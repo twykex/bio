@@ -332,6 +332,152 @@ def explain_biomarker():
     return jsonify(query_ollama(prompt) or {"explanation": "Could not analyze.", "recommendation": "Consult a doctor."})
 
 
+# --- 20 MINI OLLAMA FEATURES ---
+
+@app.route('/suggest_supplement', methods=['POST'])
+def suggest_supplement():
+    data = request.json
+    focus = data.get('focus', 'general health')
+    prompt = f"Suggest 3 supplements for {focus}. Output JSON: {{ 'supplements': [{{ 'name': '...', 'reason': '...' }}] }}"
+    return jsonify(query_ollama(prompt) or {"supplements": []})
+
+@app.route('/check_food_interaction', methods=['POST'])
+def check_food_interaction():
+    data = request.json
+    item1 = data.get('item1', '')
+    item2 = data.get('item2', '')
+    prompt = f"Check interaction between {item1} and {item2}. Output JSON: {{ 'interaction': 'Safe/Caution/Danger', 'details': '...' }}"
+    return jsonify(query_ollama(prompt) or {"interaction": "Unknown", "details": "Could not check."})
+
+@app.route('/recipe_variation', methods=['POST'])
+def recipe_variation():
+    data = request.json
+    recipe = data.get('recipe', '')
+    variation_type = data.get('type', '')
+    prompt = f"Create a {variation_type} variation of {recipe}. Output JSON: {{ 'recipe': '...', 'changes': '...' }}"
+    return jsonify(query_ollama(prompt) or {})
+
+@app.route('/flavor_pairing', methods=['POST'])
+def flavor_pairing():
+    data = request.json
+    ingredient = data.get('ingredient', '')
+    prompt = f"Suggest 3 spices or flavors that pair well with {ingredient}. Output JSON: {{ 'pairings': ['...', '...', '...'] }}"
+    return jsonify(query_ollama(prompt) or {"pairings": []})
+
+@app.route('/quick_snack', methods=['POST'])
+def quick_snack():
+    data = request.json
+    preference = data.get('preference', 'healthy')
+    prompt = f"Suggest a quick snack involving {preference}. Output JSON: {{ 'snack': '...', 'calories': '...' }}"
+    return jsonify(query_ollama(prompt) or {})
+
+@app.route('/hydration_tip', methods=['POST'])
+def hydration_tip():
+    data = request.json
+    activity = data.get('activity', 'sedentary')
+    prompt = f"Give a hydration tip for someone who is {activity}. Output JSON: {{ 'tip': '...' }}"
+    return jsonify(query_ollama(prompt) or {"tip": "Drink water."})
+
+@app.route('/mood_food', methods=['POST'])
+def mood_food():
+    data = request.json
+    mood = data.get('mood', 'neutral')
+    prompt = f"Suggest a food that helps with {mood} mood. Output JSON: {{ 'food': '...', 'why': '...' }}"
+    return jsonify(query_ollama(prompt) or {})
+
+@app.route('/energy_booster', methods=['POST'])
+def energy_booster():
+    data = request.json
+    context = data.get('context', 'general')
+    prompt = f"Suggest a natural energy boosting food for {context}. Output JSON: {{ 'food': '...', 'benefit': '...' }}"
+    return jsonify(query_ollama(prompt) or {})
+
+@app.route('/recovery_meal', methods=['POST'])
+def recovery_meal():
+    data = request.json
+    workout = data.get('workout', 'general')
+    prompt = f"Suggest a post-workout recovery meal for {workout}. Output JSON: {{ 'meal': '...', 'nutrients': '...' }}"
+    return jsonify(query_ollama(prompt) or {})
+
+@app.route('/sleep_aid', methods=['POST'])
+def sleep_aid():
+    data = request.json
+    issue = data.get('issue', 'general')
+    prompt = f"Suggest a food or drink to help sleep for {issue}. Output JSON: {{ 'recommendation': '...', 'mechanism': '...' }}"
+    return jsonify(query_ollama(prompt) or {})
+
+@app.route('/digestive_aid', methods=['POST'])
+def digestive_aid():
+    data = request.json
+    symptom = data.get('symptom', 'general')
+    prompt = f"Suggest a food to help with {symptom} digestion. Output JSON: {{ 'food': '...', 'benefit': '...' }}"
+    return jsonify(query_ollama(prompt) or {})
+
+@app.route('/immunity_booster', methods=['POST'])
+def immunity_booster():
+    data = request.json
+    season = data.get('season', 'general')
+    prompt = f"Suggest immunity-boosting foods for {season}. Output JSON: {{ 'foods': ['...', '...'] }}"
+    return jsonify(query_ollama(prompt) or {"foods": []})
+
+@app.route('/anti_inflammatory', methods=['POST'])
+def anti_inflammatory():
+    data = request.json
+    condition = data.get('condition', 'general')
+    prompt = f"Suggest anti-inflammatory foods for {condition}. Output JSON: {{ 'foods': ['...', '...'] }}"
+    return jsonify(query_ollama(prompt) or {"foods": []})
+
+@app.route('/antioxidant_rich', methods=['POST'])
+def antioxidant_rich():
+    data = request.json
+    preference = data.get('preference', 'any')
+    prompt = f"Suggest antioxidant-rich foods, preference: {preference}. Output JSON: {{ 'foods': ['...', '...'] }}"
+    return jsonify(query_ollama(prompt) or {"foods": []})
+
+@app.route('/low_gi_option', methods=['POST'])
+def low_gi_option():
+    data = request.json
+    food = data.get('food', '')
+    prompt = f"Suggest a low GI alternative to {food}. Output JSON: {{ 'alternative': '...', 'gi_diff': '...' }}"
+    return jsonify(query_ollama(prompt) or {})
+
+@app.route('/high_protein_option', methods=['POST'])
+def high_protein_option():
+    data = request.json
+    food = data.get('food', '')
+    prompt = f"Suggest a high protein alternative to {food}. Output JSON: {{ 'alternative': '...', 'protein_content': '...' }}"
+    return jsonify(query_ollama(prompt) or {})
+
+@app.route('/fiber_rich_option', methods=['POST'])
+def fiber_rich_option():
+    data = request.json
+    food = data.get('food', '')
+    prompt = f"Suggest a fiber rich alternative to {food}. Output JSON: {{ 'alternative': '...', 'fiber_content': '...' }}"
+    return jsonify(query_ollama(prompt) or {})
+
+@app.route('/seasonal_swap', methods=['POST'])
+def seasonal_swap():
+    data = request.json
+    ingredient = data.get('ingredient', '')
+    season = data.get('season', 'current')
+    prompt = f"Suggest a seasonal alternative to {ingredient} for {season}. Output JSON: {{ 'swap': '...', 'reason': '...' }}"
+    return jsonify(query_ollama(prompt) or {})
+
+@app.route('/budget_swap', methods=['POST'])
+def budget_swap():
+    data = request.json
+    ingredient = data.get('ingredient', '')
+    prompt = f"Suggest a cheaper alternative to {ingredient}. Output JSON: {{ 'swap': '...', 'savings': '...' }}"
+    return jsonify(query_ollama(prompt) or {})
+
+@app.route('/leftover_idea', methods=['POST'])
+def leftover_idea():
+    data = request.json
+    food = data.get('food', '')
+    prompt = f"Suggest a creative way to use leftover {food}. Output JSON: {{ 'idea': '...', 'recipe_hint': '...' }}"
+    return jsonify(query_ollama(prompt) or {})
+
+
 if __name__ == '__main__':
     logger.info(f"🔋 HOSTING ON PORT {PORT} using model: {OLLAMA_MODEL}")
     app.run(debug=True, port=PORT)
