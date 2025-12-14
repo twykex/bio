@@ -5,6 +5,7 @@ import re
 import requests
 import pdfplumber
 from flask import Flask, render_template, request, jsonify
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
@@ -67,7 +68,9 @@ def clean_and_parse_json(text):
     text = re.sub(r'\]\s*"\s*\}', '] }', text)  # Fix rogue quotes
     text = re.sub(r',\s*\}', '}', text)  # Fix trailing commas
     text = re.sub(r',\s*\]', ']', text)
-    text = re.sub(r'//.*', '', text)  # Fix comments
+    # Fix comments (safely, trying not to match URLs)
+    # Match // only if it's not preceded by a colon (as in http://)
+    text = re.sub(r'(?<!:)\/\/.*', '', text)
 
     # 4. Attempt Parse
     try:
@@ -124,10 +127,12 @@ def init_context():
     file = request.files['file']
     token = request.form.get('token')
 
-    file.save(os.path.join(UPLOAD_FOLDER, file.filename))
+    filename = secure_filename(file.filename)
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
+    file.save(filepath)
     text = ""
     try:
-        with pdfplumber.open(os.path.join(UPLOAD_FOLDER, file.filename)) as pdf:
+        with pdfplumber.open(filepath) as pdf:
             for page in pdf.pages: text += (page.extract_text() or "") + "\n"
     except:
         return jsonify({"error": "PDF Error"}), 500
