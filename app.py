@@ -4,19 +4,27 @@ import uuid
 import re
 import requests
 import pdfplumber
+import logging
 from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
+
+# --- LOGGING CONFIGURATION ---
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # --- CONFIGURATION ---
-OLLAMA_MODEL = "huihui_ai/gemma3-abliterated:12b"
-OLLAMA_URL = "http://localhost:11434/api/generate"
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "huihui_ai/gemma3-abliterated:12b")
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+PORT = int(os.getenv("PORT", 5000))
 
 sessions = {}
-
 
 def get_session(token):
     if token not in sessions:
@@ -59,11 +67,27 @@ def clean_and_parse_json(text):
     # 1. Strip Markdown
     text = text.replace("```json", "").replace("```", "")
 
-    # 2. Extract JSON block
-    match = re.search(r'(\{.*|\[.*)', text, re.DOTALL)
-    if match: text = match.group(0)
+    # 2. Try to find a complete JSON block first
+    # This regex looks for { ... } or [ ... ] across lines.
+    # It is greedy, so it finds the largest block.
+    # Note: This works well if the noise is outside the JSON.
+    match_complete = re.search(r'(\{.*\}|\[.*\])', text, re.DOTALL)
 
-    # 3. Apply Repairs
+    if match_complete:
+        candidate = match_complete.group(0)
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            # If the "complete" block is invalid (e.g. syntax error inside),
+            # we use it as the base for repairs.
+            text = candidate
+    else:
+        # 3. If no complete block, extract from first { or [ to the end (handling truncation)
+        match_start = re.search(r'(\{.*|\[.*)', text, re.DOTALL)
+        if match_start:
+            text = match_start.group(0)
+
+    # 4. Apply Repairs
     text = repair_lazy_json(text)  # Fix missing keys
     text = re.sub(r'\]\s*"\s*\}', '] }', text)  # Fix rogue quotes
     text = re.sub(r',\s*\}', '}', text)  # Fix trailing commas
@@ -72,12 +96,12 @@ def clean_and_parse_json(text):
     # Match // only if it's not preceded by a colon (as in http://)
     text = re.sub(r'(?<!:)\/\/.*', '', text)
 
-    # 4. Attempt Parse
+    # 5. Attempt Parse
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        # 5. Try fixing truncation
-        print("⚠️ JSON Invalid. Attempting auto-balance...")
+        # 6. Try fixing truncation
+        logger.warning("JSON Invalid. Attempting auto-balance...")
         balanced_text = fix_truncated_json(text)
         try:
             return json.loads(balanced_text)
@@ -89,7 +113,7 @@ def query_ollama(prompt, retries=1):
     """
     Sends prompt to Ollama with retry logic.
     """
-    print(f"\n🚀 SENDING PROMPT ({len(prompt)} chars)...")
+    logger.info(f"🚀 SENDING PROMPT ({len(prompt)} chars)...")
     payload = {
         "model": OLLAMA_MODEL,
         "prompt": prompt,
@@ -103,14 +127,14 @@ def query_ollama(prompt, retries=1):
         result = clean_and_parse_json(r.json().get('response', ''))
 
         if result is None and retries > 0:
-            print("🔄 JSON Failed. Retrying with stricter prompt...")
+            logger.warning("🔄 JSON Failed. Retrying with stricter prompt...")
             prompt += "\nIMPORTANT: You previously outputted invalid JSON. Fix syntax. Ensure all keys are present."
             return query_ollama(prompt, retries - 1)
 
         return result
 
     except Exception as e:
-        print(f"❌ CONNECTION ERROR: {e}")
+        logger.error(f"❌ CONNECTION ERROR: {e}")
         return None
 
 
@@ -134,10 +158,11 @@ def init_context():
     try:
         with pdfplumber.open(filepath) as pdf:
             for page in pdf.pages: text += (page.extract_text() or "") + "\n"
-    except:
-        return jsonify({"error": "PDF Error"}), 500
+    except Exception as e:
+        logger.error(f"Failed to parse PDF: {e}")
+        return jsonify({"error": "PDF Parsing Error"}), 500
 
-    print(f"📄 PDF LOADED: {len(text)} chars.")
+    logger.info(f"📄 PDF LOADED: {len(text)} chars.")
     safe_text = text[:4500]
 
     prompt = f"""
@@ -158,6 +183,7 @@ def init_context():
     data = query_ollama(prompt)
     if not data:
         # Emergency Fallback
+        logger.warning("Using fallback analysis strategy.")
         data = {
             "summary": "Analysis failed, but strategies loaded.",
             "strategies": [{"name": "General Health", "desc": "Balanced approach."}]
@@ -175,7 +201,7 @@ def generate_week():
     strategy = data.get('strategy_name')
     preferences = data.get('preferences', 'None')
 
-    print(f"📅 GENERATING PLAN: {strategy} (Prefs: {preferences})")
+    logger.info(f"📅 GENERATING PLAN: {strategy} (Prefs: {preferences})")
 
     prompt = f"""
     CONTEXT: {json.dumps(session.get('blood_context', {}))}
@@ -194,7 +220,7 @@ def generate_week():
     plan = query_ollama(prompt)
 
     if not plan:
-        print("❌ AI Failed. Serving Fallback Plan.")
+        logger.error("AI Failed. Serving Fallback Plan.")
         # Fallback Plan so UI never breaks
         plan = [
             {"day": "Mon", "title": "Grilled Salmon", "ingredients": ["Salmon", "Asparagus"],
@@ -259,7 +285,7 @@ def generate_workout():
     session = get_session(data.get('token'))
     strategy = data.get('strategy_name') or "General Health"
 
-    print(f"🏋️ GENERATING WORKOUT: {strategy}")
+    logger.info(f"🏋️ GENERATING WORKOUT: {strategy}")
 
     prompt = f"""
     CONTEXT: {json.dumps(session.get('blood_context', {}))}
@@ -307,5 +333,5 @@ def explain_biomarker():
 
 
 if __name__ == '__main__':
-    print(f"🔋 HOSTING ON PORT 5000 using model: {OLLAMA_MODEL}")
-    app.run(debug=True, port=5000)
+    logger.info(f"🔋 HOSTING ON PORT {PORT} using model: {OLLAMA_MODEL}")
+    app.run(debug=True, port=PORT)
