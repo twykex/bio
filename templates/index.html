@@ -48,22 +48,61 @@
     </script>
 
     <style>
-        body { background-color: #000; color: #fff; }
+        :root {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --card-bg: #1C1C1E;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-bg: rgba(28, 28, 30, 0.6);
+            --glass-heavy-bg: rgba(10, 10, 10, 0.85);
+        }
+
+        .light-mode {
+            --bg-color: #F2F2F7;
+            --text-color: #000000;
+            --card-bg: #FFFFFF;
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.6);
+            --glass-heavy-bg: rgba(255, 255, 255, 0.85);
+        }
+
+        body { background-color: var(--bg-color); color: var(--text-color); transition: background-color 0.3s, color 0.3s; }
+
+        .large-text { font-size: 1.125rem; }
 
         /* Premium Blur Utilities */
         .glass {
-            background: rgba(28, 28, 30, 0.6);
+            background: var(--glass-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--glass-border);
         }
 
         .glass-heavy {
-            background: rgba(10, 10, 10, 0.85);
+            background: var(--glass-heavy-bg);
             backdrop-filter: blur(40px);
             -webkit-backdrop-filter: blur(40px);
-            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--glass-border);
         }
+
+        /* Light mode specific overrides for Tailwind classes that are hardcoded */
+        .light-mode .text-white\/20 { color: rgba(0,0,0,0.2); }
+        .light-mode .text-white\/30 { color: rgba(0,0,0,0.3); }
+        .light-mode .text-white\/40 { color: rgba(0,0,0,0.4); }
+        .light-mode .text-white\/50 { color: rgba(0,0,0,0.5); }
+        .light-mode .text-white\/70 { color: rgba(0,0,0,0.7); }
+        .light-mode .text-white\/90 { color: rgba(0,0,0,0.9); }
+        .light-mode .text-white { color: #000; }
+
+        .light-mode .bg-white\/5 { background-color: rgba(0,0,0,0.05); }
+        .light-mode .bg-white\/10 { background-color: rgba(0,0,0,0.1); }
+        .light-mode .bg-white\/20 { background-color: rgba(0,0,0,0.2); }
+
+        .light-mode .border-white\/5 { border-color: rgba(0,0,0,0.05); }
+        .light-mode .border-white\/10 { border-color: rgba(0,0,0,0.1); }
+
+        .light-mode .bg-ios-card { background-color: #fff; color: #000; }
+        .light-mode .text-ios-sub { color: #666; }
 
         /* Hide Scrollbar but keep functionality */
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -86,12 +125,25 @@
     <div class="fixed bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[100px] pointer-events-none"></div>
 
     <header class="h-20 flex items-center justify-between px-8 z-40">
-        <div class="flex items-center gap-3 cursor-pointer group" @click="resetSystem">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-lg group-hover:scale-105 transition-transform">B</div>
-            <span class="font-semibold text-lg tracking-tight">BioFlow</span>
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-3 cursor-pointer group" @click="resetSystem">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-lg group-hover:scale-105 transition-transform">B</div>
+                <span class="font-semibold text-lg tracking-tight" x-text="appName" @click.stop="editAppName">BioFlow</span>
+            </div>
+
+            <!-- Feature: Date & Clock -->
+            <div class="hidden md:flex flex-col text-xs text-ios-sub" x-data="{ date: '', time: '' }" x-init="setInterval(() => { const now = new Date(); date = now.toLocaleDateString(undefined, {weekday:'short', month:'short', day:'numeric'}); time = now.toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'}); }, 1000); $nextTick(() => { const now = new Date(); date = now.toLocaleDateString(undefined, {weekday:'short', month:'short', day:'numeric'}); time = now.toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'}); })">
+                <span x-text="date"></span>
+                <span class="font-mono" x-text="time"></span>
+            </div>
         </div>
 
         <div class="flex items-center gap-4">
+            <!-- Feature: Tools Button -->
+            <button @click="toolsOpen = !toolsOpen" class="w-10 h-10 rounded-full bg-ios-card hover:bg-white/10 flex items-center justify-center transition-colors border border-ios-border text-white/70 hover:text-white" title="Tools & Settings">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+
             <template x-if="weekPlan.length > 0">
                 <div class="flex gap-3 animate-scale-in">
                     <button @click="generateShoppingList"
@@ -111,6 +163,11 @@
     <main class="flex-1 relative flex flex-col items-center justify-center p-6 z-10">
 
         <div x-show="!context && !loading" class="w-full max-w-2xl text-center" x-transition.opacity.duration.700ms>
+            <!-- Feature: Quote of the Day -->
+             <div class="mb-8 p-4 rounded-2xl bg-white/5 border border-white/5 text-sm italic text-white/60 mx-auto max-w-md animate-scale-in" x-data="{ quote: '' }" x-init="const q = ['Let food be thy medicine.', 'Health is wealth.', 'Eat well, live well.', 'Nutrition is key.', 'Biology is destiny.']; quote = q[Math.floor(Math.random() * q.length)]">
+                 "<span x-text="quote"></span>"
+             </div>
+
             <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
                 Decode your biology.
             </h1>
@@ -218,7 +275,18 @@
                                 <button @click="openRecipe(day)" class="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 transition-transform">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                                 </button>
-                                <span class="text-xs font-medium text-white/30">View Recipe</span>
+
+                                <!-- Feature: Meal Rating & Favorite -->
+                                <div class="flex items-center gap-2">
+                                     <button @click.stop="toggleHeart(day)" class="text-lg transition-transform hover:scale-125" :class="isHearted(day) ? 'text-red-500' : 'text-white/20'">
+                                         <span x-text="isHearted(day) ? '❤️' : '🤍'"></span>
+                                     </button>
+                                     <div class="flex text-xs text-yellow-500">
+                                         <template x-for="i in 5">
+                                             <button @click.stop="rateMeal(day, i)" class="hover:scale-125 transition" x-text="getRating(day) >= i ? '★' : '☆'"></button>
+                                         </template>
+                                     </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -228,6 +296,18 @@
             </div>
         </div>
 
+        <!-- Feature: Footer with Version & GitHub Link -->
+        <footer class="w-full text-center py-6 text-xs text-ios-sub z-10">
+            <div class="flex items-center justify-center gap-4">
+                <span>v1.2.0</span>
+                <a href="https://github.com/twykex/bio" target="_blank" class="hover:text-white transition-colors flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    GitHub
+                </a>
+                <span class="text-white/20">|</span>
+                <span x-text="'Updated: ' + new Date().toLocaleDateString()"></span>
+            </div>
+        </footer>
     </main>
 
     <div class="fixed top-6 left-0 right-0 flex justify-center z-[100] pointer-events-none">
@@ -354,11 +434,198 @@
         </div>
     </div>
 
+    <!-- Feature: Tools Drawer -->
+    <div class="fixed inset-y-4 right-4 w-[360px] glass-heavy rounded-[32px] z-50 transform transition-transform duration-500 shadow-2xl flex flex-col overflow-hidden border border-white/10"
+         :class="toolsOpen ? 'translate-x-0' : 'translate-x-[120%]'" x-cloak>
+
+        <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
+            <h3 class="font-semibold text-sm">Tools & Settings</h3>
+            <button @click="toolsOpen = false" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition">✕</button>
+        </div>
+
+        <div class="p-6 space-y-8 overflow-y-auto custom-scroll flex-1">
+            <!-- Appearance -->
+            <div>
+                <h4 class="text-xs font-bold text-white/40 uppercase mb-4 tracking-wider">Appearance</h4>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm">Dark Mode</span>
+                        <button @click="toggleTheme" class="w-12 h-6 rounded-full p-1 transition-colors duration-300" :class="darkMode ? 'bg-blue-600' : 'bg-gray-400'">
+                            <div class="w-4 h-4 rounded-full bg-white shadow-sm transform transition-transform duration-300" :class="darkMode ? 'translate-x-6' : 'translate-x-0'"></div>
+                        </button>
+                    </div>
+                     <div class="flex items-center justify-between">
+                        <span class="text-sm">Large Text</span>
+                        <button @click="toggleLargeText" class="w-12 h-6 rounded-full p-1 transition-colors duration-300" :class="largeText ? 'bg-blue-600' : 'bg-gray-400'">
+                            <div class="w-4 h-4 rounded-full bg-white shadow-sm transform transition-transform duration-300" :class="largeText ? 'translate-x-6' : 'translate-x-0'"></div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personalization -->
+             <div>
+                <h4 class="text-xs font-bold text-white/40 uppercase mb-4 tracking-wider">Personalization</h4>
+                <div class="space-y-3">
+                    <div class="space-y-2">
+                        <label class="text-xs text-ios-sub">App Name</label>
+                        <input type="text" x-model="appName" @input="saveSettings" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature: Utilities -->
+            <div>
+                 <h4 class="text-xs font-bold text-white/40 uppercase mb-4 tracking-wider">Utilities</h4>
+                 <div class="grid grid-cols-2 gap-3">
+                     <button @click="bmiOpen = true" class="p-3 bg-white/5 rounded-xl text-left hover:bg-white/10 transition-colors">
+                         <div class="text-lg mb-1">⚖️</div>
+                         <div class="text-xs font-medium">BMI Calc</div>
+                     </button>
+                     <button @click="timerOpen = true" class="p-3 bg-white/5 rounded-xl text-left hover:bg-white/10 transition-colors">
+                         <div class="text-lg mb-1">⏱️</div>
+                         <div class="text-xs font-medium">Timer</div>
+                     </button>
+                 </div>
+            </div>
+
+             <!-- Feature: Water Tracker -->
+             <div>
+                 <h4 class="text-xs font-bold text-white/40 uppercase mb-4 tracking-wider">Hydration</h4>
+                 <div class="bg-white/5 rounded-xl p-4 flex items-center justify-between">
+                     <div>
+                         <div class="text-2xl font-bold text-blue-400" x-text="waterCups"></div>
+                         <div class="text-xs text-ios-sub">Cups Today</div>
+                     </div>
+                     <div class="flex gap-2">
+                         <button @click="waterCups = Math.max(0, waterCups - 1)" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">-</button>
+                         <button @click="waterCups++" class="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-500 flex items-center justify-center">+</button>
+                     </div>
+                 </div>
+             </div>
+
+             <!-- Feature: Mood Tracker -->
+             <div>
+                 <h4 class="text-xs font-bold text-white/40 uppercase mb-4 tracking-wider">Mood</h4>
+                 <div class="flex justify-between bg-white/5 rounded-xl p-2">
+                     <button @click="mood = 'happy'" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-xl transition-transform hover:scale-125" :class="mood === 'happy' ? 'bg-white/20 scale-110' : ''">😄</button>
+                     <button @click="mood = 'neutral'" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-xl transition-transform hover:scale-125" :class="mood === 'neutral' ? 'bg-white/20 scale-110' : ''">😐</button>
+                     <button @click="mood = 'sad'" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-xl transition-transform hover:scale-125" :class="mood === 'sad' ? 'bg-white/20 scale-110' : ''">😔</button>
+                     <button @click="mood = 'tired'" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-xl transition-transform hover:scale-125" :class="mood === 'tired' ? 'bg-white/20 scale-110' : ''">😴</button>
+                     <button @click="mood = 'energetic'" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-xl transition-transform hover:scale-125" :class="mood === 'energetic' ? 'bg-white/20 scale-110' : ''">⚡</button>
+                 </div>
+             </div>
+
+             <!-- Feature: Data Actions -->
+             <div>
+                <h4 class="text-xs font-bold text-white/40 uppercase mb-4 tracking-wider">Data & Actions</h4>
+                <div class="space-y-3">
+                    <button @click="exportData" class="w-full py-2 bg-white/5 rounded-lg text-xs font-medium hover:bg-white/10 transition-colors flex items-center gap-3 px-3">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Export Data (JSON)
+                    </button>
+                    <button @click="window.print()" class="w-full py-2 bg-white/5 rounded-lg text-xs font-medium hover:bg-white/10 transition-colors flex items-center gap-3 px-3">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        Print View
+                    </button>
+                    <button @click="shareApp" class="w-full py-2 bg-white/5 rounded-lg text-xs font-medium hover:bg-white/10 transition-colors flex items-center gap-3 px-3">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                        Share BioFlow
+                    </button>
+                </div>
+            </div>
+
+            <!-- Help -->
+            <div>
+                 <h4 class="text-xs font-bold text-white/40 uppercase mb-4 tracking-wider">Help</h4>
+                 <button @click="shortcutsOpen = true" class="w-full py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-medium transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                    Keyboard Shortcuts
+                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature: BMI Modal -->
+    <div x-show="bmiOpen" class="fixed inset-0 z-[60] bg-black/60 backdrop-blur-md flex items-center justify-center p-4" x-cloak>
+        <div @click.outside="bmiOpen = false" class="bg-[#1C1C1E] w-full max-w-sm rounded-[32px] p-8 border border-white/10 animate-scale-in" x-data="{ h: '', w: '', bmi: null }">
+            <h2 class="text-xl font-bold mb-6">BMI Calculator</h2>
+            <div class="space-y-4 mb-6">
+                <input type="number" x-model="h" placeholder="Height (cm)" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                <input type="number" x-model="w" placeholder="Weight (kg)" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+            </div>
+
+            <div x-show="bmi" class="mb-6 text-center">
+                 <div class="text-4xl font-bold text-blue-500" x-text="bmi"></div>
+                 <div class="text-xs text-ios-sub">Your Body Mass Index</div>
+            </div>
+
+            <button @click="if(h && w) bmi = (w / ((h/100) * (h/100))).toFixed(1)" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-sm transition-colors mb-2">Calculate</button>
+            <button @click="bmiOpen = false" class="w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 font-medium text-sm transition-colors">Close</button>
+        </div>
+    </div>
+
+    <!-- Feature: Timer Modal -->
+    <div x-show="timerOpen" class="fixed inset-0 z-[60] bg-black/60 backdrop-blur-md flex items-center justify-center p-4" x-cloak>
+        <div @click.outside="timerOpen = false" class="bg-[#1C1C1E] w-full max-w-sm rounded-[32px] p-8 border border-white/10 animate-scale-in"
+             x-data="{ time: 0, running: false, interval: null,
+                       start() { this.running = true; this.interval = setInterval(() => { if(this.time > 0) this.time--; else this.stop(); }, 1000) },
+                       stop() { this.running = false; clearInterval(this.interval); },
+                       reset() { this.stop(); this.time = 0; },
+                       fmt(t) { const m = Math.floor(t/60).toString().padStart(2,'0'); const s = (t%60).toString().padStart(2,'0'); return `${m}:${s}`; } }">
+            <h2 class="text-xl font-bold mb-6 text-center">Kitchen Timer</h2>
+
+            <div class="text-6xl font-mono text-center mb-8 font-light" x-text="fmt(time)">00:00</div>
+
+            <div class="grid grid-cols-3 gap-2 mb-6" x-show="time === 0">
+                <button @click="time = 300" class="py-2 bg-white/5 rounded-lg text-xs hover:bg-white/10">5m</button>
+                <button @click="time = 600" class="py-2 bg-white/5 rounded-lg text-xs hover:bg-white/10">10m</button>
+                <button @click="time = 1800" class="py-2 bg-white/5 rounded-lg text-xs hover:bg-white/10">30m</button>
+            </div>
+
+            <div class="flex gap-3">
+                <button x-show="!running && time > 0" @click="start" class="flex-1 py-3 rounded-xl bg-green-600 hover:bg-green-500 font-bold text-sm">Start</button>
+                <button x-show="running" @click="stop" class="flex-1 py-3 rounded-xl bg-yellow-600 hover:bg-yellow-500 font-bold text-sm">Pause</button>
+                <button @click="reset" class="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/20 font-medium text-sm">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature: Shortcuts Modal -->
+    <div x-show="shortcutsOpen" class="fixed inset-0 z-[60] bg-black/60 backdrop-blur-md flex items-center justify-center p-4" x-cloak>
+        <div @click.outside="shortcutsOpen = false" class="bg-[#1C1C1E] w-full max-w-sm rounded-[32px] p-8 border border-white/10 animate-scale-in">
+            <h2 class="text-xl font-bold mb-6">Keyboard Shortcuts</h2>
+            <div class="space-y-4">
+                <div class="flex justify-between text-sm">
+                    <span class="text-ios-sub">Close Modals</span>
+                    <span class="font-mono bg-white/10 px-2 py-1 rounded">Esc</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-ios-sub">Toggle Tools</span>
+                    <span class="font-mono bg-white/10 px-2 py-1 rounded">/</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-ios-sub">Toggle Assistant</span>
+                    <span class="font-mono bg-white/10 px-2 py-1 rounded">.</span>
+                </div>
+                 <div class="flex justify-between text-sm">
+                    <span class="text-ios-sub">Shortcuts Help</span>
+                    <span class="font-mono bg-white/10 px-2 py-1 rounded">?</span>
+                </div>
+            </div>
+             <button @click="shortcutsOpen = false" class="mt-8 w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 font-medium text-sm transition-colors">Done</button>
+        </div>
+    </div>
+
     <div x-show="shoppingListOpen" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4" x-cloak>
         <div @click.outside="shoppingListOpen = false" class="bg-[#1C1C1E] w-full max-w-lg rounded-[32px] relative max-h-[85vh] flex flex-col border border-white/10 animate-scale-in">
             <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
                 <div class="flex items-center gap-4">
                     <h2 class="text-xl font-bold">Shopping List</h2>
+                    <!-- Feature: Copy to Clipboard -->
+                    <button @click="copyList" x-show="shoppingList" class="px-3 py-1 rounded-full bg-white/10 text-white text-xs font-bold hover:bg-white/20 transition-all">
+                        Copy
+                    </button>
                     <button @click="downloadList" x-show="shoppingList" class="px-3 py-1 rounded-full bg-blue-600/20 text-blue-400 text-xs font-bold hover:bg-blue-600 hover:text-white transition-all">
                         Download ↓
                     </button>
@@ -390,16 +657,99 @@
         document.addEventListener('alpine:init', () => {
             Alpine.data('app', () => ({
                 token: localStorage.getItem('bio_token') || Math.random().toString(36).substring(7),
+                appName: localStorage.getItem('bio_appName') || 'BioFlow',
+                darkMode: localStorage.getItem('bio_dark') !== 'false', // Default true
+                largeText: localStorage.getItem('bio_large') === 'true',
+
+                waterCups: 0,
+                mood: null,
+                bmiOpen: false,
+                timerOpen: false,
+
                 context: null, weekPlan: [], chatHistory: [], toasts: [],
-                loading: false, chatLoading: false, chatOpen: false,
-                recipeModalOpen: false, shoppingListOpen: false, prefModalOpen: false, dragOver: false,
+                loading: false, chatLoading: false,
+
+                chatOpen: false, toolsOpen: false, shortcutsOpen: false,
+                recipeModalOpen: false, shoppingListOpen: false, prefModalOpen: false,
+                dragOver: false,
+
                 selectedMeal: null, recipeDetails: null, shoppingList: null, chatInput: '',
                 loadingText: 'Initializing...', loadingInterval: null,
                 preferences: '', tempStrategy: null,
 
+                hearts: JSON.parse(localStorage.getItem('bio_hearts') || '[]'),
+                ratings: JSON.parse(localStorage.getItem('bio_ratings') || '{}'),
+
                 init() {
                     localStorage.setItem('bio_token', this.token);
+                    this.applyTheme();
+
+                    // Keyboard Shortcuts
+                    window.addEventListener('keydown', (e) => {
+                        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                        if (e.key === 'Escape') {
+                            this.chatOpen = false; this.toolsOpen = false; this.shortcutsOpen = false;
+                            this.recipeModalOpen = false; this.shoppingListOpen = false; this.prefModalOpen = false;
+                        }
+                        if (e.key === '/' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); this.toolsOpen = !this.toolsOpen; }
+                        if (e.key === '.' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); this.chatOpen = !this.chatOpen; }
+                        if (e.key === '?' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); this.shortcutsOpen = !this.shortcutsOpen; }
+                    });
                 },
+
+                applyTheme() {
+                    if (this.darkMode) document.body.classList.remove('light-mode');
+                    else document.body.classList.add('light-mode');
+
+                    if (this.largeText) document.body.classList.add('large-text');
+                    else document.body.classList.remove('large-text');
+                },
+
+                toggleTheme() {
+                    this.darkMode = !this.darkMode;
+                    this.saveSettings();
+                    this.applyTheme();
+                },
+
+                toggleLargeText() {
+                    this.largeText = !this.largeText;
+                    this.saveSettings();
+                    this.applyTheme();
+                },
+
+                saveSettings() {
+                    localStorage.setItem('bio_appName', this.appName);
+                    localStorage.setItem('bio_dark', this.darkMode);
+                    localStorage.setItem('bio_large', this.largeText);
+                },
+
+                editAppName() {
+                    const newName = prompt("Rename App:", this.appName);
+                    if (newName) {
+                        this.appName = newName;
+                        this.saveSettings();
+                    }
+                },
+
+                toggleHeart(day) {
+                    const id = day.title;
+                    if(this.hearts.includes(id)) {
+                        this.hearts = this.hearts.filter(h => h !== id);
+                    } else {
+                        this.hearts.push(id);
+                        this.notify("Meal saved to Favorites");
+                    }
+                    localStorage.setItem('bio_hearts', JSON.stringify(this.hearts));
+                },
+
+                isHearted(day) { return this.hearts.includes(day.title); },
+
+                rateMeal(day, rating) {
+                    this.ratings[day.title] = rating;
+                    localStorage.setItem('bio_ratings', JSON.stringify(this.ratings));
+                },
+
+                getRating(day) { return this.ratings[day.title] || 0; },
 
                 notify(msg, type='success') {
                     const id = Date.now();
@@ -470,6 +820,7 @@
                         const data = await res.json();
                         this.weekPlan = Array.isArray(data) ? data : [];
                         this.notify("Protocol Active");
+                        this.fireConfetti();
                     } catch(e) {
                         this.notify("Generation Failed", "error");
                     } finally {
@@ -546,6 +897,70 @@
                     a.href = url;
                     a.download = 'shopping-list.txt';
                     a.click();
+                },
+
+                copyList() {
+                    if (!this.shoppingList) return;
+                    let text = "BIOFLOW SHOPPING LIST\n=====================\n\n";
+                    for (const [cat, items] of Object.entries(this.shoppingList)) {
+                        text += `[ ${cat.toUpperCase()} ]\n`;
+                        items.forEach(i => text += ` - ${i}\n`);
+                        text += "\n";
+                    }
+                    navigator.clipboard.writeText(text).then(() => {
+                        this.notify("Shopping list copied!");
+                    });
+                },
+
+                exportData() {
+                    const data = {
+                        app: "BioFlow",
+                        date: new Date().toISOString(),
+                        context: this.context,
+                        plan: this.weekPlan,
+                        shopping: this.shoppingList,
+                        favorites: this.hearts,
+                        ratings: this.ratings
+                    };
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'bioflow-export.json';
+                    a.click();
+                },
+
+                shareApp() {
+                    if (navigator.share) {
+                        navigator.share({ title: 'BioFlow', text: 'Check out this AI Nutrition Architect!', url: window.location.href });
+                    } else {
+                        navigator.clipboard.writeText(window.location.href);
+                        this.notify("Link copied to clipboard");
+                    }
+                },
+
+                fireConfetti() {
+                    // Simple CSS/DOM confetti implementation
+                    const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#ffffff'];
+                    for(let i=0; i<50; i++) {
+                        const el = document.createElement('div');
+                        el.style.position = 'fixed';
+                        el.style.left = Math.random() * 100 + 'vw';
+                        el.style.top = '-10px';
+                        el.style.width = Math.random() * 8 + 4 + 'px';
+                        el.style.height = Math.random() * 8 + 'px';
+                        el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                        el.style.zIndex = '1000';
+                        el.style.borderRadius = '50%';
+                        el.style.pointerEvents = 'none';
+                        document.body.appendChild(el);
+
+                        const duration = Math.random() * 2 + 1;
+                        el.animate([
+                            { transform: `translate(0, 0) rotate(0)`, opacity: 1 },
+                            { transform: `translate(${Math.random()*200 - 100}px, 100vh) rotate(720deg)`, opacity: 0 }
+                        ], { duration: duration * 1000, easing: 'cubic-bezier(0,0,0.2,1)' }).onfinish = () => el.remove();
+                    }
                 },
 
                 async quickSwap(day, ing) {
