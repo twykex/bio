@@ -92,6 +92,11 @@
         </div>
 
         <div class="flex items-center gap-4">
+            <button @click="bioHacksOpen = true"
+                class="px-4 py-2 rounded-full bg-ios-card border border-ios-border hover:bg-white/10 text-xs font-medium transition-all flex items-center gap-2">
+                <span>Bio-Hacks</span>
+            </button>
+
             <template x-if="weekPlan.length > 0">
                 <div class="flex gap-3 animate-scale-in">
                     <button @click="workoutModalOpen = true"
@@ -429,16 +434,97 @@
         </div>
     </div>
 
+    <div x-show="bioHacksOpen" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4" x-cloak>
+        <div @click.outside="closeBioHacks" class="bg-[#1C1C1E] w-full max-w-5xl h-[80vh] rounded-[32px] relative flex shadow-2xl border border-white/10 overflow-hidden animate-scale-in">
+            <div class="w-1/3 border-r border-white/5 bg-white/5 flex flex-col">
+                <div class="p-6 border-b border-white/5">
+                    <h2 class="text-xl font-bold">Bio-Hacks</h2>
+                    <p class="text-xs text-white/40 mt-1">20 AI-Powered Micro Tools</p>
+                </div>
+                <div class="flex-1 overflow-y-auto custom-scroll p-4 space-y-2">
+                    <template x-for="tool in tools" :key="tool.id">
+                        <button @click="selectTool(tool)"
+                                class="w-full text-left p-3 rounded-xl transition-all flex items-center gap-3"
+                                :class="selectedTool?.id === tool.id ? 'bg-blue-600 text-white' : 'hover:bg-white/5 text-white/70'">
+                            <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">⚡</div>
+                            <div>
+                                <div class="text-sm font-medium" x-text="tool.name"></div>
+                                <div class="text-[10px] opacity-60" x-text="tool.desc"></div>
+                            </div>
+                        </button>
+                    </template>
+                </div>
+            </div>
+            <div class="flex-1 flex flex-col relative">
+                <button @click="closeBioHacks" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition z-10">✕</button>
+                <div x-show="!selectedTool" class="flex-1 flex flex-col items-center justify-center text-center p-10 opacity-50">
+                    <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 text-2xl">⚡</div>
+                    <p>Select a tool from the sidebar to begin.</p>
+                </div>
+                <div x-show="selectedTool" class="flex-1 flex flex-col p-8 overflow-y-auto custom-scroll">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold mb-2" x-text="selectedTool?.name"></h2>
+                        <p class="text-white/50" x-text="selectedTool?.desc"></p>
+                    </div>
+                    <div class="space-y-6 max-w-lg">
+                        <template x-for="input in selectedTool?.inputs">
+                            <div>
+                                <label class="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-2" x-text="input.l"></label>
+                                <input type="text" x-model="toolInputs[input.k]" :placeholder="input.p"
+                                       class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                            </div>
+                        </template>
+                        <button @click="runTool" :disabled="toolLoading"
+                                class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow-lg shadow-blue-900/20 disabled:opacity-50 flex items-center justify-center gap-2">
+                            <span x-show="toolLoading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                            <span x-text="toolLoading ? 'Processing...' : 'Generate'"></span>
+                        </button>
+                    </div>
+                    <div x-show="toolResult" class="mt-10 pt-10 border-t border-white/10 animate-scale-in">
+                        <h3 class="text-xs font-bold text-green-400 uppercase tracking-wider mb-4">AI Analysis</h3>
+                        <div class="p-6 rounded-2xl bg-white/5 border border-white/5 text-sm leading-relaxed whitespace-pre-line" x-text="toolResult"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('app', () => ({
                 token: localStorage.getItem('bio_token') || Math.random().toString(36).substring(7),
                 context: null, weekPlan: [], workoutPlan: [], chatHistory: [], toasts: [],
                 loading: false, chatLoading: false, chatOpen: false,
-                recipeModalOpen: false, shoppingListOpen: false, workoutModalOpen: false, prefModalOpen: false, dragOver: false,
+                recipeModalOpen: false, shoppingListOpen: false, workoutModalOpen: false, prefModalOpen: false,
+                bioHacksOpen: false, dragOver: false,
                 selectedMeal: null, recipeDetails: null, shoppingList: null, chatInput: '',
                 loadingText: 'Initializing...', loadingInterval: null,
                 preferences: '', tempStrategy: null,
+
+                // Bio Hacks
+                selectedTool: null, toolInputs: {}, toolResult: null, toolLoading: false,
+                tools: [
+                    { id: 'suggest_supplement', name: 'Supplement Advisor', desc: 'Get supplement recommendations.', inputs: [{k:'focus', l:'Focus', p:'Joint Health'}] },
+                    { id: 'check_food_interaction', name: 'Interaction Checker', desc: 'Check if foods clash.', inputs: [{k:'item1', l:'Item A', p:'Grapefruit'}, {k:'item2', l:'Item B', p:'Medication'}] },
+                    { id: 'recipe_variation', name: 'Recipe Variator', desc: 'Modify a recipe.', inputs: [{k:'recipe', l:'Original Recipe', p:'Lasagna'}, {k:'type', l:'Variation Type', p:'Keto'}] },
+                    { id: 'flavor_pairing', name: 'Flavor Pairer', desc: 'Find matching flavors.', inputs: [{k:'ingredient', l:'Ingredient', p:'Salmon'}] },
+                    { id: 'quick_snack', name: 'Snack Generator', desc: 'Get a quick snack idea.', inputs: [{k:'preference', l:'Preference', p:'Savory'}] },
+                    { id: 'hydration_tip', name: 'Hydration Coach', desc: 'Tips for hydration.', inputs: [{k:'activity', l:'Activity Level', p:'High Intensity'}] },
+                    { id: 'mood_food', name: 'Mood Food', desc: 'Food for your mood.', inputs: [{k:'mood', l:'Current Mood', p:'Stressed'}] },
+                    { id: 'energy_booster', name: 'Energy Booster', desc: 'Natural energy sources.', inputs: [{k:'context', l:'Context', p:'Afternoon Slump'}] },
+                    { id: 'recovery_meal', name: 'Recovery Meal', desc: 'Post-workout fuel.', inputs: [{k:'workout', l:'Workout Type', p:'Heavy Lifting'}] },
+                    { id: 'sleep_aid', name: 'Sleep Aid', desc: 'Foods to help sleep.', inputs: [{k:'issue', l:'Sleep Issue', p:'Trouble Falling Asleep'}] },
+                    { id: 'digestive_aid', name: 'Digestive Helper', desc: 'Foods for digestion.', inputs: [{k:'symptom', l:'Symptom', p:'Bloating'}] },
+                    { id: 'immunity_booster', name: 'Immunity Boost', desc: 'Boost your immune system.', inputs: [{k:'season', l:'Season/Context', p:'Flu Season'}] },
+                    { id: 'anti_inflammatory', name: 'Inflammation Fighter', desc: 'Reduce inflammation.', inputs: [{k:'condition', l:'Concern', p:'General'}] },
+                    { id: 'antioxidant_rich', name: 'Antioxidant Finder', desc: 'Find rich foods.', inputs: [{k:'preference', l:'Preference', p:'Berries'}] },
+                    { id: 'low_gi_option', name: 'Low GI Swap', desc: 'Stable blood sugar.', inputs: [{k:'food', l:'High GI Food', p:'White Rice'}] },
+                    { id: 'high_protein_option', name: 'Protein Swap', desc: 'More protein.', inputs: [{k:'food', l:'Original Food', p:'Oatmeal'}] },
+                    { id: 'fiber_rich_option', name: 'Fiber Boost', desc: 'Add more fiber.', inputs: [{k:'food', l:'Original Food', p:'White Bread'}] },
+                    { id: 'seasonal_swap', name: 'Seasonal Swap', desc: 'Eat seasonally.', inputs: [{k:'ingredient', l:'Ingredient', p:'Strawberries'}, {k:'season', l:'Current Season', p:'Winter'}] },
+                    { id: 'budget_swap', name: 'Budget Saver', desc: 'Save money.', inputs: [{k:'ingredient', l:'Expensive Ingredient', p:'Pine Nuts'}] },
+                    { id: 'leftover_idea', name: 'Leftover Alchemist', desc: 'Use up leftovers.', inputs: [{k:'food', l:'Leftover Item', p:'Rotisserie Chicken'}] },
+                ],
 
                 init() {
                     localStorage.setItem('bio_token', this.token);
@@ -616,6 +702,52 @@
                         this.chatHistory = [];
                         this.toasts = [];
                     }
+                },
+
+                closeBioHacks() {
+                    this.bioHacksOpen = false;
+                },
+
+                selectTool(tool) {
+                    this.selectedTool = tool;
+                    this.toolInputs = {};
+                    this.toolResult = null;
+                },
+
+                async runTool() {
+                    if(!this.selectedTool) return;
+                    this.toolLoading = true;
+                    this.toolResult = null;
+                    try {
+                        const res = await fetch(`/${this.selectedTool.id}`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(this.toolInputs)
+                        });
+                        const data = await res.json();
+                        this.toolResult = this.formatResult(data);
+                    } catch(e) {
+                        this.toolResult = "Error connecting to Bio-Architect.";
+                    } finally {
+                        this.toolLoading = false;
+                    }
+                },
+
+                formatResult(data) {
+                    if(!data) return "No data returned.";
+                    if(data.supplements) return data.supplements.map(s => `• ${s.name}: ${s.reason}`).join('\n');
+                    if(data.foods) return data.foods.map(f => `• ${f}`).join('\n');
+                    if(data.interaction) return `Status: ${data.interaction}\n${data.details}`;
+                    if(data.recipe) return `Recipe: ${data.recipe}\n${data.changes || ''}`;
+                    if(data.pairings) return data.pairings.map(p => `• ${p}`).join('\n');
+
+                    // Generic formatter
+                    let output = "";
+                    for(const [key, val] of Object.entries(data)) {
+                        const label = key.replace(/_/g, ' ').toUpperCase();
+                        output += `${label}: ${val}\n`;
+                    }
+                    return output;
                 }
             }))
         })
