@@ -27,6 +27,14 @@ PORT = int(os.getenv("PORT", 5000))
 sessions = {}
 
 def get_session(token):
+    # Basic memory management
+    if len(sessions) > 100 and token not in sessions:
+        # Remove oldest (insertion order preserved in Python 3.7+)
+        try:
+            sessions.pop(next(iter(sessions)), None)
+        except (RuntimeError, StopIteration):
+            pass
+
     if token not in sessions:
         sessions[token] = {
             "blood_context": {},
@@ -90,6 +98,44 @@ def fix_truncated_json(json_str):
     return json_str
 
 
+def remove_json_comments(text):
+    """
+    Safely removes // comments from JSON-like text, preserving strings.
+    """
+    output = []
+    in_string = False
+    escape = False
+    i = 0
+    while i < len(text):
+        char = text[i]
+
+        if in_string:
+            if char == '"' and not escape:
+                in_string = False
+
+            if char == '\\' and not escape:
+                escape = True
+            else:
+                escape = False
+
+            output.append(char)
+            i += 1
+        else:
+            if char == '"':
+                in_string = True
+                output.append(char)
+                i += 1
+            elif char == '/' and i + 1 < len(text) and text[i+1] == '/':
+                # Comment detected. Skip until newline.
+                i += 2
+                while i < len(text) and text[i] != '\n':
+                    i += 1
+            else:
+                output.append(char)
+                i += 1
+    return "".join(output)
+
+
 def clean_and_parse_json(text):
     # 1. Strip Markdown
     text = text.replace("```json", "").replace("```", "")
@@ -119,9 +165,8 @@ def clean_and_parse_json(text):
     text = re.sub(r'\]\s*"\s*\}', '] }', text)  # Fix rogue quotes
     text = re.sub(r',\s*\}', '}', text)  # Fix trailing commas
     text = re.sub(r',\s*\]', ']', text)
-    # Fix comments (safely, trying not to match URLs)
-    # Only match // if preceded by whitespace
-    text = re.sub(r'\s+\/\/.*', '', text)
+
+    text = remove_json_comments(text)
 
     # 5. Attempt Parse
     try:
@@ -272,12 +317,26 @@ def generate_week():
 def chat_agent():
     data = request.json
     session = get_session(data.get('token'))
+    user_msg = data.get('message')
+
+    # Update History
+    history = session.get('chat_history', [])
+    history.append({"role": "user", "text": user_msg})
+
+    # Context window management (last 10 messages)
+    recent_history = history[-10:]
+
     prompt = f"""
     DATA: {str(session.get('weekly_plan', []))[:500]}
-    USER: "{data.get('message')}"
+    HISTORY: {json.dumps(recent_history)}
+    USER: "{user_msg}"
     RESPONSE FORMAT JSON: {{ "response": "Answer here" }}
     """
     resp = query_ollama(prompt)
+
+    if resp and 'response' in resp:
+        history.append({"role": "ai", "text": resp['response']})
+
     return jsonify(resp if resp else {"response": "I'm having trouble connecting to your data."})
 
 
