@@ -80,5 +80,11 @@ class TestJsonUtils(unittest.TestCase):
         result = clean_and_parse_json(text)
         self.assertEqual(result, {"url": "http://example.com/foo//bar"})
 
+    def test_clean_and_parse_json_comment_inside_string(self):
+        # This case was previously broken
+        text = '{"data": "This is // not a comment", } // This is a comment'
+        result = clean_and_parse_json(text)
+        self.assertEqual(result, {"data": "This is // not a comment"})
+
 if __name__ == '__main__':
     unittest.main()

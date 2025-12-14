@@ -93,7 +93,7 @@ class TestRoutes(unittest.TestCase):
     @patch('app.query_ollama')
     def test_chat_agent(self, mock_query):
         mock_query.return_value = {"response": "Hello"}
-        sessions['testtoken'] = {'weekly_plan': []}
+        sessions['testtoken'] = {'weekly_plan': [], 'chat_history': []}
 
         response = self.app.post('/chat_agent', json={
             'token': 'testtoken',
@@ -102,6 +102,12 @@ class TestRoutes(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()['response'], "Hello")
+
+        # Verify history updated
+        history = sessions['testtoken']['chat_history']
+        self.assertEqual(len(history), 2)
+        self.assertEqual(history[0]['text'], 'Hi')
+        self.assertEqual(history[1]['text'], 'Hello')
 
     @patch('app.query_ollama')
     def test_get_recipe(self, mock_query):
