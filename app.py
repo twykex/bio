@@ -261,7 +261,11 @@ def init_context():
         logger.warning("Using fallback analysis strategy.")
         data = {
             "summary": "Analysis failed, but strategies loaded.",
-            "strategies": [{"name": "General Health", "desc": "Balanced approach."}]
+            "strategies": [
+                {"name": "General Health", "desc": "Balanced approach."},
+                {"name": "Muscle Gain", "desc": "High protein, hypertrophy focus."},
+                {"name": "Weight Loss", "desc": "Caloric deficit, high volume foods."}
+            ]
         }
 
     session = get_session(token)
@@ -622,6 +626,40 @@ def leftover_idea():
     return jsonify(query_ollama(prompt) or {
         "idea": "Hearty Stir-Fry or Salad",
         "recipe_hint": "Toss with fresh vegetables and a light dressing or soy sauce."
+    })
+
+
+@app.route('/stress_relief', methods=['POST'])
+def stress_relief():
+    data = request.json
+    context = data.get('context', 'general')
+    prompt = f"Suggest a stress relief technique for {context}. Output JSON: {{ 'technique': '...', 'steps': '...' }}"
+    return jsonify(query_ollama(prompt) or {
+        "technique": "Box Breathing",
+        "steps": "Inhale for 4s, hold for 4s, exhale for 4s, hold for 4s. Repeat 4 times."
+    })
+
+
+@app.route('/focus_technique', methods=['POST'])
+def focus_technique():
+    data = request.json
+    task = data.get('task', 'general work')
+    prompt = f"Suggest a focus technique for {task}. Output JSON: {{ 'technique': '...', 'description': '...' }}"
+    return jsonify(query_ollama(prompt) or {
+        "technique": "Pomodoro Technique",
+        "description": "Work for 25 minutes, then take a 5-minute break. Repeat."
+    })
+
+
+@app.route('/exercise_alternative', methods=['POST'])
+def exercise_alternative():
+    data = request.json
+    exercise = data.get('exercise', 'running')
+    reason = data.get('reason', 'injury')
+    prompt = f"Suggest an alternative to {exercise} due to {reason}. Output JSON: {{ 'alternative': '...', 'benefit': '...' }}"
+    return jsonify(query_ollama(prompt) or {
+        "alternative": "Swimming",
+        "benefit": "Low impact cardio that protects joints while building endurance."
     })
 
 
