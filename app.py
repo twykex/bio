@@ -55,11 +55,38 @@ def repair_lazy_json(text):
 def fix_truncated_json(json_str):
     """Auto-completes JSON that was cut off."""
     json_str = json_str.strip()
-    json_str = re.sub(r'[,"]+$', '', json_str)
-    open_braces = json_str.count('{') - json_str.count('}')
-    open_brackets = json_str.count('[') - json_str.count(']')
-    if open_brackets > 0: json_str += ']' * open_brackets
-    if open_braces > 0: json_str += '}' * open_braces
+    # Remove trailing comma if present
+    json_str = re.sub(r',\s*$', '', json_str)
+
+    stack = []
+    is_inside_string = False
+    escaped = False
+
+    for char in json_str:
+        if is_inside_string:
+            if char == '"' and not escaped:
+                is_inside_string = False
+            elif char == '\\':
+                escaped = not escaped
+            else:
+                escaped = False
+        else:
+            if char == '"':
+                is_inside_string = True
+            elif char == '{':
+                stack.append('}')
+            elif char == '[':
+                stack.append(']')
+            elif char == '}' or char == ']':
+                if stack and stack[-1] == char:
+                    stack.pop()
+
+    if is_inside_string:
+        json_str += '"'
+
+    while stack:
+        json_str += stack.pop()
+
     return json_str
 
 
@@ -93,8 +120,8 @@ def clean_and_parse_json(text):
     text = re.sub(r',\s*\}', '}', text)  # Fix trailing commas
     text = re.sub(r',\s*\]', ']', text)
     # Fix comments (safely, trying not to match URLs)
-    # Match // only if it's not preceded by a colon (as in http://)
-    text = re.sub(r'(?<!:)\/\/.*', '', text)
+    # Only match // if preceded by whitespace
+    text = re.sub(r'\s+\/\/.*', '', text)
 
     # 5. Attempt Parse
     try:
@@ -152,6 +179,9 @@ def init_context():
     token = request.form.get('token')
 
     filename = secure_filename(file.filename)
+    if not filename.lower().endswith('.pdf'):
+        return jsonify({"error": "Invalid file type. Only PDF allowed."}), 400
+
     filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
     text = ""
