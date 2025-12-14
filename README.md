@@ -31,6 +31,11 @@
 * **Context-Aware Chat:** A RAG-like (Retrieval-Augmented Generation) chat interface. The AI "knows" your uploaded bloodwork and current meal plan.
 * **Ingredient Swapping:** Don't like an ingredient? Ask the Architect to swap it based on your biological needs.
 
+### ⚡ Bio-Hacks (20 Mini-Features)
+* **Instant Nutritional Tools:** 20 specialized micro-tools powered by AI.
+* **Features Include:** Supplement Advisor, Interaction Checker, Flavor Pairer, Mood Food, Sleep Aid, and more.
+* **Robust Fallbacks:** Even if the AI is offline, these tools provide useful default recommendations.
+
 ### 🛡️ Robust Backend Engineering
 * **Self-Healing JSON Parser:** Custom logic detects and repairs broken JSON output from LLMs (missing brackets, rogue quotes, lazy key generation).
 * **Retry Logic:** Automatically retries prompts if the AI output fails validation.
