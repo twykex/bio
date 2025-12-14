@@ -27,6 +27,10 @@
 * **Recipe Architect:** Provides detailed macros, cooking steps, and bio-hacking tips for every generated meal.
 * **Smart Logistics:** Automatically aggregates ingredients from the weekly plan into a categorized shopping list (Produce, Meat, Pantry).
 
+### 🏋️ Personalized Fitness Architecture
+* **Strategy-Aligned Workouts:** Generates a 7-day exercise protocol tailored to your health strategy.
+* **Biomarker-Based Focus:** Adjusts intensity and focus based on physiological context (e.g., "Anti-Inflammatory" prioritizes recovery).
+
 ### 🤖 The "Bio-Architect" Assistant
 * **Context-Aware Chat:** A RAG-like (Retrieval-Augmented Generation) chat interface. The AI "knows" your uploaded bloodwork and current meal plan.
 * **Ingredient Swapping:** Don't like an ingredient? Ask the Architect to swap it based on your biological needs.
@@ -57,11 +61,12 @@
 
 ### 1. Clone the Repository
 ```bash
-git clone [https://github.com/twykex/bio.git](https://github.com/twykex/bio.git)
+git clone https://github.com/twykex/bio.git
 cd bio
-2. Set up Virtual Environment
-Bash
+```
 
+### 2. Set up Virtual Environment
+```bash
 # Windows
 python -m venv .venv
 .venv\Scripts\activate
@@ -69,94 +74,89 @@ python -m venv .venv
 # Mac/Linux
 python3 -m venv .venv
 source .venv/bin/activate
-3. Install Dependencies
-Bash
+```
 
+### 3. Install Dependencies
+```bash
 pip install -r requirements.txt
-(If requirements.txt is missing, install manually: pip install flask requests pdfplumber)
+```
+(If requirements.txt is missing, install manually: `pip install flask requests pdfplumber`)
 
-4. Pull the AI Model
+### 4. Pull the AI Model
 By default, the app uses a specific Gemma 3 model. Run this in your terminal:
 
-Bash
-
+```bash
 ollama pull huihui_ai/gemma3-abliterated:12b
-Note: You can change the model in app.py by editing the OLLAMA_MODEL variable.
+```
+Note: You can change the model in `app.py` by editing the `OLLAMA_MODEL` variable.
 
-🖥️ Usage
-Start Ollama: Ensure Ollama is running in the background.
+---
 
-Bash
+## 🖥️ Usage
+1. **Start Ollama:** Ensure Ollama is running in the background.
+   ```bash
+   ollama serve
+   ```
 
-ollama serve
-Run the Application:
+2. **Run the Application:**
+   ```bash
+   python app.py
+   ```
 
-Bash
+3. **Access the Interface:** Open your browser and navigate to: `http://127.0.0.1:5000`
 
-python app.py
-Access the Interface: Open your browser and navigate to: http://127.0.0.1:5000
+### Workflow:
+1. **Upload:** Drag & drop a PDF (e.g., bloodwork or a dummy PDF text file).
+2. **Select Strategy:** Choose one of the 3 AI-recommended health paths.
+3. **Generate:** Watch the AI build your weekly protocol.
+4. **Interact:** Click meals for recipes, generate a shopping list, view your workout plan, or open the "Assistant" drawer to chat.
 
-Workflow:
+---
 
-Upload: Drag & drop a PDF (e.g., bloodwork or a dummy PDF text file).
+## 📂 Project Structure
 
-Select Strategy: Choose one of the 3 AI-recommended health paths.
-
-Generate: Watch the AI build your weekly protocol.
-
-Interact: Click meals for recipes, generate a shopping list, or open the "Assistant" drawer to chat.
-
-📂 Project Structure
-Plaintext
-
+```plaintext
 bio/
 ├── app.py                  # Core Flask backend & AI logic
 ├── requirements.txt        # Python dependencies
 ├── uploads/                # Temp storage for analyzed PDFs
 ├── templates/
 │   └── index.html          # Single-page Application (Frontend)
+├── tests/                  # Unit tests
+├── test_model.py           # Model verification script
 └── README.md               # Documentation
-🔧 Troubleshooting
-Issue: "JSON PARSE ERROR" or Blank Screen
+```
 
-Cause: The LLM outputted malformed data.
+---
 
-Solution: The app has built-in "Self-Healing" logic. Check the terminal console. If it persists, try generating again. The AI sometimes needs a second try.
+## 🔧 Troubleshooting
 
-Issue: "Connection Refused"
+**Issue:** "JSON PARSE ERROR" or Blank Screen
+* **Cause:** The LLM outputted malformed data.
+* **Solution:** The app has built-in "Self-Healing" logic. Check the terminal console. If it persists, try generating again. The AI sometimes needs a second try.
 
-Cause: Ollama is not running.
+**Issue:** "Connection Refused"
+* **Cause:** Ollama is not running.
+* **Solution:** Open a terminal and run `ollama serve`.
 
-Solution: Open a terminal and run ollama serve.
+**Issue:** "Model not found"
+* **Cause:** You haven't downloaded the specific model in `app.py`.
+* **Solution:** Run `ollama list` to see what you have, and update `OLLAMA_MODEL` in `app.py` to match a model you have installed (e.g., `llama3`).
 
-Issue: "Model not found"
+---
 
-Cause: You haven't downloaded the specific model in app.py.
-
-Solution: Run ollama list to see what you have, and update OLLAMA_MODEL in app.py to match a model you have installed (e.g., llama3).
-
-🤝 Contributing
+## 🤝 Contributing
 Contributions are welcome!
 
-Fork the Project
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-Create your Feature Branch (git checkout -b feature/AmazingFeature)
+---
 
-Commit your Changes (git commit -m 'Add some AmazingFeature')
-
-Push to the Branch (git push origin feature/AmazingFeature)
-
-Open a Pull Request
-
-📄 License
-Distributed under the MIT License. See LICENSE for more information.
+## 📄 License
+Distributed under the MIT License. See `LICENSE` for more information.
 
 <p align="center"> Built with ❤️ by twykex </p>
-
-
-### Steps to complete your repo:
-
-1.  Create a file named `README.md` in your folder.
-2.  Paste the code above into it.
-3.  (Optional) Take a screenshot of your beautiful new UI, save it as `screenshot.png`, add it to your folder, and uncomment the image link in the "Interface" section.
-4.  Run `git add README.md` and `git push` to send it to GitHub.
