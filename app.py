@@ -22,6 +22,7 @@ def get_session(token):
         sessions[token] = {
             "blood_context": {},
             "weekly_plan": [],
+            "workout_plan": [],
             "chat_history": []
         }
     return sessions[token]
@@ -245,6 +246,59 @@ def generate_shopping_list():
     FORMAT: {{ "Produce": ["A","B"], "Meat": ["C"], "Pantry": ["D"] }}
     """
     return jsonify(query_ollama(prompt) or {})
+
+
+@app.route('/generate_workout', methods=['POST'])
+def generate_workout():
+    data = request.json
+    session = get_session(data.get('token'))
+    strategy = data.get('strategy_name') or "General Health"
+
+    print(f"🏋️ GENERATING WORKOUT: {strategy}")
+
+    prompt = f"""
+    CONTEXT: {json.dumps(session.get('blood_context', {}))}
+    STRATEGY: {strategy}
+    TASK: 7-Day Workout Plan.
+    OUTPUT: JSON Array of 7 objects.
+    FORMAT:
+    [
+        {{ "day": "Mon", "focus": "Cardio", "exercises": ["Run 30m", "Stretch"], "benefit": "Heart Health" }},
+        {{ "day": "Tue", "focus": "Strength", "exercises": ["Squats", "Pushups"], "benefit": "Muscle" }}
+    ]
+    """
+
+    plan = query_ollama(prompt)
+
+    if not plan:
+        plan = [
+            {"day": "Mon", "focus": "Light Cardio", "exercises": ["30m Walk"], "benefit": "Circulation"},
+            {"day": "Tue", "focus": "Rest", "exercises": ["Stretching"], "benefit": "Recovery"},
+            {"day": "Wed", "focus": "Bodyweight", "exercises": ["Squats", "Pushups"], "benefit": "Strength"},
+            {"day": "Thu", "focus": "Mobility", "exercises": ["Yoga Flow"], "benefit": "Flexibility"},
+            {"day": "Fri", "focus": "Cardio", "exercises": ["Jogging"], "benefit": "Endurance"},
+            {"day": "Sat", "focus": "Active Rest", "exercises": ["Hiking"], "benefit": "Mental Health"},
+            {"day": "Sun", "focus": "Rest", "exercises": ["None"], "benefit": "Recovery"}
+        ]
+
+    session["workout_plan"] = plan
+    return jsonify(plan)
+
+
+@app.route('/explain_biomarker', methods=['POST'])
+def explain_biomarker():
+    data = request.json
+    session = get_session(data.get('token'))
+    biomarker = data.get('biomarker')
+
+    prompt = f"""
+    CONTEXT: {json.dumps(session.get('blood_context', {}))}
+    BIOMARKER: {biomarker}
+    TASK: Explain this biomarker in the context of the user's health data.
+    OUTPUT: JSON with keys "explanation" and "recommendation".
+    FORMAT: {{ "explanation": "...", "recommendation": "..." }}
+    """
+    return jsonify(query_ollama(prompt) or {"explanation": "Could not analyze.", "recommendation": "Consult a doctor."})
 
 
 if __name__ == '__main__':
