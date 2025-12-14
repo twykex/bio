@@ -167,12 +167,14 @@ def generate_week():
     data = request.json
     session = get_session(data.get('token'))
     strategy = data.get('strategy_name')
+    preferences = data.get('preferences', 'None')
 
-    print(f"📅 GENERATING PLAN: {strategy}")
+    print(f"📅 GENERATING PLAN: {strategy} (Prefs: {preferences})")
 
     prompt = f"""
     CONTEXT: {json.dumps(session.get('blood_context', {}))}
     STRATEGY: {strategy}
+    PREFERENCES: {preferences}
     TASK: 7-Day Dinner Plan.
     OUTPUT: JSON Array of 7 objects.
     FORMAT:
