@@ -74,7 +74,6 @@ def init_context():
     session['raw_text_chunks'] = safe_chunks
     session['embeddings'] = embeddings
 
-    # --- THE CONSULTATION PROMPT ---
     system_prompt = "You are a Functional Doctor. Diagnose the user. Return strict JSON."
     user_prompt = f"""
     DATA: {text[:8000]}
@@ -105,7 +104,6 @@ def init_context():
     data = query_ollama(user_prompt, system_instruction=system_prompt, temperature=0.1)
 
     if not data or 'issues' not in data:
-        # Emergency Fallback if AI fails parsing
         data = {
             "patient_name": "Guest",
             "health_score": 75,
@@ -138,22 +136,33 @@ def init_context():
 def generate_week():
     data = request.json
     session = get_session(data.get('token'))
-    strategy = data.get('strategy_name', 'General')
-    preferences = data.get('preferences', 'None')
 
-    logger.info(f"📅 Generating Meal Plan for: {strategy}")
+    summary = session.get('blood_context', {}).get('summary', 'General Health')
+    blood_strategies = data.get('blood_strategies', [])
+    lifestyle = data.get('lifestyle', {})
 
-    # OPTIMIZED PROMPT: ONE-SHOT LEARNING
-    # We give it an exact example to copy. This helps small models drastically.
+    logger.info(f"🍳 ARCHITECTING PLAN: {lifestyle.get('cuisine')} | {lifestyle.get('time')} | {summary}")
+
     prompt = f"""
-    Role: Nutritionist. Strategy: {strategy}. Preferences: {preferences}.
-    Task: 7-Day Dinner Plan.
-    Output: STRICT JSON ONLY.
+    ROLE: Elite Nutritionist.
 
-    EXAMPLE JSON STRUCTURE:
+    PATIENT PROFILE:
+    - BIOLOGY: {summary}
+    - PRIORITY FIXES: {", ".join(blood_strategies)}
+
+    LIFESTYLE CONSTRAINTS:
+    - CUISINE STYLE: {lifestyle.get('cuisine', 'Varied')}
+    - COOKING TIME: {lifestyle.get('time', '30 mins')}
+    - BUDGET: {lifestyle.get('budget', 'Moderate')}
+    - DIET TYPE: {lifestyle.get('diet', 'Balanced')}
+
+    TASK: Create a 7-Day Dinner Plan.
+    OUTPUT: STRICT JSON ARRAY ONLY.
+
+    EXAMPLE:
     [
-      {{ "day": "Mon", "title": "Salmon Bowl", "ingredients": ["Salmon", "Rice"], "benefit": "Omega-3" }},
-      {{ "day": "Tue", "title": "Chicken Salad", "ingredients": ["Chicken", "Greens"], "benefit": "Protein" }}
+      {{ "day": "Mon", "title": "Mediterranean Salmon", "ingredients": ["Salmon", "Olives", "Quinoa"], "benefit": "High Omega-3." }},
+      {{ "day": "Tue", "title": "Quick Chicken Stir-Fry", "ingredients": ["Chicken", "Ginger", "Snap Peas"], "benefit": "High protein." }}
     ]
 
     GENERATE 7 DAYS NOW:
@@ -164,7 +173,8 @@ def generate_week():
     if isinstance(plan, dict) and 'plan' in plan: plan = plan['plan']
 
     if not plan or not isinstance(plan, list) or len(plan) == 0:
-        logger.warning("❌ AI MEAL PLAN FAILED. Using Fallback.")
+        logger.warning("❌ AI PLAN FAILED. Using Fallback.")
+        # FIXED: Use the global variable directly, do NOT import it
         plan = FALLBACK_MEAL_PLAN
 
     return jsonify(plan)
@@ -179,21 +189,11 @@ def generate_workout():
     logger.info(f"💪 Generating Workout for: {strategy}")
 
     prompt = f"""
-    Role: Trainer. Strategy: {strategy}.
-    Task: 7-Day Workout Plan.
-    Output: STRICT JSON ONLY.
-
-    EXAMPLE JSON STRUCTURE:
-    [
-      {{ "day": "Mon", "focus": "Cardio", "exercises": ["Run"], "benefit": "Heart" }},
-      {{ "day": "Tue", "focus": "Strength", "exercises": ["Squats"], "benefit": "Legs" }}
-    ]
-
-    GENERATE 7 DAYS NOW:
+    Create a 7-day workout schedule for strategy: {strategy}.
+    Format: JSON Array: [{{ "day": "Mon", "focus": "Cardio", "exercises": ["Run"], "benefit": "Heart" }}]
     """
 
-    # CHANGED: temperature from 0.4 to 0.1
-    plan = query_ollama(prompt, system_instruction="Return JSON Array only.", temperature=0.1)
+    plan = query_ollama(prompt, system_instruction="You are a Trainer.", temperature=0.1)
 
     if not plan or not isinstance(plan, list) or len(plan) == 0:
         logger.warning("❌ AI WORKOUT FAILED. Using Fallback.")
@@ -206,9 +206,7 @@ def generate_workout():
 def get_recipe():
     data = request.json
     title = data.get('meal_title')
-
     prompt = f"Create recipe for {title}. JSON: {{ 'steps': ['1...', '2...'], 'macros': {{ 'protein': '30g', 'carbs': '20g', 'fats': '10g' }} }}"
-
     recipe = query_ollama(prompt, system_instruction="Chef. JSON Only.", temperature=0.3)
     return jsonify(recipe or {"steps": ["Cook ingredients.", "Serve hot."],
                               "macros": {"protein": "20g", "carbs": "20g", "fats": "10g"}})

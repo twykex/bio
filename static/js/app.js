@@ -19,7 +19,10 @@ document.addEventListener('alpine:init', () => {
         consultationStep: 0,
         currentIssue: null,
         userChoices: [],
-
+        interviewQueue: [],    // <--- ADD THIS
+        currentQuestion: null, // <--- ADD THIS
+        userChoices: {},       // <--- ADD THIS
+        bloodStrategies: [],   // <--- ADD THIS
         // Chat
         chatInput: '',
         chatLoading: false,
@@ -173,23 +176,100 @@ document.addEventListener('alpine:init', () => {
         },
 
         // --- CONSULTATION MODE ---
+        // --- ADVANCED CONSULTATION ENGINE ---
+
+        // Configuration for the "Lifestyle" part of the interview
+        lifestyleQuestions: [
+            {
+                id: 'diet',
+                title: 'Dietary Philosophy',
+                desc: 'How do you prefer to eat?',
+                options: [
+                    { text: 'No Restrictions', icon: '🥩' },
+                    { text: 'Keto / Low Carb', icon: '🥑' },
+                    { text: 'Vegetarian', icon: '🥗' },
+                    { text: 'High Protein', icon: '💪' },
+                    { text: 'Paleo', icon: '🍖' }
+                ]
+            },
+            {
+                id: 'cuisine',
+                title: 'Flavor Palette',
+                desc: 'What cuisines do you enjoy most?',
+                options: [
+                    { text: 'Mediterranean', icon: '🫒' },
+                    { text: 'Asian / Stir-Fry', icon: '🥢' },
+                    { text: 'Mexican / Spicy', icon: '🌶️' },
+                    { text: 'Classic American', icon: '🍔' },
+                    { text: 'Global Mix', icon: '🌎' }
+                ]
+            },
+            {
+                id: 'time',
+                title: 'Time Commitment',
+                desc: 'How much time do you have for dinner?',
+                options: [
+                    { text: '15 Mins (Quick)', icon: '⚡' },
+                    { text: '30 Mins (Standard)', icon: '⏱️' },
+                    { text: '45+ Mins (Chef Mode)', icon: '👨‍🍳' },
+                    { text: 'Meal Prep / Bulk', icon: '📦' }
+                ]
+            },
+            {
+                id: 'budget',
+                title: 'Weekly Budget',
+                desc: 'How much do you want to spend?',
+                options: [
+                    { text: 'Budget Friendly', icon: '💵' },
+                    { text: 'Moderate', icon: '💰' },
+                    { text: 'Premium / Organic', icon: '💎' }
+                ]
+            }
+        ],
+
         startConsultation() {
             this.consultationActive = true;
             this.consultationStep = 0;
-            this.userChoices = [];
-            this.currentIssue = this.context.issues[0];
+            this.userChoices = {};     // Stores lifestyle answers
+            this.bloodStrategies = []; // Stores choices for blood issues
+
+            // Merge Blood Issues + Lifestyle Questions into one "Queue"
+            // 1. Map Blood Issues to a standard format
+            const bioQueue = (this.context.issues || []).map(issue => ({
+                type: 'bio',
+                title: `${issue.title} Detected`,
+                desc: issue.explanation, // "Your Vitamin D is low..."
+                value: issue.value,
+                options: issue.options.map(opt => ({ text: opt.text, icon: opt.type === 'Diet' ? '🥦' : '🧘' }))
+            }));
+
+            // 2. Map Lifestyle Questions to standard format
+            const lifeQueue = this.lifestyleQuestions.map(q => ({
+                type: 'lifestyle',
+                id: q.id,
+                title: q.title,
+                desc: q.desc,
+                options: q.options
+            }));
+
+            // Combine them
+            this.interviewQueue = [...bioQueue, ...lifeQueue];
+            this.currentQuestion = this.interviewQueue[0];
         },
 
         selectOption(option) {
-            this.userChoices.push({
-                issue: this.currentIssue.title,
-                choice: option.text
-            });
+            // Save the answer based on the type of question
+            if (this.currentQuestion.type === 'bio') {
+                this.bloodStrategies.push(option.text);
+            } else {
+                this.userChoices[this.currentQuestion.id] = option.text;
+            }
 
+            // Next Step
             this.consultationStep++;
 
-            if (this.consultationStep < this.context.issues.length) {
-                this.currentIssue = this.context.issues[this.consultationStep];
+            if (this.consultationStep < this.interviewQueue.length) {
+                this.currentQuestion = this.interviewQueue[this.consultationStep];
             } else {
                 this.finalizeConsultation();
             }
@@ -197,16 +277,43 @@ document.addEventListener('alpine:init', () => {
 
         async finalizeConsultation() {
             this.consultationActive = false;
+            this.startLoading('plan'); // Start the "Architecting..." loading screen
 
-            // Format choices for the generator prompt
-            const choicesText = this.userChoices.length > 0
-                ? this.userChoices.map(c => `${c.issue}: ${c.choice}`).join(', ')
-                : "Standard Optimization";
+            try {
+                const [mealRes, workoutRes] = await Promise.all([
+                    fetch('/generate_week', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        // SEND THE FULL PROFILE
+                        body: JSON.stringify({
+                            token: this.token,
+                            blood_strategies: this.bloodStrategies,
+                            lifestyle: this.userChoices
+                        })
+                    }),
+                    fetch('/generate_workout', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            token: this.token,
+                            strategy_name: this.userChoices.diet || "Balanced"
+                        })
+                    })
+                ]);
 
-            this.preferences = choicesText;
-            this.tempStrategy = "Personalized Protocol"; // Default name
+                const data = await mealRes.json();
+                const workoutData = await workoutRes.json();
 
-            await this.generateWeek();
+                this.weekPlan = Array.isArray(data) ? data : [];
+                this.workoutPlan = Array.isArray(workoutData) ? workoutData : [];
+
+                this.currentTab = 'dashboard';
+                this.notify("Protocol Optimized & Active");
+            } catch(e) {
+                this.notify("Generation Failed", "error");
+            } finally {
+                this.stopLoading();
+            }
         },
 
         async generateWeek() {
