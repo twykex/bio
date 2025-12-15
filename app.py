@@ -1,12 +1,18 @@
 import logging
 import os
+import re
+import json
 import uuid
+import requests
+import socket
+import webbrowser
+import threading
+from time import sleep
 
 from flask import Flask, render_template, request, session, redirect, url_for, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # Attempt to import config and blueprints from the main branch structure
-# If these files don't exist yet in your feature branch, you may need to adjust paths
 try:
     from config import PORT, OLLAMA_MODEL
 except ImportError:
@@ -28,23 +34,186 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 # --- CONFIGURATION ---
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'super-secret-key-for-dev-only') # Use env var in production
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'super-secret-key-for-dev-only')
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
 
-# Register Blueprints (from main branch)
+# Register Blueprints
 if main_bp:
     app.register_blueprint(main_bp)
 if mini_apps_bp:
     app.register_blueprint(mini_apps_bp)
 
 # --- DATA STORES ---
-# In-memory user store (for demonstration purposes only).
-# In a production environment, this should be replaced with a proper database.
 users = {}
 password_reset_tokens = {}
+sessions = {}
+
+# --- HELPER FUNCTIONS ---
+
+def get_session(token):
+    if len(sessions) > 100 and token not in sessions:
+        try:
+            sessions.pop(next(iter(sessions)), None)
+        except (RuntimeError, StopIteration):
+            pass
+
+    if token not in sessions:
+        sessions[token] = {
+            "blood_context": {},
+            "weekly_plan": [],
+            "workout_plan": [],
+            "chat_history": []
+        }
+    return sessions[token]
+
+def repair_lazy_json(text):
+    text = re.sub(r'("day":\s*"[^"]+",\s*)("[^"]+")(\s*,)', r'\1"title": \2\3', text)
+    text = re.sub(r'(,\s*)("[^"]+")(\s*\})', r'\1"desc": \2\3', text)
+    return text
+
+def fix_truncated_json(json_str):
+    json_str = json_str.strip()
+    json_str = re.sub(r',\s*$', '', json_str)
+    stack = []
+    is_inside_string = False
+    escaped = False
+
+    for char in json_str:
+        if is_inside_string:
+            if char == '"' and not escaped:
+                is_inside_string = False
+            elif char == '\\':
+                escaped = not escaped
+            else:
+                escaped = False
+        else:
+            if char == '"':
+                is_inside_string = True
+            elif char == '{':
+                stack.append('}')
+            elif char == '[':
+                stack.append(']')
+            elif char == '}' or char == ']':
+                if stack and stack[-1] == char:
+                    stack.pop()
+
+    if is_inside_string:
+        json_str += '"'
+    while stack:
+        json_str += stack.pop()
+    return json_str
+
+def remove_json_comments(text):
+    output = []
+    in_string = False
+    escape = False
+    i = 0
+    while i < len(text):
+        char = text[i]
+        if in_string:
+            if char == '"' and not escape:
+                in_string = False
+            if char == '\\' and not escape:
+                escape = True
+            else:
+                escape = False
+            output.append(char)
+            i += 1
+        else:
+            if char == '"':
+                in_string = True
+                output.append(char)
+                i += 1
+            elif char == '/' and i + 1 < len(text) and text[i+1] == '/':
+                i += 2
+                while i < len(text) and text[i] != '\n':
+                    i += 1
+            else:
+                output.append(char)
+                i += 1
+    return "".join(output)
+
+def clean_and_parse_json(text):
+    text = text.replace("```json", "").replace("```", "")
+    match_complete = re.search(r'(\{.*\}|\[.*\])', text, re.DOTALL)
+
+    if match_complete:
+        candidate = match_complete.group(0)
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            text = candidate
+    else:
+        match_start = re.search(r'(\{.*|\[.*)', text, re.DOTALL)
+        if match_start:
+            text = match_start.group(0)
+
+    text = repair_lazy_json(text)
+    text = re.sub(r'\]\s*"\s*\}', '] }', text)
+    text = re.sub(r',\s*\}', '}', text)
+    text = re.sub(r',\s*\]', ']', text)
+    text = remove_json_comments(text)
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        logger.warning("JSON Invalid. Attempting auto-balance...")
+        balanced_text = fix_truncated_json(text)
+        try:
+            return json.loads(balanced_text)
+        except json.JSONDecodeError:
+            return None
+
+def query_ollama(prompt, retries=1):
+    logger.info(f"🚀 SENDING PROMPT ({len(prompt)} chars)...")
+    payload = {
+        "model": OLLAMA_MODEL,
+        "prompt": prompt,
+        "stream": False,
+    }
+    try:
+        r = requests.post(OLLAMA_URL, json=payload)
+        if r.status_code != 200: return None
+        result = clean_and_parse_json(r.json().get('response', ''))
+
+        if result is None and retries > 0:
+            logger.warning("🔄 JSON Failed. Retrying with stricter prompt...")
+            prompt += "\nIMPORTANT: You previously outputted invalid JSON. Fix syntax. Ensure all keys are present."
+            return query_ollama(prompt, retries - 1)
+        return result
+    except Exception as e:
+        logger.error(f"❌ CONNECTION ERROR: {e}")
+        return None
+
+# --- NEW UTILITIES: Port Finding & Browser Opening ---
+
+def find_free_port(start_port):
+    port = start_port
+    while port < start_port + 100:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(1)
+            result = sock.connect_ex(('127.0.0.1', port))
+            if result != 0:
+                return port
+            else:
+                port += 1
+    return start_port
+
+def open_browser(port):
+    sleep(1.5) 
+    url = f"http://127.0.0.1:{port}"
+    logger.info(f"🌍 Opening browser at {url}...")
+    try:
+        browser = webbrowser.get('chrome')
+    except webbrowser.Error:
+        try:
+            browser = webbrowser.get('open -a /Applications/Google\ Chrome.app %s')
+        except webbrowser.Error:
+            browser = webbrowser
+    browser.open(url)
 
 # --- ROUTES ---
 
@@ -132,5 +301,19 @@ def dashboard():
     return render_template('index.html')
 
 if __name__ == '__main__':
-    logger.info(f"🔋 HOSTING ON PORT {PORT} using model: {OLLAMA_MODEL}")
-    app.run(debug=True, port=PORT)
+    # Fix for double-execution of port finding in Flask Debug mode
+    if os.environ.get('SERVER_PORT'):
+        actual_port = int(os.environ.get('SERVER_PORT'))
+    else:
+        actual_port = find_free_port(PORT)
+        os.environ['SERVER_PORT'] = str(actual_port)
+        if actual_port != PORT:
+            logger.warning(f"⚠️  Port {PORT} is in use. Switched to {actual_port}.")
+    
+    logger.info(f"🔋 HOSTING ON PORT {actual_port} using model: {OLLAMA_MODEL}")
+    
+    # Open browser only in the reloader process
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        threading.Thread(target=open_browser, args=(actual_port,)).start()
+
+    app.run(debug=True, port=actual_port)
