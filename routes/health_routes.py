@@ -1,7 +1,7 @@
 import logging
 import os
+import uuid
 from flask import Blueprint, request, jsonify, Response, stream_with_context
-from werkzeug.utils import secure_filename
 from config import UPLOAD_FOLDER
 from utils import get_session, query_ollama, stream_ollama, retrieve_relevant_context, get_embedding, analyze_image
 from services.pdf_service import advanced_pdf_parse
@@ -18,7 +18,8 @@ def init_context():
     if not token:
         return jsonify({"error": "Token is required"}), 400
 
-    filename = secure_filename(file.filename)
+    ext = os.path.splitext(file.filename)[1]
+    filename = f"{uuid.uuid4()}{ext}"
     filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
 
