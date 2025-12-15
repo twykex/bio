@@ -1,6 +1,6 @@
 ### FILENAME: mini_apps.py ###
 from flask import Blueprint, request, jsonify
-from utils import query_ollama
+from services.ai_service import query_ollama
 
 mini_apps_bp = Blueprint('mini_apps_bp', __name__)
 

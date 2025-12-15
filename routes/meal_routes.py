@@ -1,6 +1,7 @@
 import logging
 from flask import Blueprint, request, jsonify
-from utils import get_session, query_ollama
+from services.session_service import get_session
+from services.ai_service import query_ollama
 from data.fallbacks import FALLBACK_MEAL_PLAN
 
 logger = logging.getLogger(__name__)

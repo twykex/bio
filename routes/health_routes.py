@@ -3,7 +3,9 @@ import os
 from flask import Blueprint, request, jsonify
 from werkzeug.utils import secure_filename
 from config import UPLOAD_FOLDER
-from utils import get_session, query_ollama, retrieve_relevant_context, get_embedding, analyze_image
+from services.session_service import get_session
+from services.ai_service import query_ollama, analyze_image
+from services.rag_service import retrieve_relevant_context, get_embedding
 from services.pdf_service import advanced_pdf_parse
 
 logger = logging.getLogger(__name__)
@@ -113,7 +115,11 @@ def chat_agent():
     Medical Assistant.
     CONTEXT: {summary}
     EVIDENCE: {rag_context}
-    If user asks for BMI/Calories calculation, output JSON: {{ "tool": "calculate_bmi", ... }}
+    If user asks for BMI/Calories calculation, output JSON:
+    {{ "tool": "calculate_bmi", "args": {{ "weight_kg": 70, "height_m": 1.75 }} }}
+    OR
+    {{ "tool": "estimate_daily_calories", "args": {{ "weight_kg": 70, "height_cm": 175, "age": 30, "gender": "male", "activity_level": "moderate" }} }}
+
     Otherwise output JSON: {{ "response": "Your answer..." }}
     """
 

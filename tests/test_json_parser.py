@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.getcwd())
 import unittest
-from utils import clean_json_output
+from services.ai_service import clean_json_output
 
 class TestJsonParser(unittest.TestCase):
     def test_basic_json(self):

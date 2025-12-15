@@ -207,7 +207,7 @@ def query_ollama(prompt, system_instruction=None, tools_enabled=False, temperatu
         # Tool Logic
         if tools_enabled and isinstance(data, dict) and "tool" in data:
             res = execute_tool_call(data["tool"], data.get("args", {}))
-            return query_ollama(f"Tool Result: {res}. Answer user JSON.", system_instruction="Assistant",
+            return query_ollama(f"Tool Result: {res}. Answer user JSON.", system_instruction=system_instruction,
                                 tools_enabled=False)
 
         return data

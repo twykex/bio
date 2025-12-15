@@ -6,7 +6,7 @@ import json
 # Add parent directory to path to import app
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils import repair_lazy_json, fix_truncated_json, clean_and_parse_json
+from services.ai_service import repair_lazy_json, fix_truncated_json, clean_and_parse_json
 
 class TestJsonUtils(unittest.TestCase):
 

@@ -25,7 +25,8 @@ try:
     from routes.workout_routes import workout_bp
     from routes.health_routes import health_bp
     from routes.mini_apps import mini_apps_bp
-except ImportError:
+except ImportError as e:
+    logging.error(f"Failed to import routes: {e}")
     meal_bp = None
     workout_bp = None
     health_bp = None

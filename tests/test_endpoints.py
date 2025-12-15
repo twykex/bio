@@ -2,7 +2,7 @@ import unittest
 import json
 import io
 from app import app
-from utils import get_session
+from services.session_service import get_session
 
 class FlaskTestCase(unittest.TestCase):
 
