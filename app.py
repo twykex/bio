@@ -4,11 +4,13 @@ import re
 import json
 import uuid
 import requests
-import socket  # <--- ADDED: To check for open ports
+import socket
+import webbrowser
+import threading
+from time import sleep
 
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
+from flask import Flask, render_template, request, session, redirect, url_for, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 
 # Attempt to import config and blueprints from the main branch structure
 try:
@@ -49,7 +51,6 @@ users = {}
 password_reset_tokens = {}
 sessions = {}
 
-
 # --- HELPER FUNCTIONS ---
 
 def get_session(token):
@@ -68,12 +69,10 @@ def get_session(token):
         }
     return sessions[token]
 
-
 def repair_lazy_json(text):
     text = re.sub(r'("day":\s*"[^"]+",\s*)("[^"]+")(\s*,)', r'\1"title": \2\3', text)
     text = re.sub(r'(,\s*)("[^"]+")(\s*\})', r'\1"desc": \2\3', text)
     return text
-
 
 def fix_truncated_json(json_str):
     json_str = json_str.strip()
@@ -107,7 +106,6 @@ def fix_truncated_json(json_str):
         json_str += stack.pop()
     return json_str
 
-
 def remove_json_comments(text):
     output = []
     in_string = False
@@ -129,7 +127,7 @@ def remove_json_comments(text):
                 in_string = True
                 output.append(char)
                 i += 1
-            elif char == '/' and i + 1 < len(text) and text[i + 1] == '/':
+            elif char == '/' and i + 1 < len(text) and text[i+1] == '/':
                 i += 2
                 while i < len(text) and text[i] != '\n':
                     i += 1
@@ -137,7 +135,6 @@ def remove_json_comments(text):
                 output.append(char)
                 i += 1
     return "".join(output)
-
 
 def clean_and_parse_json(text):
     text = text.replace("```json", "").replace("```", "")
@@ -170,7 +167,6 @@ def clean_and_parse_json(text):
         except json.JSONDecodeError:
             return None
 
-
 def query_ollama(prompt, retries=1):
     logger.info(f"🚀 SENDING PROMPT ({len(prompt)} chars)...")
     payload = {
@@ -192,37 +188,38 @@ def query_ollama(prompt, retries=1):
         logger.error(f"❌ CONNECTION ERROR: {e}")
         return None
 
+# --- NEW UTILITIES: Port Finding & Browser Opening ---
 
-# --- NEW PORT CHECKER FUNCTION ---
 def find_free_port(start_port):
-    """
-    Checks if start_port is taken. If so, increments until it finds a free one.
-    """
     port = start_port
-    # Try up to 100 ports
     while port < start_port + 100:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            # Timeout quickly if port is unresponsive
             sock.settimeout(1)
-            # 0 means the port is in use (connection successful), != 0 means it's free/refused
             result = sock.connect_ex(('127.0.0.1', port))
-
             if result != 0:
-                # Connection failed, which means the port is FREE
                 return port
             else:
-                # Connection succeeded, which means the port is TAKEN
-                logger.warning(f"⚠️  Port {port} is in use (likely AirPlay or another app). Trying {port + 1}...")
                 port += 1
     return start_port
 
+def open_browser(port):
+    sleep(1.5) 
+    url = f"http://127.0.0.1:{port}"
+    logger.info(f"🌍 Opening browser at {url}...")
+    try:
+        browser = webbrowser.get('chrome')
+    except webbrowser.Error:
+        try:
+            browser = webbrowser.get('open -a /Applications/Google\ Chrome.app %s')
+        except webbrowser.Error:
+            browser = webbrowser
+    browser.open(url)
 
 # --- ROUTES ---
 
 @app.route('/')
 def index():
     return render_template('landing.html', logged_in=('user_id' in session))
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -238,7 +235,6 @@ def login():
             flash('Invalid email or password', 'error')
             return redirect(url_for('login'))
     return render_template('login.html')
-
 
 @app.route('/signup', methods=['POST'])
 def signup():
@@ -257,12 +253,10 @@ def signup():
     session['user_id'] = email
     return redirect(url_for('dashboard'))
 
-
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
     return redirect(url_for('login'))
-
 
 @app.route('/forgot-password', methods=['POST'])
 def forgot_password():
@@ -274,11 +268,9 @@ def forgot_password():
         logger.info(f"Password reset link for {email}: {reset_link}")
     return redirect(url_for('forgot_password_confirm'))
 
-
 @app.route('/forgot-password-confirm')
 def forgot_password_confirm():
     return render_template('forgot_password_confirm.html')
-
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
@@ -302,19 +294,26 @@ def reset_password(token):
 
     return render_template('reset_password.html')
 
-
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     return render_template('index.html')
 
-
 if __name__ == '__main__':
-    # Automatically find a free port
-    actual_port = find_free_port(PORT)
-
+    # Fix for double-execution of port finding in Flask Debug mode
+    if os.environ.get('SERVER_PORT'):
+        actual_port = int(os.environ.get('SERVER_PORT'))
+    else:
+        actual_port = find_free_port(PORT)
+        os.environ['SERVER_PORT'] = str(actual_port)
+        if actual_port != PORT:
+            logger.warning(f"⚠️  Port {PORT} is in use. Switched to {actual_port}.")
+    
     logger.info(f"🔋 HOSTING ON PORT {actual_port} using model: {OLLAMA_MODEL}")
+    
+    # Open browser only in the reloader process
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        threading.Thread(target=open_browser, args=(actual_port,)).start()
 
-    # Run the app on the detected free port
     app.run(debug=True, port=actual_port)
