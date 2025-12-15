@@ -26,6 +26,11 @@ APP_CONFIGS = {
         "prompt": "Analyze interaction between '{item1}' and '{item2}'. Output format: {{ 'status': 'Safe/Caution/Danger', 'details': '...' }}",
         "temp": 0.0
     },
+    "check_drug_interaction": {
+        "system": "You are a Pharmacist. Check for interactions strictly.",
+        "prompt": "Check interaction between: '{drug_list}'. Output format: {{ 'interactions': [{{ 'drugs': 'A + B', 'severity': 'High', 'effect': '...' }}] }}",
+        "temp": 0.0
+    },
     "recipe_variation": {
         "system": "You are an Avant-Garde Chef. Be creative and flavorful.",
         "prompt": "Reinvent the recipe '{recipe}' to be '{type}'. Output format: {{ 'new_title': '...', 'changes': ['...'], 'instructions': '...' }}",
@@ -150,6 +155,37 @@ APP_CONFIGS = {
     }
 }
 
+FALLBACKS = {
+    "define_term": {"definition": "Loading definition..."},
+    "suggest_supplement": {"supplements": [{"name": "Multivitamin", "reason": "General Wellness"}]},
+    "check_food_interaction": {"status": "Safe", "details": "No known interaction."},
+    "check_drug_interaction": {"interactions": []},
+    "recipe_variation": {"new_title": "Varied Recipe", "changes": ["Add spice"], "instructions": "Cook as usual."},
+    "stress_relief": {"technique": "Deep Breathing", "steps": ["Inhale 4s", "Hold 4s", "Exhale 4s"]},
+    "flavor_pairing": {"pairings": ["Salt & Pepper", "Lemon & Garlic"]},
+    "quick_snack": {"snack": "Apple", "calories": "95"},
+    "hydration_tip": {"tip": "Drink water."},
+    "mood_food": {"food": "Dark Chocolate", "mechanism": "Endorphins"},
+    "energy_booster": {"food": "Banana", "benefit": "Potassium"},
+    "recovery_meal": {"meal": "Protein Shake", "nutrients": "Protein"},
+    "sleep_aid": {"recommendation": "Chamomile Tea", "why": "Relaxation"},
+    "digestive_aid": {"food": "Ginger", "benefit": "Anti-nausea"},
+    "immunity_booster": {"foods": ["Citrus", "Garlic"]},
+    "anti_inflammatory": {"foods": ["Turmeric", "Berries"]},
+    "antioxidant_rich": {"foods": ["Blueberries", "Pecans"]},
+    "low_gi_option": {"alternative": "Quinoa", "benefit": "Lower spike"},
+    "high_protein_option": {"alternative": "Chicken Breast", "protein": "30g"},
+    "fiber_rich_option": {"alternative": "Beans", "fiber": "10g"},
+    "seasonal_swap": {"swap": "Root Vegetables", "reason": "In season"},
+    "budget_swap": {"swap": "Lentils", "savings": "High"},
+    "leftover_idea": {"idea": "Stir fry", "recipe": "Mix with veggies"},
+    "focus_technique": {"technique": "Pomodoro", "desc": "25m work, 5m rest"},
+    "exercise_alternative": {"alternative": "Swimming", "benefit": "Low impact"},
+    "calculate_1rm": {"estimated_1rm": "100kg", "training_tip": "Be safe"},
+    "heart_rate_zones": {"max_hr": "180", "zone_2": "110-130"},
+    "exercise_form_check": {"cues": ["Keep back straight"], "common_mistake": "Rounding back"}
+}
+
 
 @mini_apps_bp.route('/<action>', methods=['POST'])
 def handle_mini_app(action):
@@ -180,9 +216,9 @@ def handle_mini_app(action):
     )
 
     if not result:
-        # Fallback for simple definition tool if AI fails (prevents empty tooltip)
-        if action == "define_term":
-            return jsonify({"definition": "Loading definition..."})
+        # Fallback
+        if action in FALLBACKS:
+            return jsonify(FALLBACKS[action])
         return jsonify({"error": "AI could not process request"}), 500
 
     return jsonify(result)

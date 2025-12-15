@@ -15,8 +15,8 @@ class TestFeatureFallbacks(unittest.TestCase):
 
         features = [
             ('/suggest_supplement', {'focus': 'energy'}, "supplements"),
-            ('/check_food_interaction', {'item1': 'a', 'item2': 'b'}, "interaction"),
-            ('/recipe_variation', {'recipe': 'a', 'type': 'b'}, "recipe"),
+            ('/check_food_interaction', {'item1': 'a', 'item2': 'b'}, "status"),
+            ('/recipe_variation', {'recipe': 'a', 'type': 'b'}, "new_title"),
             ('/flavor_pairing', {'ingredient': 'a'}, "pairings"),
             ('/quick_snack', {'preference': 'a'}, "snack"),
             ('/hydration_tip', {'activity': 'run'}, "tip"),

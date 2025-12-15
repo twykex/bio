@@ -4,6 +4,7 @@ import re
 import requests
 import logging
 import hashlib
+import base64
 from config import OLLAMA_MODEL, OLLAMA_URL
 
 logger = logging.getLogger(__name__)
@@ -152,10 +153,30 @@ def clean_json_output(text):
     return text[start_idx:]  # Fallback
 
 
-def query_ollama(prompt, system_instruction=None, tools_enabled=False, temperature=0.1, retries=1):
+def analyze_image(image_file, prompt):
+    """
+    Encodes image to base64 and sends to Ollama vision model.
+    """
+    try:
+        # Reset file pointer if needed
+        image_file.seek(0)
+        img_bytes = image_file.read()
+        b64_img = base64.b64encode(img_bytes).decode('utf-8')
+
+        return query_ollama(prompt, images=[b64_img], temperature=0.2)
+    except Exception as e:
+        logger.error(f"Image Analysis Error: {e}")
+        return None
+
+
+def query_ollama(prompt, system_instruction=None, tools_enabled=False, temperature=0.1, retries=1, images=None):
     messages = []
     if system_instruction: messages.append({"role": "system", "content": system_instruction})
-    messages.append({"role": "user", "content": prompt})
+
+    user_msg = {"role": "user", "content": prompt}
+    if images:
+        user_msg["images"] = images
+    messages.append(user_msg)
 
     payload = {
         "model": OLLAMA_MODEL,
