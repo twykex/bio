@@ -20,6 +20,7 @@ const app = (userId) => ({
     preferences: '',
     tempStrategy: null,
     prefModalOpen: false,
+    weekPlan: [],
 
     // --- 2. CONFIG DATA ---
     dailyTips,
@@ -75,6 +76,7 @@ const app = (userId) => ({
         localStorage.setItem('bio_token', this.token);
         this.handleDailyStreak();
         this.restoreState();
+        if (this.initFitness) this.initFitness();
 
         // Random Tip
         if(this.dailyTips && this.dailyTips.length) {

@@ -1,155 +1,199 @@
-<div x-show="currentTab === 'fitness'" class="max-w-6xl mx-auto space-y-8 animate-scale-in">
-    <div class="flex justify-between items-end">
+<div x-show="currentTab === 'fitness'" class="max-w-6xl mx-auto space-y-6 animate-scale-in pb-24">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center">
         <div>
-            <h2 class="text-3xl font-bold">Training Protocol</h2>
-            <p class="text-white/40 text-sm mt-1">Optimized for your biology.</p>
+            <h2 class="text-2xl font-bold tracking-tight">Training Lab</h2>
+            <p class="text-white/40 text-xs mt-1">Bio-Individualized Protocol</p>
         </div>
-        <div class="flex gap-3">
-             <button @click="openFitnessWizard" class="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition shadow-lg shadow-orange-900/20 flex items-center gap-2"><span>🏋️</span> Plan New Split</button>
+        <div class="flex gap-2">
+             <button @click="openFitnessWizard" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white text-xs font-bold border border-white/10 transition flex items-center gap-2">
+                <span>⚡</span> Regenerate
+             </button>
         </div>
     </div>
 
-    <div class="glass-panel p-4 rounded-[24px] flex gap-3 overflow-x-auto custom-scroll snap-x">
+    <!-- Calendar Strip -->
+    <div class="flex gap-2 overflow-x-auto custom-scroll snap-x py-2">
         <template x-for="day in calendarDays">
             <button @click="selectDate(day)"
-                    class="flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-300 snap-center border"
-                    :class="day.active ? 'bg-orange-600 border-orange-500 text-white shadow-lg shadow-orange-900/40 transform scale-105' : 'bg-white/5 border-transparent text-white/40 hover:bg-white/10 hover:text-white'">
-                <span class="text-xs font-bold uppercase tracking-wider" x-text="day.day"></span>
-                <span class="text-xl font-bold" x-text="day.date"></span>
+                    class="flex-shrink-0 w-14 h-16 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all duration-300 snap-center border"
+                    :class="day.active ? 'bg-orange-600 border-orange-500 text-white shadow-lg shadow-orange-900/40' : 'bg-white/5 border-transparent text-white/40 hover:bg-white/10 hover:text-white'">
+                <span class="text-[10px] font-bold uppercase tracking-wider" x-text="day.day"></span>
+                <span class="text-lg font-bold" x-text="day.date"></span>
+                <div x-show="day.isToday" class="w-1 h-1 rounded-full bg-orange-400 mt-1"></div>
             </button>
         </template>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="md:col-span-2">
-             <template x-for="workout in workoutPlan">
-                <div x-show="workout.day === calendarDays.find(d => d.active)?.day" class="animate-scale-in">
-                    <div class="glass-card p-8 rounded-[32px] relative overflow-hidden">
-                        <div class="absolute top-0 right-0 p-32 bg-orange-500/10 blur-[60px] rounded-full pointer-events-none"></div>
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                        <div class="flex justify-between items-start mb-8 relative z-10">
-                            <div>
-                                <div class="px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 text-xs font-bold uppercase tracking-widest inline-block mb-2" x-text="workout.focus"></div>
-                                <h3 class="text-4xl font-extrabold text-white">Today's Session</h3>
-                                <p class="text-white/40 mt-2" x-text="workout.benefit"></p>
+        <!-- Left: Workout Session -->
+        <div class="lg:col-span-2 space-y-6">
+             <template x-for="workout in workoutPlan">
+                <div x-show="workout.day === calendarDays.find(d => d.active)?.day" class="animate-scale-in space-y-6">
+
+                    <!-- Workout Header Card -->
+                    <div class="glass-card p-6 rounded-[24px] relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 blur-[80px] rounded-full pointer-events-none"></div>
+                        <div class="relative z-10">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-400 text-[10px] font-bold uppercase tracking-wider border border-orange-500/20" x-text="workout.focus"></div>
+                                <div class="text-xs text-white/40 font-mono" x-text="workout.benefit"></div>
                             </div>
-                            <div class="text-right">
-                                <div class="text-3xl font-bold text-white/20">01</div>
-                                <div class="text-xs uppercase text-white/20">Hour</div>
+                            <h3 class="text-3xl font-extrabold text-white mb-2">Today's Session</h3>
+                            <div class="flex gap-4 text-xs text-white/50">
+                                <div class="flex items-center gap-1"><span>⏱️</span> 60m Est.</div>
+                                <div class="flex items-center gap-1"><span>🔥</span> 450 Kcal</div>
+                                <div class="flex items-center gap-1"><span>📊</span> <span x-text="calculateSessionVolume(workout) + ' kg Vol'"></span></div>
                             </div>
                         </div>
 
-                        <template x-if="workout.warmup && workout.warmup.length">
-                            <div class="mb-6 relative z-10">
-                                <h4 class="text-xs font-bold text-orange-400 uppercase tracking-widest mb-3">Warm Up</h4>
+                        <!-- Warmup Mini-Section -->
+                         <template x-if="workout.warmup && workout.warmup.length">
+                            <div class="mt-6 pt-4 border-t border-white/5">
+                                <div class="text-[10px] font-bold text-white/30 uppercase mb-2">Warm Up</div>
                                 <div class="flex flex-wrap gap-2">
                                     <template x-for="warm in workout.warmup">
-                                        <span class="px-3 py-1 rounded-full bg-white/5 border border-white/5 text-xs text-white/70" x-text="warm"></span>
+                                        <div class="px-2 py-1 rounded bg-white/5 border border-white/5 text-[10px] text-white/60" x-text="warm"></div>
                                     </template>
                                 </div>
                             </div>
                         </template>
-
-                        <div class="space-y-4 relative z-10 mb-8">
-                            <h4 class="text-xs font-bold text-white/40 uppercase tracking-widest mb-3">Main Lift</h4>
-                            <template x-for="(ex, idx) in workout.exercises">
-                                <div class="p-5 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition group">
-                                    <div class="flex items-center justify-between mb-3">
-                                         <div class="flex items-center gap-4">
-                                             <div class="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center text-xs font-bold text-orange-400" x-text="idx + 1"></div>
-                                             <div>
-                                                 <div class="text-lg font-bold text-white" x-text="ex.name || ex"></div>
-                                                 <div class="text-[10px] text-white/40 flex gap-2">
-                                                     <span x-text="(ex.sets || '3') + ' Sets'"></span> • <span x-text="(ex.reps || '12') + ' Reps'"></span> • <span x-text="'RPE ' + (ex.rpe || '8')"></span>
-                                                 </div>
-                                             </div>
-                                         </div>
-                                         <button @click="toggleExercise(ex)" class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center hover:bg-green-500 hover:border-green-500 hover:text-white transition" :class="ex.completed ? 'bg-green-500 border-green-500 text-white' : 'text-white/20'">
-                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                         </button>
-                                    </div>
-
-                                    <div class="grid grid-cols-2 gap-3 mb-3">
-                                         <div class="relative">
-                                             <input type="number" x-model="ex.weight" placeholder="kg" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-orange-500 focus:outline-none placeholder-white/20">
-                                             <span class="absolute right-3 top-2 text-[10px] text-white/20">KG</span>
-                                         </div>
-                                         <div class="relative">
-                                             <input type="number" x-model="ex.performedReps" placeholder="reps" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-orange-500 focus:outline-none placeholder-white/20">
-                                             <span class="absolute right-3 top-2 text-[10px] text-white/20">REPS</span>
-                                         </div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <input type="text" x-model="ex.notes" placeholder="Notes (e.g. felt heavy)" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-orange-500 focus:outline-none placeholder-white/20">
-                                    </div>
-
-                                    <div class="flex justify-between items-center pl-12">
-                                        <div class="text-xs text-white/40 italic" x-text="'Tip: ' + (ex.tip || 'Maintain good form')"></div>
-                                        <div x-show="getExerciseHistory(ex.name)" class="text-[10px] text-blue-400 font-bold" x-text="getExerciseHistory(ex.name)"></div>
-                                    </div>
-
-                                    <div class="mt-3 flex justify-end">
-                                         <button @click="startRest(90)" class="px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] text-white/60 hover:text-white transition flex items-center gap-1">
-                                             <span>⏱️</span> Rest 90s
-                                         </button>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-
-                        <template x-if="workout.cooldown && workout.cooldown.length">
-                            <div class="pt-6 border-t border-white/10 relative z-10">
-                                <h4 class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-3">Cool Down</h4>
-                                <div class="flex flex-wrap gap-2">
-                                    <template x-for="cool in workout.cooldown">
-                                        <span class="px-3 py-1 rounded-full bg-white/5 border border-white/5 text-xs text-white/70" x-text="cool"></span>
-                                    </template>
-                                </div>
-                            </div>
-                        </template>
-
-                        <div class="mt-8 pt-8 border-t border-white/10 flex justify-between items-center relative z-10">
-                            <div class="text-xs text-white/40">Estimated Burn: <span class="text-white font-bold">450 kcal</span></div>
-                            <button @click="finishWorkout(workout)" class="px-6 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold shadow-lg shadow-green-900/20 transition-all">Finish & Save</button>
-                        </div>
                     </div>
+
+                    <!-- Exercises List -->
+                    <div class="space-y-4">
+                        <template x-for="(ex, exIdx) in workout.exercises">
+                            <div class="glass-card rounded-[20px] overflow-hidden border border-white/5" x-data="{ expanded: true }">
+                                <!-- Exercise Header -->
+                                <div class="p-4 bg-white/5 flex justify-between items-center cursor-pointer hover:bg-white/10 transition" @click="expanded = !expanded">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-6 h-6 rounded-full bg-orange-500/10 text-orange-400 flex items-center justify-center text-xs font-bold" x-text="exIdx + 1"></div>
+                                        <div>
+                                            <div class="font-bold text-sm" x-text="ex.name || ex"></div>
+                                            <div class="text-[10px] text-white/40" x-text="(ex.setLogs.length) + ' Sets • Target: ' + (ex.reps || '8-12') + ' Reps'"></div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div x-show="getExerciseHistory(ex.name)" class="hidden sm:block text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                            Best: <span x-text="getExerciseHistory(ex.name)"></span>
+                                        </div>
+                                        <div class="transform transition-transform" :class="expanded ? 'rotate-180' : ''">▼</div>
+                                    </div>
+                                </div>
+
+                                <!-- Exercise Details (Sets) -->
+                                <div x-show="expanded" class="p-4 bg-black/20">
+                                    <div class="space-y-2">
+                                        <!-- Header Row -->
+                                        <div class="grid grid-cols-10 gap-2 text-[10px] text-white/30 font-bold uppercase tracking-wider text-center mb-1">
+                                            <div class="col-span-1">Set</div>
+                                            <div class="col-span-3">Prev</div>
+                                            <div class="col-span-2">Kg</div>
+                                            <div class="col-span-2">Reps</div>
+                                            <div class="col-span-2">Done</div>
+                                        </div>
+
+                                        <!-- Set Rows -->
+                                        <template x-for="(set, setIdx) in ex.setLogs">
+                                            <div class="grid grid-cols-10 gap-2 items-center" :class="set.completed ? 'opacity-50' : ''">
+                                                <div class="col-span-1 flex justify-center">
+                                                    <div class="w-5 h-5 rounded bg-white/5 flex items-center justify-center text-[10px] text-white/50" x-text="setIdx + 1"></div>
+                                                </div>
+                                                <div class="col-span-3 text-center">
+                                                    <div class="text-[10px] text-white/30" x-text="getExerciseHistory(ex.name) || '-'"></div>
+                                                </div>
+                                                <div class="col-span-2">
+                                                    <input type="number" x-model="set.weight" placeholder="0" class="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-xs text-center focus:border-orange-500 focus:outline-none">
+                                                </div>
+                                                <div class="col-span-2">
+                                                    <input type="number" x-model="set.reps" placeholder="0" class="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-xs text-center focus:border-orange-500 focus:outline-none">
+                                                </div>
+                                                <div class="col-span-2 flex justify-center">
+                                                    <button @click="toggleSet(ex, setIdx); if(set.completed) startRest(90);" class="w-6 h-6 rounded border transition flex items-center justify-center"
+                                                            :class="set.completed ? 'bg-green-500 border-green-500 text-white' : 'border-white/20 hover:border-white/50 text-transparent'">
+                                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"></path></svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <!-- Tip and Rest -->
+                                    <div class="mt-4 pt-3 border-t border-white/5 flex justify-between items-center">
+                                        <div class="text-[10px] text-white/40 italic truncate max-w-[200px]" x-text="'💡 ' + (ex.tip || 'Keep core tight')"></div>
+                                        <button @click="startRest(90)" class="text-[10px] text-orange-400 hover:text-orange-300 font-bold flex items-center gap-1">
+                                            <span>⏱️</span> Rest 90s
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Finish Workout -->
+                    <div class="pt-6 pb-12">
+                         <button @click="finishWorkout(workout)" class="w-full py-4 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold shadow-lg shadow-green-900/20 transition-all transform hover:scale-[1.02]">
+                             Finish Workout & Save Progress
+                         </button>
+                    </div>
+
                 </div>
              </template>
-             <div x-show="!workoutPlan.length" class="p-12 text-center text-white/40 border-2 border-dashed border-white/10 rounded-[32px]">
-                No workout plan generated yet.
-             </div>
 
-             <div class="mt-12">
-                <h3 class="text-xl font-bold mb-6">Performance Tools</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <template x-for="tool in fitnessTools">
-                        <button @click="selectedTool = tool; bioHacksOpen = true" class="glass-card p-5 rounded-[24px] text-left hover:bg-white/5 transition-all flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-400">⚙️</div>
-                            <div>
-                                <div class="font-bold text-sm" x-text="tool.name"></div>
-                                <div class="text-[10px] text-white/40" x-text="tool.desc"></div>
-                            </div>
-                        </button>
-                    </template>
-                </div>
+             <!-- Empty State -->
+             <div x-show="!workoutPlan.length" class="p-12 text-center text-white/40 border border-dashed border-white/10 rounded-[32px] bg-white/5">
+                <div class="text-4xl mb-4">🏋️</div>
+                <h3 class="text-lg font-bold text-white mb-2">No Plan Active</h3>
+                <p class="text-sm mb-6">Create a new split to get started.</p>
+                <button @click="openFitnessWizard" class="px-6 py-2 rounded-lg bg-orange-600 text-white font-bold hover:bg-orange-500 transition">Create Plan</button>
              </div>
         </div>
 
+        <!-- Right: Sidebar & Tools -->
         <div class="space-y-6">
-            <div class="glass-card p-6 rounded-[32px]">
-                <h4 class="font-bold text-sm mb-4">Weekly Volume</h4>
-                <div class="space-y-3">
-                    <div class="flex justify-between text-xs text-white/60"><span>Cardio</span> <span>2h 30m</span></div>
-                    <div class="w-full h-1 bg-white/10 rounded-full"><div class="w-1/2 h-full bg-blue-500 rounded-full"></div></div>
-                    <div class="flex justify-between text-xs text-white/60 pt-2"><span>Strength</span> <span>4h 00m</span></div>
-                    <div class="w-full h-1 bg-white/10 rounded-full"><div class="w-3/4 h-full bg-orange-500 rounded-full"></div></div>
+
+            <!-- Recovery Card -->
+            <div class="glass-card p-5 rounded-[24px]">
+                <h4 class="font-bold text-xs text-white/50 mb-4 uppercase tracking-wider">Recovery Status</h4>
+                <div class="flex items-end gap-2 mb-2">
+                    <div class="text-3xl font-bold text-green-400">92%</div>
+                    <div class="text-xs text-white/40 mb-1">Recovered</div>
                 </div>
+                <div class="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                    <div class="w-[92%] h-full bg-green-500 rounded-full"></div>
+                </div>
+                <p class="text-[10px] text-white/40 mt-3">Ready for high intensity output.</p>
             </div>
-            <div class="glass-card p-6 rounded-[32px] bg-gradient-to-br from-white/5 to-transparent">
-                <h4 class="font-bold text-sm mb-2">Recovery Status</h4>
-                <div class="text-2xl font-bold text-green-400 mb-1">92%</div>
-                <p class="text-xs text-white/40">Ready for high intensity.</p>
+
+            <!-- Volume Chart Placeholder -->
+            <div class="glass-card p-5 rounded-[24px]">
+                 <h4 class="font-bold text-xs text-white/50 mb-4 uppercase tracking-wider">Weekly Volume</h4>
+                 <div class="h-32 flex items-end justify-between gap-2">
+                     <!-- Fake Bars for visual only, Chart.js can be connected later -->
+                     <div class="w-full bg-white/5 rounded-t hover:bg-orange-500/20 transition h-[40%]"></div>
+                     <div class="w-full bg-white/5 rounded-t hover:bg-orange-500/20 transition h-[60%]"></div>
+                     <div class="w-full bg-orange-500 rounded-t hover:bg-orange-400 transition h-[80%] relative group">
+                         <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] bg-black px-1 rounded opacity-0 group-hover:opacity-100 transition">Today</div>
+                     </div>
+                     <div class="w-full bg-white/5 rounded-t hover:bg-orange-500/20 transition h-[30%]"></div>
+                     <div class="w-full bg-white/5 rounded-t hover:bg-orange-500/20 transition h-[50%]"></div>
+                 </div>
+            </div>
+
+            <!-- Tools Grid -->
+            <div>
+                <h4 class="font-bold text-xs text-white/50 mb-4 uppercase tracking-wider">Tools</h4>
+                <div class="grid grid-cols-2 gap-3">
+                    <template x-for="tool in fitnessTools">
+                        <button @click="selectedTool = tool; bioHacksOpen = true" class="glass-card p-3 rounded-xl text-left hover:bg-white/5 transition border border-white/5 hover:border-white/10">
+                            <div class="text-lg mb-1" x-text="tool.icon || '⚙️'"></div>
+                            <div class="font-bold text-xs truncate" x-text="tool.name"></div>
+                        </button>
+                    </template>
+                </div>
             </div>
         </div>
     </div>

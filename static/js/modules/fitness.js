@@ -1,7 +1,7 @@
 export function fitnessSlice() {
     return {
         // --- FITNESS STATE ---
-        workoutHistory: {}, // format: { "Bench Press": [ {date, weight, reps}, ... ] }
+        workoutHistory: {}, // format: { "Bench Press": [ {date, weight, reps, volume}, ... ] }
         workoutPlan: [],
         restActive: false,
         restTimeLeft: 0,
@@ -10,57 +10,139 @@ export function fitnessSlice() {
         fitnessWizardOpen: false,
         fitnessStrategies: [],
         selectedFitnessStrategy: null,
+        activeWorkoutMode: false,
+        currentWorkoutVolume: 0,
 
-        // --- FITNESS METHODS ---
+        // --- INIT ---
+        initFitness() {
+            // Migration: Ensure all exercises have setLogs
+            if (this.workoutPlan && this.workoutPlan.length) {
+                let modified = false;
+                this.workoutPlan.forEach(day => {
+                    if (day.exercises) {
+                        day.exercises.forEach(ex => {
+                            if (!ex.setLogs) {
+                                const numSets = parseInt(ex.sets) || 3;
+                                ex.setLogs = Array.from({length: numSets}, (_, i) => ({
+                                    id: i + 1,
+                                    weight: ex.weight || '',
+                                    reps: ex.performedReps || '',
+                                    completed: ex.completed || false
+                                }));
+                                modified = true;
+                            }
+                        });
+                    }
+                });
+                if (modified) {
+                    localStorage.setItem('workoutPlan', JSON.stringify(this.workoutPlan));
+                }
+            }
+        },
+
+        // --- COMPUTED / HELPERS ---
         getNextWorkout() {
              const activeDayObj = this.calendarDays.find(d => d.active);
              if (!activeDayObj) return null;
-
-             // Fuzzy match: "Mon" matches "Monday"
-             const activeDay = activeDayObj.day; // e.g., "Mon"
+             const activeDay = activeDayObj.day;
              return this.workoutPlan.find(w => w.day.startsWith(activeDay)) || null;
         },
 
-        toggleExercise(ex) {
-            ex.completed = !ex.completed;
-            if(ex.completed) {
-                this.notify("Exercise Complete! 💪");
-                this.logActivity(`Did ${ex.name || 'exercise'}`, '💪');
+        calculateSessionVolume(dayPlan) {
+            if (!dayPlan || !dayPlan.exercises) return 0;
+            return dayPlan.exercises.reduce((acc, ex) => {
+                const exVol = ex.setLogs.reduce((sAcc, set) => {
+                    if (set.completed && set.weight && set.reps) {
+                        return sAcc + (parseInt(set.weight) * parseInt(set.reps));
+                    }
+                    return sAcc;
+                }, 0);
+                return acc + exVol;
+            }, 0);
+        },
+
+        // --- ACTIONS ---
+        toggleSet(ex, setIndex) {
+            const set = ex.setLogs[setIndex];
+            set.completed = !set.completed;
+
+            // Auto-fill from previous set if empty
+            if (set.completed && setIndex > 0 && (!set.weight || !set.reps)) {
+                const prev = ex.setLogs[setIndex - 1];
+                if (!set.weight) set.weight = prev.weight;
+                if (!set.reps) set.reps = prev.reps;
             }
+
+            if (set.completed) {
+                // Check if all sets completed
+                const allDone = ex.setLogs.every(s => s.completed);
+                if (allDone) {
+                    this.notify(`${ex.name || 'Exercise'} Complete! 🔥`);
+                    this.logActivity(`Finished ${ex.name}`, '💪');
+                }
+            }
+            // Trigger reactivity for volume calculation (if we bind it)
+            this.currentWorkoutVolume = this.calculateSessionVolume(this.getNextWorkout());
         },
 
         finishWorkout(workout) {
             let logCount = 0;
+            let totalVol = 0;
+
             if (workout.exercises) {
                 workout.exercises.forEach(ex => {
-                    if (ex.weight || ex.performedReps) {
-                        const name = ex.name || "Unknown Exercise";
+                    const name = ex.name || "Unknown Exercise";
+                    let bestSet = null;
+                    let exVol = 0;
 
-                        // Initialize array if new exercise
+                    // Filter completed sets
+                    const doneSets = ex.setLogs.filter(s => s.completed && s.weight && s.reps);
+
+                    if (doneSets.length > 0) {
+                        // Initialize history
                         if (!this.workoutHistory[name] || !Array.isArray(this.workoutHistory[name])) {
                             this.workoutHistory[name] = [];
                         }
 
-                        // Add new log entry
+                        // Calculate volume and find best set
+                        doneSets.forEach(s => {
+                            const vol = parseInt(s.weight) * parseInt(s.reps);
+                            exVol += vol;
+                            if (!bestSet || (parseInt(s.weight) > parseInt(bestSet.weight))) {
+                                bestSet = s;
+                            }
+                        });
+
+                        // Add log entry (summary of the session for this exercise)
                         this.workoutHistory[name].push({
-                            weight: ex.weight,
-                            reps: ex.performedReps,
                             date: new Date().toISOString().split('T')[0],
+                            topWeight: bestSet.weight,
+                            topReps: bestSet.reps,
+                            totalVolume: exVol,
+                            sets: doneSets.length,
                             notes: ex.notes
                         });
                         logCount++;
+                        totalVol += exVol;
                     }
                 });
             }
+
             localStorage.setItem('workoutHistory', JSON.stringify(this.workoutHistory));
-            this.notify(logCount > 0 ? `Workout Saved! ${logCount} Logs Updated.` : "Workout Completed!");
-            this.updateAchievement('workout_warrior', 1);
+
+            if (logCount > 0) {
+                this.notify(`Workout Saved! Volume: ${totalVol}kg`, "success");
+                this.updateAchievement('workout_warrior', 1);
+                // Maybe update a "volume streak"
+            } else {
+                this.notify("Workout Completed (No Data Logged)");
+            }
+
+            this.activeWorkoutMode = false;
         },
 
         startRest(seconds) {
-            if (this.restActive) {
-                this.stopRest();
-            }
+            if (this.restActive) this.stopRest();
             this.restTimeLeft = seconds;
             this.restTotalTime = seconds;
             this.restActive = true;
@@ -70,8 +152,9 @@ export function fitnessSlice() {
                 if (this.restTimeLeft <= 0) {
                     this.stopRest();
                     this.notify("Rest Complete! Go!", "success");
-                    // Play sound if desired
-                    // const audio = new Audio('/static/sounds/beep.mp3'); audio.play();
+                    const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3');
+                    audio.volume = 0.5;
+                    audio.play().catch(e => console.log("Audio play failed"));
                 }
             }, 1000);
         },
@@ -89,16 +172,26 @@ export function fitnessSlice() {
 
         getExerciseHistory(exName) {
             if (!this.workoutHistory || !this.workoutHistory[exName]) return null;
-
             const history = this.workoutHistory[exName];
-
-            // Handle legacy data (if user had old object format)
-            if (!Array.isArray(history)) return `Last: ${history.weight || '-'}kg`;
-
-            if (history.length === 0) return null;
+            if (!Array.isArray(history) || history.length === 0) return null;
 
             const lastLog = history[history.length - 1];
-            return `Last: ${lastLog.weight || '-'}kg x ${lastLog.reps || '-'} (${lastLog.date.substring(5)})`;
+            // Support both old format (weight/reps direct) and new format (topWeight/topReps)
+            const w = lastLog.topWeight || lastLog.weight || '-';
+            const r = lastLog.topReps || lastLog.reps || '-';
+            return `${w}kg x ${r}`;
+        },
+
+        getExerciseProgress(exName) {
+             // Returns a trend: 'up', 'down', 'same' based on volume or weight
+             if (!this.workoutHistory || !this.workoutHistory[exName]) return 'same';
+             const h = this.workoutHistory[exName];
+             if (h.length < 2) return 'same';
+             const last = h[h.length - 1];
+             const prev = h[h.length - 2];
+             const lastW = parseInt(last.topWeight || last.weight || 0);
+             const prevW = parseInt(prev.topWeight || prev.weight || 0);
+             return lastW > prevW ? 'up' : (lastW < prevW ? 'down' : 'same');
         },
 
         async openFitnessWizard() {
@@ -142,14 +235,18 @@ export function fitnessSlice() {
                 // Normalize data structure
                 this.workoutPlan = workoutData.map(daily => ({
                     ...daily,
-                    // Ensure day is standardized if needed, or keep as AI returned
                     exercises: daily.exercises ? daily.exercises.map(ex => {
                         const exObj = (typeof ex === 'string') ? { name: ex } : ex;
+                        const numSets = parseInt(exObj.sets) || 3;
                         return {
                             ...exObj,
-                            completed: false,
-                            weight: '',
-                            performedReps: '',
+                            sets: numSets, // Ensure numeric
+                            setLogs: Array.from({length: numSets}, (_, i) => ({
+                                id: i + 1,
+                                weight: '',
+                                reps: '',
+                                completed: false
+                            })),
                             notes: ''
                         };
                     }) : []
