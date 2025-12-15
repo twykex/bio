@@ -8,15 +8,17 @@ from io import BytesIO
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app import app
-from utils import sessions
+# Resolved imports: Import app instance and in-memory stores from app.py
+from app import app, sessions, users, password_reset_tokens
 
 class TestRoutes(unittest.TestCase):
     def setUp(self):
         self.app = app.test_client()
         self.app.testing = True
-        # Clear sessions
+        # Clear sessions and user data to ensure test isolation
         sessions.clear()
+        users.clear()
+        password_reset_tokens.clear()
 
     @patch('routes.main_routes.query_ollama')
     def test_init_context_no_file(self, mock_query):
@@ -122,6 +124,24 @@ class TestRoutes(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()['prep_time'], "15m")
+
+    def test_forgot_password(self):
+        users['test@test.com'] = {'password': 'password'}
+        response = self.app.post('/forgot-password', data={'email': 'test@test.com'})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(any(token for token, email in password_reset_tokens.items() if email == 'test@test.com'))
+
+    def test_reset_password(self):
+        token = 'test-token'
+        password_reset_tokens[token] = 'test@test.com'
+        users['test@test.com'] = {'password': 'old_password'}
+
+        response = self.app.post(f'/reset-password/{token}', data={
+            'password': 'new_password',
+            'confirm_password': 'new_password'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertNotIn(token, password_reset_tokens)
 
 if __name__ == '__main__':
     unittest.main()

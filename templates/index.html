@@ -149,8 +149,19 @@
             </div>
         </aside>
 
-        <!-- Main Content -->
+        <!-- MAIN CONTENT AREA -->
         <main class="flex-1 h-full overflow-hidden relative flex flex-col bg-[#050505]">
+
+            <!-- HEADER -->
+            <header class="h-20 flex items-center justify-between px-8 border-b border-white/5 bg-black/20 backdrop-blur-sm">
+                <h1 class="text-xl font-bold capitalize" x-text="currentTab"></h1>
+                <div class="flex items-center gap-4">
+                    <div class="text-xs text-white/50" x-text="new Date().toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'})"></div>
+                    <a href="/logout" class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold transition">Logout</a>
+                </div>
+            </header>
+
+            <!-- CONTENT VIEWS -->
             <div class="flex-1 overflow-y-auto custom-scroll p-6 lg:p-10">
 
                 <!-- DASHBOARD TAB -->
