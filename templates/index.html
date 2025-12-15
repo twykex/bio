@@ -165,49 +165,152 @@
             <div class="flex-1 overflow-y-auto custom-scroll p-6 lg:p-10">
 
                 <!-- DASHBOARD TAB -->
-                <div x-show="currentTab === 'dashboard'" class="max-w-5xl mx-auto space-y-10 animate-scale-in">
+                <div x-show="currentTab === 'dashboard'" class="max-w-6xl mx-auto space-y-8 animate-scale-in">
+
+                    <!-- Welcome Header -->
                     <div class="flex items-center justify-between">
                         <div>
                             <h2 class="text-3xl font-bold">Hello, <span x-text="userName"></span></h2>
-                            <p class="text-white/40">Your biometrics are optimizing.</p>
+                            <p class="text-white/40">Bio-optimization in progress.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="px-4 py-2 rounded-full bg-white/5 border border-white/5 text-xs font-bold text-white/60">
+                                Goal: <span class="text-white" x-text="userChoices?.goal || 'General Health'"></span>
+                            </div>
+                            <div class="px-4 py-2 rounded-full bg-white/5 border border-white/5 text-xs font-bold text-white/60">
+                                Diet: <span class="text-white" x-text="userChoices?.diet || 'Standard'"></span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Ring -->
-                        <div class="md:col-span-1 glass-card rounded-[32px] p-8 flex flex-col items-center justify-center relative">
-                            <div class="relative w-40 h-40">
+                    <!-- Metrics Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+
+                        <!-- 1. Health Score Ring -->
+                        <div class="glass-card rounded-[32px] p-6 flex flex-col items-center justify-center relative md:row-span-2">
+                             <div class="absolute top-6 left-6 text-xs uppercase tracking-widest text-blue-400 font-bold">Bio-Score</div>
+                             <div class="relative w-48 h-48 mt-4">
                                 <svg class="w-full h-full transform -rotate-90">
-                                    <circle cx="80" cy="80" r="70" stroke="rgba(255,255,255,0.05)" stroke-width="12" fill="none"></circle>
-                                    <circle cx="80" cy="80" r="70" stroke="#3b82f6" stroke-width="12" fill="none"
-                                            :stroke-dasharray="440" :stroke-dashoffset="440 - (440 * healthScore / 100)"
-                                            class="transition-all duration-1000 ease-out shadow-[0_0_20px_#3b82f6]"></circle>
+                                    <circle cx="96" cy="96" r="80" stroke="rgba(255,255,255,0.05)" stroke-width="16" fill="none"></circle>
+                                    <circle cx="96" cy="96" r="80" stroke="#3b82f6" stroke-width="16" fill="none"
+                                            :stroke-dasharray="502" :stroke-dashoffset="502 - (502 * healthScore / 100)"
+                                            class="transition-all duration-1000 ease-out shadow-[0_0_30px_#3b82f6]"></circle>
                                 </svg>
                                 <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span class="text-3xl font-bold" x-text="healthScore"></span>
-                                    <span class="text-[10px] uppercase tracking-widest text-white/40">Score</span>
+                                    <span class="text-5xl font-bold tracking-tighter" x-text="healthScore"></span>
+                                    <span class="text-[10px] uppercase tracking-widest text-white/40 mt-1">Optimization</span>
                                 </div>
+                            </div>
+                            <div class="mt-8 w-full">
+                                <div class="flex justify-between text-xs text-white/40 mb-1"><span>Biological Age</span> <span class="text-white font-bold">28.4</span></div>
+                                <div class="w-full h-1 bg-white/10 rounded-full"><div class="w-3/4 h-full bg-green-500 rounded-full"></div></div>
                             </div>
                         </div>
 
-                        <!-- Trackers -->
+                        <!-- 2. Primary Stats -->
+                        <div class="glass-card rounded-[32px] p-6 flex flex-col justify-between h-40">
+                            <div class="flex justify-between items-start">
+                                <div class="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400">🌙</div>
+                                <span class="text-xs font-bold bg-white/5 px-2 py-1 rounded text-white/40">Last Night</span>
+                            </div>
+                            <div>
+                                <div class="text-xs uppercase tracking-widest text-white/40 mb-1">Sleep Quality</div>
+                                <div class="text-xl font-bold" x-text="userChoices?.sleep || 'Not Tracked'"></div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-[32px] p-6 flex flex-col justify-between h-40">
+                            <div class="flex justify-between items-start">
+                                <div class="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-400">⚡</div>
+                                <span class="text-xs font-bold bg-white/5 px-2 py-1 rounded text-white/40">Current</span>
+                            </div>
+                            <div>
+                                <div class="text-xs uppercase tracking-widest text-white/40 mb-1">Stress Load</div>
+                                <div class="text-xl font-bold" x-text="userChoices?.stress || 'Not Tracked'"></div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-[32px] p-6 flex flex-col justify-between h-40 bg-blue-600/10 border-blue-500/20">
+                            <div class="flex justify-between items-start">
+                                <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">🔥</div>
+                            </div>
+                            <div>
+                                <div class="text-xs uppercase tracking-widest text-blue-300 mb-1">Daily Burn</div>
+                                <div class="text-xl font-bold">2,450 <span class="text-xs text-white/40 font-normal">kcal</span></div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Biomarker Alerts (Spans 2 cols) -->
+                        <div class="md:col-span-2 glass-card rounded-[32px] p-6 flex flex-col relative overflow-hidden">
+                             <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Priority Biomarkers
+                             </h3>
+                             <div class="flex-1 overflow-y-auto custom-scroll space-y-3 max-h-[160px]">
+                                <template x-if="!context?.issues || context.issues.length === 0">
+                                    <div class="text-white/30 text-sm italic">No critical issues detected.</div>
+                                </template>
+                                <template x-for="issue in context?.issues">
+                                    <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition">
+                                        <div>
+                                            <div class="text-sm font-bold text-white" x-text="issue.title"></div>
+                                            <div class="text-[10px] text-white/40" x-text="issue.explanation.substring(0, 50) + '...'"></div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-xs font-bold text-red-400" x-text="issue.value"></div>
+                                            <div class="text-[10px] uppercase text-white/20">Level</div>
+                                        </div>
+                                    </div>
+                                </template>
+                             </div>
+                        </div>
+
+                        <!-- 4. Next Workout Preview -->
+                        <div class="glass-card rounded-[32px] p-6 flex flex-col justify-between group cursor-pointer hover:bg-white/5 transition" @click="currentTab = 'fitness'">
+                            <div class="flex justify-between items-start">
+                                <div class="text-xs uppercase tracking-widest text-white/40">Next Session</div>
+                                <div class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/40 group-hover:bg-white group-hover:text-black transition">→</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold mb-1" x-text="getNextWorkout()?.focus || 'Rest Day'"></div>
+                                <div class="text-sm text-white/50" x-text="(getNextWorkout()?.exercises?.length || 0) + ' Exercises'"></div>
+                            </div>
+                        </div>
+
+                        <!-- 5. Hydration & Fasting (Existing) -->
                         <div class="md:col-span-2 grid grid-cols-2 gap-6">
                             <div class="glass-card rounded-[32px] p-6 flex flex-col justify-between">
                                 <div>
                                     <div class="text-xs uppercase tracking-widest text-blue-400 mb-1">Hydration</div>
-                                    <div class="text-2xl font-bold"><span x-text="waterIntake"></span> / 8</div>
+                                    <div class="text-2xl font-bold"><span x-text="waterIntake"></span> / <span x-text="waterGoal"></span></div>
+                                    <div class="w-full h-1 bg-white/10 rounded-full mt-3 overflow-hidden">
+                                        <div class="h-full bg-blue-500 rounded-full transition-all duration-500" :style="`width: ${(waterIntake/waterGoal)*100}%`"></div>
+                                    </div>
                                 </div>
-                                <button @click="addWater" class="w-10 h-10 rounded-full bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white flex items-center justify-center transition">+</button>
+                                <div class="flex justify-between items-end mt-4">
+                                    <button @click="resetWater" class="text-[10px] text-white/20 hover:text-white transition">RESET</button>
+                                    <button @click="addWater" class="w-10 h-10 rounded-full bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white flex items-center justify-center transition text-xl font-bold">+</button>
+                                </div>
                             </div>
                             <div class="glass-card rounded-[32px] p-6 flex flex-col justify-between">
                                 <div>
-                                    <div class="text-xs uppercase tracking-widest text-purple-400 mb-1">Fasting</div>
-                                    <div class="text-2xl font-bold" x-text="fastingStart ? fastingElapsed : 'Inactive'"></div>
+                                    <div class="text-xs uppercase tracking-widest text-purple-400 mb-1">Fasting Timer</div>
+                                    <div class="text-2xl font-bold font-mono" x-text="fastingStart ? fastingElapsed : '--:--'"></div>
                                 </div>
-                                <button @click="toggleFasting" class="w-full py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold transition">
-                                    <span x-text="fastingStart ? 'Stop Timer' : 'Start Fast'"></span>
+                                <button @click="toggleFasting" class="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold transition flex items-center justify-center gap-2" :class="fastingStart ? 'text-red-400' : 'text-green-400'">
+                                    <span class="w-2 h-2 rounded-full" :class="fastingStart ? 'bg-red-500 animate-pulse' : 'bg-green-500'"></span>
+                                    <span x-text="fastingStart ? 'End Fast' : 'Start Fast'"></span>
                                 </button>
                             </div>
+                        </div>
+
+                        <!-- 6. Supplement Stack (Simulated) -->
+                        <div class="md:col-span-2 glass-card rounded-[32px] p-6 flex items-center gap-6">
+                             <div class="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center text-green-400 text-xl">💊</div>
+                             <div class="flex-1">
+                                 <h3 class="font-bold text-sm">Recommended Stack</h3>
+                                 <p class="text-xs text-white/40 mt-1">Based on your bloodwork: Vitamin D3, Omega-3, Magnesium.</p>
+                             </div>
+                             <button class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold transition">View Details</button>
                         </div>
                     </div>
                 </div>
@@ -315,8 +418,95 @@
                     </div>
                 </div>
 
+                <!-- FITNESS TAB -->
+                <div x-show="currentTab === 'fitness'" class="max-w-6xl mx-auto space-y-8 animate-scale-in">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <h2 class="text-3xl font-bold">Training Protocol</h2>
+                            <p class="text-white/40 text-sm mt-1">Optimized for your biology.</p>
+                        </div>
+                    </div>
+
+                    <!-- Calendar Strip (Synced) -->
+                    <div class="glass-panel p-4 rounded-[24px] flex gap-3 overflow-x-auto custom-scroll snap-x">
+                        <template x-for="day in calendarDays">
+                            <button @click="selectDate(day)"
+                                    class="flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-300 snap-center border"
+                                    :class="day.active ? 'bg-orange-600 border-orange-500 text-white shadow-lg shadow-orange-900/40 transform scale-105' : 'bg-white/5 border-transparent text-white/40 hover:bg-white/10 hover:text-white'">
+                                <span class="text-xs font-bold uppercase tracking-wider" x-text="day.day"></span>
+                                <span class="text-xl font-bold" x-text="day.date"></span>
+                            </button>
+                        </template>
+                    </div>
+
+                    <!-- Workout Content -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Main Workout Card -->
+                        <div class="md:col-span-2">
+                             <template x-for="workout in workoutPlan">
+                                <div x-show="workout.day === calendarDays.find(d => d.active)?.day" class="animate-scale-in">
+                                    <div class="glass-card p-8 rounded-[32px] relative overflow-hidden">
+                                        <div class="absolute top-0 right-0 p-32 bg-orange-500/10 blur-[60px] rounded-full pointer-events-none"></div>
+
+                                        <div class="flex justify-between items-start mb-8 relative z-10">
+                                            <div>
+                                                <div class="px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 text-xs font-bold uppercase tracking-widest inline-block mb-2" x-text="workout.focus"></div>
+                                                <h3 class="text-4xl font-extrabold text-white">Today's Session</h3>
+                                                <p class="text-white/40 mt-2" x-text="workout.benefit"></p>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="text-3xl font-bold text-white/20">01</div>
+                                                <div class="text-xs uppercase text-white/20">Hour</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="space-y-4 relative z-10">
+                                            <template x-for="(ex, idx) in workout.exercises">
+                                                <div class="flex items-center gap-6 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition group">
+                                                    <div class="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-sm font-bold text-white/50 group-hover:border-orange-500 group-hover:text-orange-500 transition-colors" x-text="idx + 1"></div>
+                                                    <div class="flex-1">
+                                                        <div class="text-lg font-bold text-white" x-text="ex"></div>
+                                                        <div class="text-xs text-white/40">3 Sets x 12 Reps</div>
+                                                    </div>
+                                                    <button class="px-4 py-2 rounded-lg bg-white/5 text-xs font-bold hover:bg-white transition text-black">Guide</button>
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                        <div class="mt-8 pt-8 border-t border-white/10 flex justify-between items-center">
+                                            <div class="text-xs text-white/40">Estimated Burn: <span class="text-white font-bold">450 kcal</span></div>
+                                            <button class="px-6 py-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold shadow-lg shadow-orange-900/20 transition-all">Start Workout</button>
+                                        </div>
+                                    </div>
+                                </div>
+                             </template>
+                             <div x-show="!workoutPlan.length" class="p-12 text-center text-white/40 border-2 border-dashed border-white/10 rounded-[32px]">
+                                No workout plan generated yet.
+                             </div>
+                        </div>
+
+                        <!-- Side Stats -->
+                        <div class="space-y-6">
+                            <div class="glass-card p-6 rounded-[32px]">
+                                <h4 class="font-bold text-sm mb-4">Weekly Volume</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between text-xs text-white/60"><span>Cardio</span> <span>2h 30m</span></div>
+                                    <div class="w-full h-1 bg-white/10 rounded-full"><div class="w-1/2 h-full bg-blue-500 rounded-full"></div></div>
+                                    <div class="flex justify-between text-xs text-white/60 pt-2"><span>Strength</span> <span>4h 00m</span></div>
+                                    <div class="w-full h-1 bg-white/10 rounded-full"><div class="w-3/4 h-full bg-orange-500 rounded-full"></div></div>
+                                </div>
+                            </div>
+                            <div class="glass-card p-6 rounded-[32px] bg-gradient-to-br from-white/5 to-transparent">
+                                <h4 class="font-bold text-sm mb-2">Recovery Status</h4>
+                                <div class="text-2xl font-bold text-green-400 mb-1">92%</div>
+                                <p class="text-xs text-white/40">Ready for high intensity.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- OTHER TABS -->
-                <div x-show="currentTab === 'fitness' || currentTab === 'biohacks' || currentTab === 'settings'" class="max-w-4xl mx-auto animate-scale-in">
+                <div x-show="currentTab === 'biohacks' || currentTab === 'settings'" class="max-w-5xl mx-auto animate-scale-in">
                     <!-- Biohacks Grid -->
                     <div x-show="currentTab === 'biohacks'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <template x-for="tool in tools" :key="tool.id">

@@ -144,6 +144,9 @@ document.addEventListener('alpine:init', () => {
             const savedName = localStorage.getItem('userName');
             if(savedName) this.userName = savedName;
 
+            const savedChoices = localStorage.getItem('userChoices');
+            if(savedChoices) this.userChoices = JSON.parse(savedChoices);
+
             // Init Calendar
             this.generateCalendar();
             this.selectedDate = this.calendarDays[0].fullDate;
@@ -180,6 +183,11 @@ document.addEventListener('alpine:init', () => {
                 return [this.weekPlan[selectedIndex]];
             }
             return [];
+        },
+
+        getNextWorkout() {
+             const activeDay = this.calendarDays.find(d => d.active)?.day;
+             return this.workoutPlan.find(w => w.day === activeDay) || this.workoutPlan[0];
         },
 
         toggleMealCompletion(meal) {
@@ -265,6 +273,7 @@ document.addEventListener('alpine:init', () => {
                 this.bloodStrategies.push(option.text);
             } else {
                 this.userChoices[this.currentQuestion.id] = option.text;
+                localStorage.setItem('userChoices', JSON.stringify(this.userChoices));
             }
 
             this.consultationStep++;
@@ -430,7 +439,11 @@ document.addEventListener('alpine:init', () => {
         },
 
         // --- UTILS ---
-        saveSettings() { localStorage.setItem('userName', this.userName); this.notify("Settings Saved"); },
+        saveSettings() {
+            localStorage.setItem('userName', this.userName);
+            localStorage.setItem('userChoices', JSON.stringify(this.userChoices));
+            this.notify("Settings Saved");
+        },
         notify(msg, type='success') { const id = Date.now(); this.toasts.push({ id, message: msg, type }); setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 3000); },
 
         openPrefModal(strategy) { this.tempStrategy = strategy; this.prefModalOpen = true; },
