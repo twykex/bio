@@ -5,6 +5,7 @@ document.addEventListener('alpine:init', () => {
 
         // --- 2. GLOBAL STATE ---
         context: null,
+        streak: 0,
         currentTip: '',
         weekPlan: [],
         workoutPlan: [],
@@ -15,7 +16,8 @@ document.addEventListener('alpine:init', () => {
         achievements: {
             'hydration_streak': { name: 'Hydration Hero', desc: 'Hit water goal 3 days in a row', icon: '💧', unlocked: false, progress: 0, target: 3 },
             'workout_warrior': { name: 'Workout Warrior', desc: 'Complete 5 workouts', icon: '💪', unlocked: false, progress: 0, target: 5 },
-            'mindful_master': { name: 'Mindful Master', desc: 'Meditate for 30 mins total', icon: '🧘', unlocked: false, progress: 0, target: 30 }
+            'mindful_master': { name: 'Mindful Master', desc: 'Meditate for 30 mins total', icon: '🧘', unlocked: false, progress: 0, target: 30 },
+            'streak_star': { name: 'Commitment King', desc: '7 Day Streak', icon: '🔥', unlocked: false, progress: 0, target: 7 }
         },
         meditationActive: false,
         meditationTimeLeft: 0,
@@ -40,6 +42,7 @@ document.addEventListener('alpine:init', () => {
         // --- 6. MODALS ---
         radarChart: null,
         barChart: null,
+        moodChart: null,
         recipeModalOpen: false,
         shoppingListOpen: false,
         workoutModalOpen: false,
@@ -190,6 +193,31 @@ document.addEventListener('alpine:init', () => {
         init() {
             localStorage.setItem('bio_token', this.token);
 
+            // Daily Login / Streak Logic
+            const lastLoginDate = localStorage.getItem('lastLoginDate');
+            const todayStr = new Date().toISOString().split('T')[0];
+            let currentStreak = parseInt(localStorage.getItem('userStreak') || '0');
+
+            if (lastLoginDate !== todayStr) {
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+                if (lastLoginDate === yesterdayStr) {
+                    currentStreak++;
+                } else {
+                    currentStreak = 1; // Reset if missed a day
+                }
+                localStorage.setItem('userStreak', currentStreak);
+                localStorage.setItem('lastLoginDate', todayStr);
+
+                // Reset Daily Trackers on new day
+                this.waterIntake = 0;
+                localStorage.setItem('waterIntake', 0);
+            }
+            this.streak = currentStreak;
+            if(this.streak >= 7) this.updateAchievement('streak_star', 7);
+
             // Restore Trackers
             const savedWater = localStorage.getItem('waterIntake');
             if (savedWater) this.waterIntake = parseInt(savedWater);
@@ -229,6 +257,70 @@ document.addEventListener('alpine:init', () => {
 
             this.$watch('currentTab', (val) => {
                 if(val === 'health') this.initCharts();
+                if(val === 'dashboard') this.initMoodChart();
+            });
+
+            // Initial chart load if landing on dashboard
+            if(this.currentTab === 'dashboard') this.initMoodChart();
+        },
+
+        async initMoodChart() {
+            // Wait for DOM
+            await this.$nextTick();
+            const ctx = document.getElementById('moodTrendChart');
+            if(!ctx) return;
+
+            if (this.moodChart) { this.moodChart.destroy(); this.moodChart = null; }
+
+            // Generate last 7 days data
+            const labels = [];
+            const data = [];
+            for(let i=6; i>=0; i--) {
+                 const d = new Date();
+                 d.setDate(new Date().getDate() - i);
+                 const dateStr = d.toISOString().split('T')[0];
+                 labels.push(d.toLocaleDateString(undefined, {weekday:'short'}));
+                 const mood = this.moodHistory[dateStr];
+                 let val = 0; // 0 = no data
+                 if(mood === '😁') val = 4;
+                 else if(mood === '🙂') val = 3;
+                 else if(mood === '😐') val = 2;
+                 else if(mood === '😔') val = 1;
+                 data.push(val);
+            }
+
+            if (typeof Chart === 'undefined') return;
+
+            this.moodChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Mood',
+                        data: data,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#3b82f6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            display: false,
+                            min: 0,
+                            max: 5
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'rgba(255, 255, 255, 0.3)', font: { size: 10 } }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
             });
         },
 
@@ -398,12 +490,10 @@ document.addEventListener('alpine:init', () => {
             return [];
         },
 
-        // FIXED CONFLICT SECTION
         getNextWorkout() {
              const activeDay = this.calendarDays.find(d => d.active)?.day;
              return this.workoutPlan.find(w => w.day === activeDay) || this.workoutPlan[0];
         },
-        // END FIXED SECTION
 
         toggleMealCompletion(meal) {
             meal.completed = !meal.completed;
