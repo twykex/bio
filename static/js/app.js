@@ -245,7 +245,6 @@ document.addEventListener('alpine:init', () => {
             // Init Calendar
             this.generateCalendar();
             // Default select today
-            const todayStr = new Date().toISOString().split('T')[0];
             const foundDay = this.calendarDays.find(d => d.fullDate === todayStr);
             if (foundDay) {
                 this.selectDate(foundDay);
