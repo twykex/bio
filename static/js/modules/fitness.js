@@ -1,7 +1,7 @@
 export function fitnessSlice() {
     return {
         // --- FITNESS STATE ---
-        workoutHistory: {},
+        workoutHistory: {}, // format: { "Bench Press": [ {date, weight, reps}, ... ] }
         workoutPlan: [],
         restActive: false,
         restTimeLeft: 0,
@@ -13,8 +13,12 @@ export function fitnessSlice() {
 
         // --- FITNESS METHODS ---
         getNextWorkout() {
-             const activeDay = this.calendarDays.find(d => d.active)?.day;
-             return this.workoutPlan.find(w => w.day === activeDay) || this.workoutPlan[0];
+             const activeDayObj = this.calendarDays.find(d => d.active);
+             if (!activeDayObj) return null;
+
+             // Fuzzy match: "Mon" matches "Monday"
+             const activeDay = activeDayObj.day; // e.g., "Mon"
+             return this.workoutPlan.find(w => w.day.startsWith(activeDay)) || null;
         },
 
         toggleExercise(ex) {
@@ -31,12 +35,19 @@ export function fitnessSlice() {
                 workout.exercises.forEach(ex => {
                     if (ex.weight || ex.performedReps) {
                         const name = ex.name || "Unknown Exercise";
-                        this.workoutHistory[name] = {
+
+                        // Initialize array if new exercise
+                        if (!this.workoutHistory[name] || !Array.isArray(this.workoutHistory[name])) {
+                            this.workoutHistory[name] = [];
+                        }
+
+                        // Add new log entry
+                        this.workoutHistory[name].push({
                             weight: ex.weight,
                             reps: ex.performedReps,
                             date: new Date().toISOString().split('T')[0],
                             notes: ex.notes
-                        };
+                        });
                         logCount++;
                     }
                 });
@@ -59,6 +70,8 @@ export function fitnessSlice() {
                 if (this.restTimeLeft <= 0) {
                     this.stopRest();
                     this.notify("Rest Complete! Go!", "success");
+                    // Play sound if desired
+                    // const audio = new Audio('/static/sounds/beep.mp3'); audio.play();
                 }
             }, 1000);
         },
@@ -76,8 +89,16 @@ export function fitnessSlice() {
 
         getExerciseHistory(exName) {
             if (!this.workoutHistory || !this.workoutHistory[exName]) return null;
-            const h = this.workoutHistory[exName];
-            return `Last: ${h.weight || '-'}kg x ${h.reps || '-'} (${h.date.substring(5)})`;
+
+            const history = this.workoutHistory[exName];
+
+            // Handle legacy data (if user had old object format)
+            if (!Array.isArray(history)) return `Last: ${history.weight || '-'}kg`;
+
+            if (history.length === 0) return null;
+
+            const lastLog = history[history.length - 1];
+            return `Last: ${lastLog.weight || '-'}kg x ${lastLog.reps || '-'} (${lastLog.date.substring(5)})`;
         },
 
         async openFitnessWizard() {
@@ -118,8 +139,10 @@ export function fitnessSlice() {
                 });
                 const workoutData = await res.json();
 
+                // Normalize data structure
                 this.workoutPlan = workoutData.map(daily => ({
                     ...daily,
+                    // Ensure day is standardized if needed, or keep as AI returned
                     exercises: daily.exercises ? daily.exercises.map(ex => {
                         const exObj = (typeof ex === 'string') ? { name: ex } : ex;
                         return {
@@ -135,6 +158,7 @@ export function fitnessSlice() {
 
                 this.notify("New Training Plan Ready");
             } catch(e) {
+                console.error(e);
                 this.notify("Failed to update workout", "error");
             } finally {
                 this.stopLoading();

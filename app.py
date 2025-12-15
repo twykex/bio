@@ -35,7 +35,7 @@ app.register_blueprint(auth_bp)
 # --- ROUTES ---
 @app.route('/')
 def index():
-    return render_template('landing.html', logged_in=('user_id' in session))
+    return render_template('index.html', user_id=session.get('user_id'))
 
 @app.route('/dashboard')
 def dashboard():

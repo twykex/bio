@@ -5,6 +5,7 @@ import { chartsSlice } from './modules/charts.js';
 import { journalSlice } from './modules/journal.js';
 import { consultationSlice } from './modules/consultation.js';
 import { utilsSlice } from './modules/utils.js';
+import { apiSlice } from './modules/api.js';
 
 document.addEventListener('alpine:init', () => {
     Alpine.data('app', (userId) => ({
@@ -37,6 +38,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         // --- 4. MERGE MODULES ---
+        ...apiSlice(),
         ...fitnessSlice(),
         ...nutritionSlice(),
         ...chartsSlice(),

@@ -44,11 +44,10 @@ export function nutritionSlice() {
 
         getMealsForSelectedDate() {
             if(!this.weekPlan.length) return [];
-            const selectedIndex = this.calendarDays.findIndex(d => d.fullDate === this.selectedDate);
-            if(selectedIndex >= 0 && selectedIndex < this.weekPlan.length) {
-                return [this.weekPlan[selectedIndex]];
-            }
-            return [];
+
+            // FIXED: Match by Date String, not Array Index
+            const foundPlan = this.weekPlan.find(day => day.date === this.selectedDate);
+            return foundPlan ? [foundPlan] : [];
         },
 
         toggleMealCompletion(meal) {
@@ -71,8 +70,14 @@ export function nutritionSlice() {
 
         addCustomMeal() {
              const dateStr = this.customMealDate.date || this.customMealDate.fullDate;
-             const dayIndex = this.calendarDays.findIndex(d => d.fullDate === dateStr);
-             if (dayIndex === -1 || !this.weekPlan[dayIndex]) return;
+
+             // FIXED: Find day by matching date string
+             const dayPlan = this.weekPlan.find(d => d.date === dateStr);
+
+             if (!dayPlan) {
+                 this.notify("No plan exists for this date.", "error");
+                 return;
+             }
 
              const meal = {
                  ...this.customMealForm,
@@ -80,10 +85,10 @@ export function nutritionSlice() {
                  benefit: 'Custom Entry'
              };
 
-             this.weekPlan[dayIndex].meals.push(meal);
+             dayPlan.meals.push(meal);
 
              // Update totals
-             const currentTotals = this.weekPlan[dayIndex].total_macros;
+             const currentTotals = dayPlan.total_macros;
              const parseVal = (str) => parseInt(String(str).replace(/\D/g, '')) || 0;
 
              currentTotals.calories = parseVal(currentTotals.calories) + parseVal(meal.calories);
@@ -93,6 +98,9 @@ export function nutritionSlice() {
 
              this.customMealModalOpen = false;
              this.notify("Meal Added");
+
+             // Force Chart Refresh
+             this.initNutritionCharts();
         },
 
         async openRecipe(meal) {
@@ -175,39 +183,62 @@ export function nutritionSlice() {
                 const data = await mealRes.json();
                 const workoutData = await workoutRes.json();
 
+                // Assign valid dates to the week plan starting from TODAY
                 this.weekPlan = data.map((daily, index) => {
                     const targetDate = new Date();
-                    targetDate.setDate(new Date().getDate() + index);
+                    targetDate.setDate(new Date().getDate() + index); // Today + index
+                    const dateStr = targetDate.toISOString().split('T')[0];
+
                     const meals = daily.meals ? daily.meals.map(m => ({...m, completed: false})) : [];
 
                     return {
                         ...daily,
                         meals: meals,
-                        date: targetDate.toISOString().split('T')[0],
+                        date: dateStr,
                         completed: false
                     };
                 });
 
-                this.workoutPlan = workoutData.map(daily => ({
-                    ...daily,
-                    exercises: daily.exercises ? daily.exercises.map(ex => {
-                        const exObj = (typeof ex === 'string') ? { name: ex } : ex;
-                        return {
-                            ...exObj,
-                            completed: false,
-                            weight: '',
-                            performedReps: '',
-                            notes: ''
-                        };
-                    }) : []
-                }));
+                // Assign valid dates to the workout plan starting from TODAY
+                this.workoutPlan = workoutData.map((daily, index) => {
+                    const targetDate = new Date();
+                    targetDate.setDate(new Date().getDate() + index); // Today + index
+                    const dateStr = targetDate.toISOString().split('T')[0];
+
+                    // Map specific day names if needed (e.g. AI returns "Day 1", we want "Mon")
+                    const dayName = targetDate.toLocaleDateString('en-US', { weekday: 'short' });
+
+                    return {
+                        ...daily,
+                        day: dayName, // Overwrite AI's "Day 1" with "Mon"
+                        date: dateStr,
+                        exercises: daily.exercises ? daily.exercises.map(ex => {
+                            const exObj = (typeof ex === 'string') ? { name: ex } : ex;
+                            return {
+                                ...exObj,
+                                completed: false,
+                                weight: '',
+                                performedReps: '',
+                                notes: ''
+                            };
+                        }) : []
+                    };
+                });
 
                 localStorage.setItem('weekPlan', JSON.stringify(this.weekPlan));
                 localStorage.setItem('workoutPlan', JSON.stringify(this.workoutPlan));
 
                 this.currentTab = 'dashboard';
                 this.notify("Protocol Optimized");
+
+                // Refresh Charts
+                setTimeout(() => {
+                    if (this.initDashboardCharts) this.initDashboardCharts();
+                    if (this.initNutritionCharts) this.initNutritionCharts();
+                }, 500);
+
             } catch(e) {
+                console.error(e);
                 this.notify("Generation Failed", "error");
             } finally {
                 this.stopLoading();
