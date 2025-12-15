@@ -6,15 +6,15 @@ CHAT_MODEL = "gemma3:4b"  # The "Brain" (Talking)
 EMBED_MODEL = "nomic-embed-text"  # The "Memory" (Math)
 BASE_URL = "http://127.0.0.1:11434"
 
-print(f"🔍 DIAGNOSTIC: Hybrid AI Architecture Test")
-print(f"----------------------------------------")
+print("🔍 DIAGNOSTIC: Hybrid AI Architecture Test")
+print("----------------------------------------")
 print(f"🗣️  Chat Model:   {CHAT_MODEL}")
 print(f"🧠 Memory Model: {EMBED_MODEL}")
-print(f"----------------------------------------\n")
+print("----------------------------------------\n")
 
 
 def test_chat_json():
-    print(f"1️⃣  TESTING CHAT (JSON Mode)...")
+    print("1️⃣  TESTING CHAT (JSON Mode)...")
     payload = {
         "model": CHAT_MODEL,
         "messages": [{"role": "user", "content": "List 3 colors. JSON format: { 'colors': [] }"}],
@@ -31,7 +31,7 @@ def test_chat_json():
             try:
                 json.loads(content)
                 print(f"   ✅ PASS: {CHAT_MODEL} generated valid JSON.")
-            except:
+            except Exception:
                 print(f"   ❌ FAIL: {CHAT_MODEL} output invalid JSON.")
         else:
             print(f"   ❌ FAIL: Connection Error {r.status_code}")
@@ -40,7 +40,7 @@ def test_chat_json():
 
 
 def test_embeddings():
-    print(f"\n2️⃣  TESTING MEMORY (Embeddings)...")
+    print("\n2️⃣  TESTING MEMORY (Embeddings)...")
     payload = {
         "model": EMBED_MODEL,
         "prompt": "The sky is blue."

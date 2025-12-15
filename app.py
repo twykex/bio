@@ -1,9 +1,6 @@
 import logging
 import os
-import re
-import json
 import uuid
-import requests
 import socket
 import webbrowser
 import threading
@@ -31,6 +28,7 @@ except ImportError:
     health_bp = None
     mini_apps_bp = None
 
+
 # Configure Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -56,8 +54,8 @@ if mini_apps_bp:
 users = {}
 password_reset_tokens = {}
 
-# --- NEW UTILITIES: Port Finding & Browser Opening ---
 
+# --- NEW UTILITIES: Port Finding & Browser Opening ---
 def find_free_port(start_port):
     port = start_port
     while port < start_port + 100:
@@ -70,24 +68,26 @@ def find_free_port(start_port):
                 port += 1
     return start_port
 
+
 def open_browser(port):
-    sleep(1.5) 
+    sleep(1.5)
     url = f"http://127.0.0.1:{port}"
     logger.info(f"🌍 Opening browser at {url}...")
     try:
         browser = webbrowser.get('chrome')
     except webbrowser.Error:
         try:
-            browser = webbrowser.get('open -a /Applications/Google\ Chrome.app %s')
+            browser = webbrowser.get(r'open -a /Applications/Google\ Chrome.app %s')
         except webbrowser.Error:
             browser = webbrowser
     browser.open(url)
 
-# --- ROUTES ---
 
+# --- ROUTES ---
 @app.route('/')
 def index():
     return render_template('landing.html', logged_in=('user_id' in session))
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -103,6 +103,7 @@ def login():
             flash('Invalid email or password', 'error')
             return redirect(url_for('login'))
     return render_template('login.html')
+
 
 @app.route('/signup', methods=['POST'])
 def signup():
@@ -121,6 +122,7 @@ def signup():
     session['user_id'] = email
     return redirect(url_for('dashboard'))
 
+
 @app.route('/guest-login')
 def guest_login():
     guest_id = f"guest_{uuid.uuid4()}"
@@ -128,10 +130,12 @@ def guest_login():
     logger.info(f"Guest login: {guest_id}")
     return redirect(url_for('dashboard'))
 
+
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
     return redirect(url_for('login'))
+
 
 @app.route('/forgot-password', methods=['POST'])
 def forgot_password():
@@ -143,9 +147,11 @@ def forgot_password():
         logger.info(f"Password reset link for {email}: {reset_link}")
     return redirect(url_for('forgot_password_confirm'))
 
+
 @app.route('/forgot-password-confirm')
 def forgot_password_confirm():
     return render_template('forgot_password_confirm.html')
+
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
@@ -169,11 +175,13 @@ def reset_password(token):
 
     return render_template('reset_password.html')
 
+
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     return render_template('index.html', user_id=session['user_id'])
+
 
 if __name__ == '__main__':
     # Fix for double-execution of port finding in Flask Debug mode
@@ -184,9 +192,9 @@ if __name__ == '__main__':
         os.environ['SERVER_PORT'] = str(actual_port)
         if actual_port != PORT:
             logger.warning(f"⚠️  Port {PORT} is in use. Switched to {actual_port}.")
-    
+
     logger.info(f"🔋 HOSTING ON PORT {actual_port} using model: {OLLAMA_MODEL}")
-    
+
     # Open browser only in the reloader process
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
         threading.Thread(target=open_browser, args=(actual_port,)).start()
