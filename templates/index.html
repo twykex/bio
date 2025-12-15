@@ -5,14 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BioFlow AI</title>
 
-    <!-- Tailwind & Alpine -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-    <!-- Custom CSS -->
     <link href="/static/css/style.css" rel="stylesheet">
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -56,16 +53,13 @@
 </head>
 <body class="h-screen w-screen overflow-hidden relative flex bg-[#050505] text-white selection:bg-blue-500/30" x-data="app()">
 
-    <!-- 1. AMBIENT BACKGROUND -->
     <div class="fixed inset-0 pointer-events-none z-0">
         <div class="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] animate-breathe"></div>
         <div class="absolute bottom-[-10%] right-[10%] w-[600px] h-[600px] bg-indigo-600/5 rounded-full blur-[100px]"></div>
     </div>
 
-    <!-- 2. LANDING STATE -->
     <main x-show="weekPlan.length === 0" class="relative z-10 w-full h-full flex flex-col items-center justify-center p-6" x-transition.opacity.duration.700ms>
 
-        <!-- Upload Zone -->
         <div x-show="!context && !loading" class="text-center max-w-2xl animate-scale-in">
             <h1 class="text-6xl font-extrabold tracking-tight mb-4 text-gradient bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">BioFlow.</h1>
             <p class="text-white/40 text-lg mb-12">Upload your blood panel. AI will decode your biology.</p>
@@ -90,7 +84,6 @@
             <p class="mt-8 text-xs text-white/20 font-medium">Local LLM Processing • Encrypted • Private</p>
         </div>
 
-        <!-- Strategy Selection (Fallback if not using wizard) -->
         <div x-show="context && !loading && !consultationActive" class="w-full max-w-6xl animate-scale-in" x-cloak>
             <div class="text-center mb-10">
                 <h2 class="text-3xl font-bold mb-2">Analysis Complete</h2>
@@ -116,17 +109,14 @@
             </div>
         </div>
 
-        <!-- Loading State -->
         <div x-show="loading" class="text-center z-50">
             <div class="w-16 h-16 border-2 border-white/10 border-t-white rounded-full animate-spin mx-auto mb-6"></div>
             <h3 class="text-xl font-medium animate-pulse" x-text="loadingText"></h3>
         </div>
     </main>
 
-    <!-- 3. DASHBOARD STATE -->
     <div x-show="weekPlan.length > 0" class="flex w-full h-full z-20" x-cloak x-transition.opacity.duration.1000ms>
 
-        <!-- Sidebar -->
         <aside class="w-20 lg:w-64 h-full glass-panel flex flex-col justify-between py-8 z-30 transition-all duration-300">
             <div class="flex flex-col items-center lg:items-start px-0 lg:px-6">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold mb-10 shadow-lg shadow-blue-500/20 cursor-pointer" @click="resetSystem">B</div>
@@ -149,10 +139,8 @@
             </div>
         </aside>
 
-        <!-- MAIN CONTENT AREA -->
         <main class="flex-1 h-full overflow-hidden relative flex flex-col bg-[#050505]">
 
-            <!-- HEADER -->
             <header class="h-20 flex items-center justify-between px-8 border-b border-white/5 bg-black/20 backdrop-blur-sm">
                 <h1 class="text-xl font-bold capitalize" x-text="currentTab"></h1>
                 <div class="flex items-center gap-4">
@@ -161,13 +149,10 @@
                 </div>
             </header>
 
-            <!-- CONTENT VIEWS -->
             <div class="flex-1 overflow-y-auto custom-scroll p-6 lg:p-10">
 
-                <!-- DASHBOARD TAB -->
                 <div x-show="currentTab === 'dashboard'" class="max-w-6xl mx-auto space-y-8 animate-scale-in">
 
-                    <!-- Welcome Header -->
                     <div class="flex items-center justify-between">
                         <div>
                             <h2 class="text-3xl font-bold">Hello, <span x-text="userName"></span></h2>
@@ -183,10 +168,8 @@
                         </div>
                     </div>
 
-                    <!-- Metrics Grid -->
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
 
-                        <!-- 1. Health Score Ring -->
                         <div class="glass-card rounded-[32px] p-6 flex flex-col items-center justify-center relative md:row-span-2">
                              <div class="absolute top-6 left-6 text-xs uppercase tracking-widest text-blue-400 font-bold">Bio-Score</div>
                              <div class="relative w-48 h-48 mt-4">
@@ -207,7 +190,6 @@
                             </div>
                         </div>
 
-                        <!-- 2. Primary Stats -->
                         <div class="glass-card rounded-[32px] p-6 flex flex-col justify-between h-40">
                             <div class="flex justify-between items-start">
                                 <div class="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400">🌙</div>
@@ -240,7 +222,6 @@
                             </div>
                         </div>
 
-                        <!-- 3. Biomarker Alerts (Spans 2 cols) -->
                         <div class="md:col-span-2 glass-card rounded-[32px] p-6 flex flex-col relative overflow-hidden">
                              <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Priority Biomarkers
@@ -264,7 +245,6 @@
                              </div>
                         </div>
 
-                        <!-- 4. Next Workout Preview -->
                         <div class="glass-card rounded-[32px] p-6 flex flex-col justify-between group cursor-pointer hover:bg-white/5 transition" @click="currentTab = 'fitness'">
                             <div class="flex justify-between items-start">
                                 <div class="text-xs uppercase tracking-widest text-white/40">Next Session</div>
@@ -276,7 +256,6 @@
                             </div>
                         </div>
 
-                        <!-- 5. Hydration & Fasting (Existing) -->
                         <div class="md:col-span-2 grid grid-cols-2 gap-6">
                             <div class="glass-card rounded-[32px] p-6 flex flex-col justify-between">
                                 <div>
@@ -303,7 +282,6 @@
                             </div>
                         </div>
 
-                        <!-- 6. Supplement Stack (Simulated) -->
                         <div class="md:col-span-2 glass-card rounded-[32px] p-6 flex items-center gap-6">
                              <div class="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center text-green-400 text-xl">💊</div>
                              <div class="flex-1">
@@ -315,7 +293,6 @@
                     </div>
                 </div>
 
-                <!-- NUTRITION TAB (Advanced Planner) -->
                 <div x-show="currentTab === 'nutrition'" class="max-w-6xl mx-auto space-y-8 animate-scale-in">
                     <div class="flex justify-between items-end">
                         <div>
@@ -328,7 +305,6 @@
                         </div>
                     </div>
 
-                    <!-- Calendar Strip -->
                     <div class="glass-panel p-4 rounded-[24px] flex gap-3 overflow-x-auto custom-scroll snap-x">
                         <template x-for="day in calendarDays">
                             <button @click="selectDate(day)"
@@ -341,7 +317,6 @@
                         </template>
                     </div>
 
-                    <!-- Tasks View -->
                     <div class="min-h-[400px]">
                         <div x-show="weekPlan.length === 0" class="flex flex-col items-center justify-center h-64 text-center border-2 border-dashed border-white/10 rounded-[32px]">
                             <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 text-2xl">📅</div>
@@ -352,7 +327,6 @@
                         <div x-show="weekPlan.length > 0">
                             <template x-for="daily in getMealsForSelectedDate()">
                                 <div>
-                                    <!-- Daily Summary Card -->
                                     <div class="glass-card p-6 rounded-[24px] mb-8 bg-blue-600/5 border-blue-500/20">
                                         <div class="flex items-center justify-between mb-4">
                                             <h3 class="text-xs font-bold text-blue-400 uppercase tracking-widest">Daily Targets</h3>
@@ -374,20 +348,17 @@
                                         </div>
                                     </div>
 
-                                    <!-- Meals List -->
                                     <h3 class="text-xs font-bold text-white/40 uppercase tracking-widest mb-4 pl-2">Scheduled Meals</h3>
                                     <div class="space-y-4">
                                         <template x-for="meal in daily.meals">
                                             <div class="glass-card p-0 rounded-[24px] overflow-hidden group transition-all duration-300" :class="meal.completed ? 'opacity-50 grayscale' : ''">
                                                 <div class="flex items-stretch">
-                                                    <!-- Completion Toggle -->
                                                     <div @click="toggleMealCompletion(meal)" class="w-16 bg-white/5 flex items-center justify-center cursor-pointer hover:bg-green-500/20 transition-colors border-r border-white/5">
                                                         <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all" :class="meal.completed ? 'bg-green-500 border-green-500' : 'border-white/30 group-hover:border-white'">
                                                             <svg x-show="meal.completed" class="w-3 h-3 text-black font-bold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path d="M5 13l4 4L19 7"></path></svg>
                                                         </div>
                                                     </div>
 
-                                                    <!-- Content -->
                                                     <div class="flex-1 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                                         <div class="flex-1">
                                                             <div class="flex items-center gap-3 mb-2">
@@ -396,7 +367,6 @@
                                                             </div>
                                                             <h3 class="text-xl font-bold text-white mb-2" x-text="meal.title" :class="meal.completed ? 'line-through' : ''"></h3>
 
-                                                            <!-- Micro Macros -->
                                                             <div class="flex gap-3 text-[10px] text-white/60 font-medium">
                                                                 <span>P: <span x-text="meal.protein"></span></span>
                                                                 <span>C: <span x-text="meal.carbs"></span></span>
@@ -418,7 +388,6 @@
                     </div>
                 </div>
 
-                <!-- FITNESS TAB -->
                 <div x-show="currentTab === 'fitness'" class="max-w-6xl mx-auto space-y-8 animate-scale-in">
                     <div class="flex justify-between items-end">
                         <div>
@@ -427,7 +396,6 @@
                         </div>
                     </div>
 
-                    <!-- Calendar Strip (Synced) -->
                     <div class="glass-panel p-4 rounded-[24px] flex gap-3 overflow-x-auto custom-scroll snap-x">
                         <template x-for="day in calendarDays">
                             <button @click="selectDate(day)"
@@ -439,9 +407,7 @@
                         </template>
                     </div>
 
-                    <!-- Workout Content -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <!-- Main Workout Card -->
                         <div class="md:col-span-2">
                              <template x-for="workout in workoutPlan">
                                 <div x-show="workout.day === calendarDays.find(d => d.active)?.day" class="animate-scale-in">
@@ -485,7 +451,6 @@
                              </div>
                         </div>
 
-                        <!-- Side Stats -->
                         <div class="space-y-6">
                             <div class="glass-card p-6 rounded-[32px]">
                                 <h4 class="font-bold text-sm mb-4">Weekly Volume</h4>
@@ -505,9 +470,7 @@
                     </div>
                 </div>
 
-                <!-- OTHER TABS -->
                 <div x-show="currentTab === 'biohacks' || currentTab === 'settings'" class="max-w-5xl mx-auto animate-scale-in">
-                    <!-- Biohacks Grid -->
                     <div x-show="currentTab === 'biohacks'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <template x-for="tool in tools" :key="tool.id">
                             <button @click="selectedTool = tool; bioHacksOpen = true" class="glass-card p-6 rounded-[24px] text-left hover:bg-white/5 transition-all">
@@ -518,7 +481,6 @@
                         </template>
                     </div>
 
-                    <!-- Settings -->
                     <div x-show="currentTab === 'settings'" class="space-y-6">
                         <div class="glass-card p-8 rounded-[32px]">
                             <h3 class="text-lg font-bold mb-4">Profile</h3>
@@ -531,15 +493,11 @@
         </main>
     </div>
 
-    <!-- ================= MODALS & OVERLAYS ================= -->
-
-    <!-- 1. AI Tooltip -->
     <div class="ai-tooltip" :class="tooltipVisible ? 'visible' : ''" :style="`top: ${tooltipY}px; left: ${tooltipX}px`">
         <span class="text-blue-400 text-[10px] font-bold uppercase block mb-1">AI Insight</span>
         <span x-text="tooltipText"></span>
     </div>
 
-    <!-- 2. Chat Slide Over (FIXED: Top Level) -->
     <div class="fixed inset-y-0 right-0 w-[400px] bg-[#0A0A0A] border-l border-white/10 z-[60] transform transition-transform duration-500 shadow-2xl flex flex-col"
          :class="chatOpen ? 'translate-x-0' : 'translate-x-full'" x-cloak>
         <div class="p-6 border-b border-white/5 flex justify-between items-center">
@@ -566,7 +524,6 @@
         </div>
     </div>
 
-    <!-- 3. Consultation Overlay -->
     <div x-show="consultationActive" class="fixed inset-0 z-[100] bg-[#050505] flex flex-col items-center justify-center p-6" x-transition.opacity>
         <div class="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] animate-pulse"></div>
         <div class="w-full max-w-2xl h-1 bg-white/10 rounded-full mb-12 relative overflow-hidden">
@@ -589,7 +546,6 @@
         </div>
     </div>
 
-    <!-- 4. Meal Wizard Overlay -->
     <div x-show="mealWizardOpen" class="fixed inset-0 z-50 bg-[#050505]/90 backdrop-blur-xl flex items-center justify-center p-6" x-cloak>
         <div @click.outside="mealWizardOpen = false" class="w-full max-w-5xl animate-scale-in">
             <div class="text-center mb-12">
@@ -618,7 +574,6 @@
         </div>
     </div>
 
-    <!-- 5. Recipe Modal -->
     <div x-show="recipeModalOpen" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" x-cloak>
         <div @click.outside="recipeModalOpen = false" class="glass-card w-full max-w-2xl rounded-[32px] p-8 max-h-[85vh] overflow-y-auto custom-scroll animate-scale-in">
             <div class="flex justify-between items-start mb-6">
@@ -640,7 +595,6 @@
         </div>
     </div>
 
-    <!-- 6. Tool / Biohacks Modal -->
     <div x-show="bioHacksOpen" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" x-cloak>
         <div @click.outside="bioHacksOpen = false" class="glass-card w-full max-w-lg rounded-[32px] relative flex flex-col max-h-[85vh] overflow-hidden animate-scale-in">
             <div class="p-6 border-b border-white/5 flex justify-between items-center">
@@ -676,7 +630,6 @@
         </div>
     </div>
 
-    <!-- 7. Shopping List Modal -->
     <div x-show="shoppingListOpen" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" x-cloak>
         <div @click.outside="shoppingListOpen = false" class="glass-card w-full max-w-lg rounded-[32px] relative max-h-[85vh] flex flex-col border border-white/10 animate-scale-in">
             <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
@@ -707,7 +660,6 @@
         </div>
     </div>
 
-    <!-- Load JS -->
     <script src="/static/js/app.js"></script>
 </body>
 </html>
