@@ -4,13 +4,13 @@ import re
 import json
 import uuid
 import requests
+import socket  # <--- ADDED: To check for open ports
 
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
 # Attempt to import config and blueprints from the main branch structure
-# If these files don't exist yet in your feature branch, you may need to adjust paths
 try:
     from config import PORT, OLLAMA_MODEL
 except ImportError:
@@ -32,31 +32,28 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 # --- CONFIGURATION ---
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'super-secret-key-for-dev-only') # Use env var in production
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'super-secret-key-for-dev-only')
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
 
-# Register Blueprints (from main branch)
+# Register Blueprints
 if main_bp:
     app.register_blueprint(main_bp)
 if mini_apps_bp:
     app.register_blueprint(mini_apps_bp)
 
 # --- DATA STORES ---
-# In-memory user store (for demonstration purposes only).
-# In a production environment, this should be replaced with a proper database.
 users = {}
 password_reset_tokens = {}
 sessions = {}
 
+
 # --- HELPER FUNCTIONS ---
 
 def get_session(token):
-    # Basic memory management
     if len(sessions) > 100 and token not in sessions:
-        # Remove oldest (insertion order preserved in Python 3.7+)
         try:
             sessions.pop(next(iter(sessions)), None)
         except (RuntimeError, StopIteration):
@@ -73,26 +70,14 @@ def get_session(token):
 
 
 def repair_lazy_json(text):
-    """
-    Advanced regex to fix common AI JSON mistakes.
-    """
-    # 1. Fix missing "title" key:
-    # Looks for pattern: "day": "Mon", "Meal Name",
-    # Replaces with: "day": "Mon", "title": "Meal Name",
     text = re.sub(r'("day":\s*"[^"]+",\s*)("[^"]+")(\s*,)', r'\1"title": \2\3', text)
-
-    # 2. Fix missing "desc" or "benefit" keys if they appear as orphan strings
     text = re.sub(r'(,\s*)("[^"]+")(\s*\})', r'\1"desc": \2\3', text)
-
     return text
 
 
 def fix_truncated_json(json_str):
-    """Auto-completes JSON that was cut off."""
     json_str = json_str.strip()
-    # Remove trailing comma if present
     json_str = re.sub(r',\s*$', '', json_str)
-
     stack = []
     is_inside_string = False
     escaped = False
@@ -118,33 +103,25 @@ def fix_truncated_json(json_str):
 
     if is_inside_string:
         json_str += '"'
-
     while stack:
         json_str += stack.pop()
-
     return json_str
 
 
 def remove_json_comments(text):
-    """
-    Safely removes // comments from JSON-like text, preserving strings.
-    """
     output = []
     in_string = False
     escape = False
     i = 0
     while i < len(text):
         char = text[i]
-
         if in_string:
             if char == '"' and not escape:
                 in_string = False
-
             if char == '\\' and not escape:
                 escape = True
             else:
                 escape = False
-
             output.append(char)
             i += 1
         else:
@@ -152,8 +129,7 @@ def remove_json_comments(text):
                 in_string = True
                 output.append(char)
                 i += 1
-            elif char == '/' and i + 1 < len(text) and text[i+1] == '/':
-                # Comment detected. Skip until newline.
+            elif char == '/' and i + 1 < len(text) and text[i + 1] == '/':
                 i += 2
                 while i < len(text) and text[i] != '\n':
                     i += 1
@@ -164,13 +140,7 @@ def remove_json_comments(text):
 
 
 def clean_and_parse_json(text):
-    # 1. Strip Markdown
     text = text.replace("```json", "").replace("```", "")
-
-    # 2. Try to find a complete JSON block first
-    # This regex looks for { ... } or [ ... ] across lines.
-    # It is greedy, so it finds the largest block.
-    # Note: This works well if the noise is outside the JSON.
     match_complete = re.search(r'(\{.*\}|\[.*\])', text, re.DOTALL)
 
     if match_complete:
@@ -178,28 +148,21 @@ def clean_and_parse_json(text):
         try:
             return json.loads(candidate)
         except json.JSONDecodeError:
-            # If the "complete" block is invalid (e.g. syntax error inside),
-            # we use it as the base for repairs.
             text = candidate
     else:
-        # 3. If no complete block, extract from first { or [ to the end (handling truncation)
         match_start = re.search(r'(\{.*|\[.*)', text, re.DOTALL)
         if match_start:
             text = match_start.group(0)
 
-    # 4. Apply Repairs
-    text = repair_lazy_json(text)  # Fix missing keys
-    text = re.sub(r'\]\s*"\s*\}', '] }', text)  # Fix rogue quotes
-    text = re.sub(r',\s*\}', '}', text)  # Fix trailing commas
+    text = repair_lazy_json(text)
+    text = re.sub(r'\]\s*"\s*\}', '] }', text)
+    text = re.sub(r',\s*\}', '}', text)
     text = re.sub(r',\s*\]', ']', text)
-
     text = remove_json_comments(text)
 
-    # 5. Attempt Parse
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        # 6. Try fixing truncation
         logger.warning("JSON Invalid. Attempting auto-balance...")
         balanced_text = fix_truncated_json(text)
         try:
@@ -209,32 +172,49 @@ def clean_and_parse_json(text):
 
 
 def query_ollama(prompt, retries=1):
-    """
-    Sends prompt to Ollama with retry logic.
-    """
     logger.info(f"🚀 SENDING PROMPT ({len(prompt)} chars)...")
     payload = {
         "model": OLLAMA_MODEL,
         "prompt": prompt,
         "stream": False,
     }
-
     try:
         r = requests.post(OLLAMA_URL, json=payload)
         if r.status_code != 200: return None
-
         result = clean_and_parse_json(r.json().get('response', ''))
 
         if result is None and retries > 0:
             logger.warning("🔄 JSON Failed. Retrying with stricter prompt...")
             prompt += "\nIMPORTANT: You previously outputted invalid JSON. Fix syntax. Ensure all keys are present."
             return query_ollama(prompt, retries - 1)
-
         return result
-
     except Exception as e:
         logger.error(f"❌ CONNECTION ERROR: {e}")
         return None
+
+
+# --- NEW PORT CHECKER FUNCTION ---
+def find_free_port(start_port):
+    """
+    Checks if start_port is taken. If so, increments until it finds a free one.
+    """
+    port = start_port
+    # Try up to 100 ports
+    while port < start_port + 100:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            # Timeout quickly if port is unresponsive
+            sock.settimeout(1)
+            # 0 means the port is in use (connection successful), != 0 means it's free/refused
+            result = sock.connect_ex(('127.0.0.1', port))
+
+            if result != 0:
+                # Connection failed, which means the port is FREE
+                return port
+            else:
+                # Connection succeeded, which means the port is TAKEN
+                logger.warning(f"⚠️  Port {port} is in use (likely AirPlay or another app). Trying {port + 1}...")
+                port += 1
+    return start_port
 
 
 # --- ROUTES ---
@@ -242,6 +222,7 @@ def query_ollama(prompt, retries=1):
 @app.route('/')
 def index():
     return render_template('landing.html', logged_in=('user_id' in session))
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -257,6 +238,7 @@ def login():
             flash('Invalid email or password', 'error')
             return redirect(url_for('login'))
     return render_template('login.html')
+
 
 @app.route('/signup', methods=['POST'])
 def signup():
@@ -275,10 +257,12 @@ def signup():
     session['user_id'] = email
     return redirect(url_for('dashboard'))
 
+
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
     return redirect(url_for('login'))
+
 
 @app.route('/forgot-password', methods=['POST'])
 def forgot_password():
@@ -290,9 +274,11 @@ def forgot_password():
         logger.info(f"Password reset link for {email}: {reset_link}")
     return redirect(url_for('forgot_password_confirm'))
 
+
 @app.route('/forgot-password-confirm')
 def forgot_password_confirm():
     return render_template('forgot_password_confirm.html')
+
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
@@ -316,12 +302,19 @@ def reset_password(token):
 
     return render_template('reset_password.html')
 
+
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     return render_template('index.html')
 
+
 if __name__ == '__main__':
-    logger.info(f"🔋 HOSTING ON PORT {PORT} using model: {OLLAMA_MODEL}")
-    app.run(debug=True, port=PORT)
+    # Automatically find a free port
+    actual_port = find_free_port(PORT)
+
+    logger.info(f"🔋 HOSTING ON PORT {actual_port} using model: {OLLAMA_MODEL}")
+
+    # Run the app on the detected free port
+    app.run(debug=True, port=actual_port)
