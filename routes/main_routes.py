@@ -151,7 +151,6 @@ def generate_workout():
 
     logger.info(f"💪 Generating Workout for: {strategy}")
 
-    # OPTIMIZED PROMPT: ONE-SHOT LEARNING
     prompt = f"""
     Role: Trainer. Strategy: {strategy}.
     Task: 7-Day Workout Plan.
@@ -166,7 +165,8 @@ def generate_workout():
     GENERATE 7 DAYS NOW:
     """
 
-    plan = query_ollama(prompt, system_instruction="Return JSON Array only.", temperature=0.3)
+    # CHANGED: temperature from 0.4 to 0.1
+    plan = query_ollama(prompt, system_instruction="Return JSON Array only.", temperature=0.1)
 
     if not plan or not isinstance(plan, list) or len(plan) == 0:
         logger.warning("❌ AI WORKOUT FAILED. Using Fallback.")
