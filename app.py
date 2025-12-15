@@ -241,9 +241,7 @@ def query_ollama(prompt, retries=1):
 
 @app.route('/')
 def index():
-    if 'user_id' in session:
-        return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
+    return render_template('landing.html', logged_in=('user_id' in session))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
