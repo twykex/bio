@@ -9,9 +9,12 @@ logging.basicConfig(
 )
 
 # --- CONFIGURATION ---
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2") # Standard model name
-# CRITICAL FIX: Base URL only (removed /api/generate)
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434") 
+# CHANGED: Set to the specific model you want
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma3:12b")
+
+# CRITICAL: Point to the base URL (127.0.0.1 is safer than localhost on Windows)
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
+
 PORT = int(os.getenv("PORT", 5000))
 
 UPLOAD_FOLDER = 'uploads'
