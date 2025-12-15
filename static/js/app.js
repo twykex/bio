@@ -114,7 +114,12 @@ document.addEventListener('alpine:init', () => {
         toolInputs: {},
         toolResult: null,
         toolLoading: false,
-        nutritionToolIds: ['quick_snack', 'check_food_interaction', 'recipe_variation', 'seasonal_swap', 'budget_swap', 'leftover_idea'],
+        nutritionToolIds: ['quick_snack', 'check_food_interaction', 'recipe_variation', 'seasonal_swap', 'budget_swap', 'leftover_idea', 'flavor_pairing', 'mood_food', 'low_gi_option', 'high_protein_option'],
+        nutritionDoughnut: null,
+        nutritionTrend: null,
+        mealNotesModalOpen: false,
+        mealNoteInput: '',
+        currentMealForNotes: null,
         tools: [
             { id: 'symptom_checker', category: 'Wellness', name: 'Symptom Checker', desc: 'Check symptoms with AI.', inputs: [{k:'symptoms', l:'Describe Symptoms', p:'Headache and fatigue'}] },
             { id: 'suggest_supplement', category: 'Wellness', name: 'Supplement Advisor', desc: 'Get supplement recommendations.', inputs: [{k:'focus', l:'Focus', p:'Joint Health', options: ['Joint Health', 'Energy', 'Sleep', 'Immunity', 'Stress', 'Digestion']}] },
@@ -190,6 +195,98 @@ document.addEventListener('alpine:init', () => {
             return groups;
         },
 
+        getMacroValue(str) {
+            return parseInt(String(str).replace(/\D/g, '')) || 0;
+        },
+
+        getMacroPercent(valStr, target) {
+            const val = this.getMacroValue(valStr);
+            return Math.min(100, Math.round((val / target) * 100));
+        },
+
+        async initNutritionCharts() {
+            if (typeof Chart === 'undefined') return;
+            await this.$nextTick();
+
+            const daily = this.getMealsForSelectedDate()[0];
+            const ctxDoughnut = document.getElementById('dailyMacrosChart');
+            const ctxTrend = document.getElementById('weeklyCalorieChart');
+
+            if (this.nutritionDoughnut) { this.nutritionDoughnut.destroy(); this.nutritionDoughnut = null; }
+            if (this.nutritionTrend) { this.nutritionTrend.destroy(); this.nutritionTrend = null; }
+
+            // 1. Daily Macros Doughnut
+            if (daily && ctxDoughnut) {
+                const p = this.getMacroValue(daily.total_macros.protein);
+                const c = this.getMacroValue(daily.total_macros.carbs);
+                const f = this.getMacroValue(daily.total_macros.fats);
+
+                this.nutritionDoughnut = new Chart(ctxDoughnut, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Protein', 'Carbs', 'Fats'],
+                        datasets: [{
+                            data: [p, c, f],
+                            backgroundColor: ['#3b82f6', '#10b981', '#f97316'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            // 2. Weekly Trend
+            if (this.weekPlan.length > 0 && ctxTrend) {
+                const labels = this.weekPlan.map(d => new Date(d.date).toLocaleDateString(undefined, {weekday:'short'}));
+                const data = this.weekPlan.map(d => this.getMacroValue(d.total_macros.calories));
+
+                this.nutritionTrend = new Chart(ctxTrend, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Calories',
+                            data: data,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#3b82f6'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: 'rgba(255, 255, 255, 0.4)' } },
+                            x: { grid: { display: false }, ticks: { color: 'rgba(255, 255, 255, 0.4)' } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        },
+
+        openMealNotes(meal) {
+            this.currentMealForNotes = meal;
+            this.mealNoteInput = meal.notes || '';
+            this.mealNotesModalOpen = true;
+        },
+
+        saveMealNotes() {
+            if(this.currentMealForNotes) {
+                this.currentMealForNotes.notes = this.mealNoteInput;
+                this.notify("Note Saved 📝");
+                this.mealNotesModalOpen = false;
+            }
+        },
+
         // --- LIFECYCLE ---
         init() {
             localStorage.setItem('bio_token', this.token);
@@ -258,6 +355,7 @@ document.addEventListener('alpine:init', () => {
             this.$watch('currentTab', (val) => {
                 if(val === 'health') this.initCharts();
                 if(val === 'dashboard') this.initMoodChart();
+                if(val === 'nutrition') this.initNutritionCharts();
             });
 
             // Initial chart load if landing on dashboard
@@ -479,6 +577,8 @@ document.addEventListener('alpine:init', () => {
             // Load Journal for this date
             this.journalInput = this.journalEntries[this.selectedDate] || '';
             this.currentMood = this.moodHistory[this.selectedDate] || null;
+
+            if(this.currentTab === 'nutrition') this.initNutritionCharts();
         },
 
         getMealsForSelectedDate() {

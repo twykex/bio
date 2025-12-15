@@ -503,6 +503,33 @@
                         </template>
                     </div>
 
+                    <!-- NUTRITION VISUALIZATIONS -->
+                    <div x-show="weekPlan.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                         <!-- Weekly Trend -->
+                         <div class="md:col-span-2 glass-card p-6 rounded-[24px] flex flex-col">
+                             <h3 class="text-xs font-bold text-white/40 uppercase tracking-widest mb-4">Weekly Calorie Trend</h3>
+                             <div class="flex-1 relative min-h-[150px]">
+                                 <canvas id="weeklyCalorieChart"></canvas>
+                             </div>
+                         </div>
+
+                         <!-- Daily Split -->
+                         <div class="glass-card p-6 rounded-[24px] flex flex-col items-center justify-center relative">
+                             <h3 class="absolute top-6 left-6 text-xs font-bold text-white/40 uppercase tracking-widest">Macro Split</h3>
+                             <div class="relative w-40 h-40">
+                                 <canvas id="dailyMacrosChart"></canvas>
+                                 <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                     <span class="text-xs text-white/40">Daily</span>
+                                 </div>
+                             </div>
+                             <div class="flex justify-center gap-4 mt-4 w-full">
+                                 <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-blue-500"></div><span class="text-[10px] text-white/60">P</span></div>
+                                 <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-green-500"></div><span class="text-[10px] text-white/60">C</span></div>
+                                 <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-orange-500"></div><span class="text-[10px] text-white/60">F</span></div>
+                             </div>
+                         </div>
+                    </div>
+
                     <div class="glass-panel p-4 rounded-[24px] flex gap-3 overflow-x-auto custom-scroll snap-x">
                         <template x-for="day in calendarDays">
                             <button @click="selectDate(day)"
@@ -591,9 +618,15 @@
                                                                 <span>C: <span x-text="meal.carbs"></span></span>
                                                                 <span>F: <span x-text="meal.fats"></span></span>
                                                             </div>
+                                                            <div x-show="meal.notes" class="mt-2 text-xs text-yellow-400 italic">
+                                                                Note: <span x-text="meal.notes"></span>
+                                                            </div>
                                                         </div>
                                                         <div class="flex flex-col items-end gap-2">
                                                             <button @click="openRecipe(meal)" class="px-5 py-2.5 rounded-xl bg-white text-black text-xs font-bold hover:scale-105 transition shadow-lg whitespace-nowrap">View Recipe</button>
+                                                            <button @click="openMealNotes(meal)" class="text-[10px] text-white/30 hover:text-white uppercase tracking-wider flex items-center gap-1 transition">
+                                                                <span>📝</span> <span>Notes</span>
+                                                            </button>
                                                             <span class="text-[10px] text-white/30 uppercase tracking-wider" x-text="meal.benefit"></span>
                                                         </div>
                                                     </div>
@@ -923,6 +956,18 @@
                         <div class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/30 group-hover:bg-blue-500 group-hover:text-white transition-all">→</div>
                     </button>
                 </template>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="mealNotesModalOpen" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" x-cloak>
+        <div @click.outside="mealNotesModalOpen = false" class="glass-card w-full max-w-md rounded-[32px] p-8 animate-scale-in border border-white/10">
+            <h2 class="text-xl font-bold mb-4">Meal Notes</h2>
+            <p class="text-xs text-white/40 mb-4">Record how you felt after this meal.</p>
+            <textarea x-model="mealNoteInput" class="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-blue-500 transition resize-none mb-4" placeholder="E.g. Felt energetic, bloated, hungry again soon..."></textarea>
+            <div class="flex gap-3">
+                <button @click="mealNotesModalOpen = false" class="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-xs transition">Cancel</button>
+                <button @click="saveMealNotes" class="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition shadow-lg shadow-blue-900/20">Save Note</button>
             </div>
         </div>
     </div>
