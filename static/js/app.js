@@ -325,11 +325,16 @@ document.addEventListener('alpine:init', () => {
                 const data = await mealRes.json();
                 this.workoutPlan = await workoutRes.json();
 
-                this.weekPlan = data.map((meal, index) => {
+                this.weekPlan = data.map((daily, index) => {
                     const targetDate = new Date();
                     targetDate.setDate(new Date().getDate() + index);
+
+                    // Initialize completed state for nested meals
+                    const meals = daily.meals ? daily.meals.map(m => ({...m, completed: false})) : [];
+
                     return {
-                        ...meal,
+                        ...daily,
+                        meals: meals,
                         date: targetDate.toISOString().split('T')[0],
                         completed: false
                     };

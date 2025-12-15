@@ -63,7 +63,7 @@ class TestRoutes(unittest.TestCase):
 
     @patch('routes.main_routes.query_ollama')
     def test_generate_week(self, mock_query):
-        mock_query.return_value = [{"day": "Mon", "title": "Meal"}]
+        mock_query.return_value = [{"day": "Mon", "meals": [{"title": "Meal"}]}]
 
         sessions['testtoken'] = {'blood_context': {}}
 
@@ -74,7 +74,7 @@ class TestRoutes(unittest.TestCase):
         })
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json()[0]['title'], "Meal")
+        self.assertEqual(response.get_json()[0]['meals'][0]['title'], "Meal")
 
     @patch('routes.main_routes.query_ollama')
     def test_generate_week_fallback(self, mock_query):
@@ -90,8 +90,8 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
         self.assertTrue(len(data) > 0)
-        # self.assertEqual(data[0]['benefit'], "Fallback Meal")
-        self.assertEqual(data[0]['benefit'], "High Omega-3s.") # Updated to match actual fallback
+        # Check first meal of first day
+        self.assertEqual(data[0]['meals'][0]['benefit'], "Sustained Energy")
 
     @patch('routes.main_routes.query_ollama')
     def test_chat_agent(self, mock_query):
