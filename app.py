@@ -11,6 +11,7 @@ from time import sleep
 
 from flask import Flask, render_template, request, session, redirect, url_for, flash
 from werkzeug.security import generate_password_hash, check_password_hash
+from database import db
 
 # Attempt to import config and blueprints from the main branch structure
 try:
@@ -47,9 +48,7 @@ if mini_apps_bp:
     app.register_blueprint(mini_apps_bp)
 
 # --- DATA STORES ---
-users = {}
 password_reset_tokens = {}
-sessions = {}
 
 # --- HELPER FUNCTIONS ---
 
@@ -226,10 +225,11 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        user = users.get(email)
 
-        if user and check_password_hash(user['password'], password):
-            session['user_id'] = email
+        user = db.get_user_by_email(email)
+
+        if user and check_password_hash(user['password_hash'], password):
+            session['user_id'] = user['id']
             return redirect(url_for('dashboard'))
         else:
             flash('Invalid email or password', 'error')
@@ -242,20 +242,36 @@ def signup():
     email = request.form.get('email')
     password = request.form.get('password')
 
-    if email in users:
+    # Check if we are upgrading a guest
+    current_user_id = session.get('user_id')
+    if current_user_id:
+        current_user = db.get_user_by_id(current_user_id)
+        if current_user and current_user['is_guest']:
+            success, msg = db.convert_guest_to_user(current_user_id, email, generate_password_hash(password), name)
+            if success:
+                flash('Account created! Your guest data has been saved.', 'success')
+                return redirect(url_for('dashboard'))
+            else:
+                flash(f'Error: {msg}', 'error')
+                return redirect(url_for('login'))
+
+    # New User
+    existing_user = db.get_user_by_email(email)
+    if existing_user:
         flash('Email already in use', 'error')
         return redirect(url_for('login'))
 
-    users[email] = {
-        'name': name,
-        'password': generate_password_hash(password)
-    }
-    session['user_id'] = email
-    return redirect(url_for('dashboard'))
+    user_id = db.create_user(email, generate_password_hash(password), name)
+    if user_id:
+        session['user_id'] = user_id
+        return redirect(url_for('dashboard'))
+    else:
+        flash('Error creating account', 'error')
+        return redirect(url_for('login'))
 
 @app.route('/guest-login')
 def guest_login():
-    guest_id = f"guest_{uuid.uuid4()}"
+    guest_id = db.create_user(None, None, "Guest", is_guest=True)
     session['user_id'] = guest_id
     logger.info(f"Guest login: {guest_id}")
     return redirect(url_for('dashboard'))
@@ -268,7 +284,8 @@ def logout():
 @app.route('/forgot-password', methods=['POST'])
 def forgot_password():
     email = request.form.get('email')
-    if email in users:
+    user = db.get_user_by_email(email)
+    if user:
         token = str(uuid.uuid4())
         password_reset_tokens[token] = email
         reset_link = url_for('reset_password', token=token, _external=True)
@@ -294,7 +311,9 @@ def reset_password(token):
             flash('Passwords do not match.', 'error')
             return render_template('reset_password.html')
 
-        users[email]['password'] = generate_password_hash(password)
+        # Update password in DB
+        db.update_password(email, generate_password_hash(password))
+
         password_reset_tokens.pop(token, None)
         flash('Your password has been reset successfully.', 'success')
         return redirect(url_for('login'))
@@ -303,9 +322,17 @@ def reset_password(token):
 
 @app.route('/dashboard')
 def dashboard():
-    if 'user_id' not in session:
+    user_id = session.get('user_id')
+    if not user_id:
         return redirect(url_for('login'))
-    return render_template('index.html')
+
+    user = db.get_user_by_id(user_id)
+    if not user:
+        session.pop('user_id', None)
+        return redirect(url_for('login'))
+
+    logger.info(f"Dashboard render: user_id={user_id}, is_guest={user['is_guest']}")
+    return render_template('index.html', user_id=user_id, is_guest=bool(user['is_guest']), user_name=user['name'])
 
 if __name__ == '__main__':
     # Fix for double-execution of port finding in Flask Debug mode

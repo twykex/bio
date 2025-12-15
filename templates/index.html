@@ -52,7 +52,14 @@
         }
     </script>
 </head>
-<body class="h-screen w-screen overflow-hidden relative flex bg-[#050505] text-white selection:bg-blue-500/30" x-data="app()">
+<body class="h-screen w-screen overflow-hidden relative flex bg-[#050505] text-white selection:bg-blue-500/30" x-data="app('{{ user_id }}')">
+
+    {% if is_guest %}
+    <div class="absolute top-0 left-0 w-full z-[60] bg-blue-600/20 border-b border-blue-500/20 py-2 px-8 flex items-center justify-between backdrop-blur-md">
+        <span class="text-xs font-bold text-blue-300">👋 You are currently in Guest Mode. Your data is temporary.</span>
+        <a href="/login?action=signup" class="px-3 py-1 rounded-lg bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold transition">Sign Up to Save</a>
+    </div>
+    {% endif %}
 
     <div class="fixed inset-0 pointer-events-none z-0">
         <div class="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] animate-breathe"></div>

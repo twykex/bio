@@ -6,7 +6,7 @@ import pdfplumber
 from flask import Blueprint, request, jsonify
 from werkzeug.utils import secure_filename
 from config import UPLOAD_FOLDER
-from utils import get_session, query_ollama, get_embedding, retrieve_relevant_context, analyze_image
+from utils import get_session, query_ollama, get_embedding, retrieve_relevant_context, analyze_image, save_session
 
 logger = logging.getLogger(__name__)
 main_bp = Blueprint('main_bp', __name__)
@@ -274,6 +274,7 @@ def init_context():
         }
 
     session["blood_context"] = data
+    save_session(token)
     return jsonify(data)
 
 
@@ -439,6 +440,7 @@ def chat_agent():
     if resp and 'response' in resp:
         history.append({"role": "ai", "text": resp['response']})
 
+    save_session(data.get('token'))
     return jsonify(resp or {"response": "I'm having trouble analyzing that."})
 
 

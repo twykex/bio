@@ -6,6 +6,7 @@ import logging
 import hashlib
 import base64
 from config import OLLAMA_MODEL, OLLAMA_URL
+from database import db
 
 logger = logging.getLogger(__name__)
 
@@ -30,13 +31,22 @@ def get_session(token):
             pass
 
     if token not in sessions:
-        sessions[token] = {
-            "blood_context": {},
-            "raw_text_chunks": [],
-            "embeddings": [],
-            "chat_history": []
-        }
+        # Try loading from DB
+        data = db.load_user_data(token)
+        if data:
+            sessions[token] = data
+        else:
+            sessions[token] = {
+                "blood_context": {},
+                "raw_text_chunks": [],
+                "embeddings": [],
+                "chat_history": []
+            }
     return sessions[token]
+
+def save_session(token):
+    if token in sessions:
+        db.save_user_data(token, sessions[token])
 
 
 # ==========================================
