@@ -14,7 +14,7 @@ def handle_mini_app(action):
     if action not in APP_CONFIGS:
         return jsonify({"error": "Unknown mini-app action"}), 404
 
-    data = request.json
+    data = request.json or {}
     config = APP_CONFIGS[action]
 
     # 1. Dynamic Prompt Injection

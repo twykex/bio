@@ -30,6 +30,7 @@ def estimate_daily_calories(weight_kg, height_cm=170, age=30, gender="male", act
         multipliers = {
             "sedentary": 1.2,
             "light": 1.375,
+            "lightly": 1.375,
             "moderate": 1.55,
             "active": 1.725,
             "extreme": 1.9
