@@ -8,13 +8,12 @@ logger = logging.getLogger(__name__)
 def find_free_port(start_port):
     port = start_port
     while port < start_port + 100:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.settimeout(1)
-            result = sock.connect_ex(('127.0.0.1', port))
-            if result != 0:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.bind(('127.0.0.1', port))
                 return port
-            else:
-                port += 1
+        except OSError:
+            port += 1
     return start_port
 
 

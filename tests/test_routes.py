@@ -131,11 +131,22 @@ class TestRoutes(unittest.TestCase):
         users['test@test.com'] = {'password': 'password'}
         response = self.app.post('/forgot-password', data={'email': 'test@test.com'})
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(any(token for token, email in password_reset_tokens.items() if email == 'test@test.com'))
+        # Check if email is in one of the values (which are now dicts)
+        found = False
+        for token, data in password_reset_tokens.items():
+            if isinstance(data, dict) and data.get('email') == 'test@test.com':
+                found = True
+                break
+        self.assertTrue(found)
 
     def test_reset_password(self):
         token = 'test-token'
-        password_reset_tokens[token] = 'test@test.com'
+        # Mock token structure with expiration
+        import time
+        password_reset_tokens[token] = {
+            'email': 'test@test.com',
+            'expires': time.time() + 3600
+        }
         users['test@test.com'] = {'password': 'old_password'}
 
         response = self.app.post(f'/reset-password/{token}', data={

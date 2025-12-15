@@ -15,14 +15,20 @@ def get_embedding(text):
     if not text:
         return []
     text_hash = hashlib.md5(text.encode('utf-8')).hexdigest()
-    if text_hash in embedding_cache:
-        return embedding_cache[text_hash]
+
+    cached = embedding_cache.get(text_hash)
+    if cached:
+        return cached
+
+    # Simple cache eviction
+    if len(embedding_cache) > 2000:
+        embedding_cache.clear()
 
     try:
         r = requests.post(EMBED_ENDPOINT, json={
             "model": EMBEDDING_MODEL,
             "prompt": text
-        })
+        }, timeout=30)
         if r.status_code != 200:
              logger.error(f"Embedding Error: Status {r.status_code}")
              return []
