@@ -44,7 +44,8 @@ export const toolsList = [
 ];
 
 export const fitnessToolsList = [
-     { id: 'calculate_1rm', name: '1 Rep Max Calc', desc: 'Estimate your max strength.', inputs: [{k:'weight', l:'Weight (kg/lbs)', p:'100'}, {k:'reps', l:'Reps', p:'5'}] },
+     { id: 'calculate_1rm', name: '1 Rep Max Calc', desc: 'Estimate your max strength.', inputs: [{k:'weight', l:'Weight (kg)', p:'100'}, {k:'reps', l:'Reps', p:'5'}] },
+     { id: 'plate_calculator', name: 'Plate Calculator', desc: 'What plates to load.', inputs: [{k:'weight', l:'Target Weight (kg)', p:'100'}] },
      { id: 'heart_rate_zones', name: 'HR Zone Calc', desc: 'Find your training zones.', inputs: [{k:'age', l:'Age', p:'30'}, {k:'resting_hr', l:'Resting HR', p:'60'}] },
      { id: 'exercise_form_check', name: 'Form Check', desc: 'Key cues for safety.', inputs: [{k:'exercise', l:'Exercise', p:'Deadlift'}] },
 ];
