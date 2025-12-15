@@ -157,6 +157,11 @@ APP_CONFIGS = {
         "system": "You are a Triage Nurse. Assess symptoms carefully.",
         "prompt": "Analyze symptoms: '{symptoms}'. List 3 potential causes and 1 recommendation. Output format: {{ 'causes': ['...', '...', '...'], 'recommendation': '...' }}",
         "temp": 0.1
+    },
+    "analyze_journal": {
+        "system": "You are an empathetic Health Coach and Psychologist.",
+        "prompt": "Analyze this journal entry: '{entry}'. Identify the mood (e.g., Happy, Anxious), potential triggers, and 1 actionable health tip. Output format: {{ 'mood': '...', 'triggers': ['...'], 'tip': '...' }}",
+        "temp": 0.3
     }
 }
 
@@ -189,7 +194,8 @@ FALLBACKS = {
     "calculate_1rm": {"estimated_1rm": "100kg", "training_tip": "Be safe"},
     "heart_rate_zones": {"max_hr": "180", "zone_2": "110-130"},
     "exercise_form_check": {"cues": ["Keep back straight"], "common_mistake": "Rounding back"},
-    "symptom_checker": {"causes": ["Dehydration", "Fatigue", "Stress"], "recommendation": "Rest and drink water."}
+    "symptom_checker": {"causes": ["Dehydration", "Fatigue", "Stress"], "recommendation": "Rest and drink water."},
+    "analyze_journal": {"mood": "Neutral", "triggers": ["None identified"], "tip": "Keep journaling to track your progress."}
 }
 
 

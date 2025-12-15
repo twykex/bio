@@ -774,9 +774,34 @@
                     <div class="glass-card p-8 rounded-[32px]">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-xl font-bold" x-text="new Date(selectedDate).toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'})"></h3>
-                            <button @click="saveJournal" class="px-6 py-2 rounded-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition shadow-lg shadow-purple-900/20">Save Entry</button>
+                            <div class="flex gap-3">
+                                <button @click="analyzeJournal" class="px-6 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-sm transition border border-white/10 flex items-center gap-2"><span>✨</span> Analyze</button>
+                                <button @click="saveJournal" class="px-6 py-2 rounded-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition shadow-lg shadow-purple-900/20">Save Entry</button>
+                            </div>
                         </div>
                         <textarea x-model="journalInput" class="w-full h-64 bg-black/20 border border-white/10 rounded-2xl p-6 text-white text-lg leading-relaxed focus:outline-none focus:border-purple-500 transition-all resize-none" placeholder="How are you feeling today? What did you eat? Any symptoms?"></textarea>
+
+                        <div x-show="journalAnalysis && journalAnalysis[selectedDate]" class="mt-8 p-6 rounded-2xl bg-white/5 border border-white/5 animate-scale-in">
+                            <h4 class="text-xs font-bold text-purple-400 uppercase tracking-widest mb-4 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span> AI Analysis</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <div class="text-white/40 text-xs uppercase tracking-widest mb-1">Detected Mood</div>
+                                    <div class="text-lg font-bold" x-text="journalAnalysis[selectedDate]?.mood"></div>
+                                </div>
+                                <div>
+                                    <div class="text-white/40 text-xs uppercase tracking-widest mb-1">Triggers</div>
+                                    <div class="flex flex-wrap gap-2">
+                                        <template x-for="trig in journalAnalysis[selectedDate]?.triggers">
+                                            <span class="px-2 py-1 rounded bg-white/10 text-xs" x-text="trig"></span>
+                                        </template>
+                                    </div>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <div class="text-white/40 text-xs uppercase tracking-widest mb-1">Recommendation</div>
+                                    <p class="text-white/80 leading-relaxed" x-text="journalAnalysis[selectedDate]?.tip"></p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

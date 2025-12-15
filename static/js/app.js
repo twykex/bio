@@ -12,6 +12,7 @@ document.addEventListener('alpine:init', () => {
         chatHistory: [],
         toasts: [],
         journalEntries: {},
+        journalAnalysis: {},
         moodHistory: {},
         achievements: {
             'hydration_streak': { name: 'Hydration Hero', desc: 'Hit water goal 3 days in a row', icon: '💧', unlocked: false, progress: 0, target: 3 },
@@ -232,6 +233,9 @@ document.addEventListener('alpine:init', () => {
 
             const savedJournal = localStorage.getItem('journalEntries');
             if(savedJournal) this.journalEntries = JSON.parse(savedJournal);
+
+            const savedJournalAnalysis = localStorage.getItem('journalAnalysis');
+            if(savedJournalAnalysis) this.journalAnalysis = JSON.parse(savedJournalAnalysis);
 
             const savedMood = localStorage.getItem('moodHistory');
             if(savedMood) this.moodHistory = JSON.parse(savedMood);
@@ -956,6 +960,27 @@ document.addEventListener('alpine:init', () => {
             this.journalEntries[this.selectedDate] = this.journalInput;
             localStorage.setItem('journalEntries', JSON.stringify(this.journalEntries));
             this.notify("Journal Saved ✍️");
+        },
+
+        async analyzeJournal() {
+             if(!this.journalInput.trim()) return;
+             this.notify("Analyzing Entry... 🧠");
+             try {
+                 const res = await fetch('/analyze_journal', {
+                     method: 'POST',
+                     headers: {'Content-Type': 'application/json'},
+                     body: JSON.stringify({ entry: this.journalInput })
+                 });
+                 const data = await res.json();
+
+                 if(!this.journalAnalysis) this.journalAnalysis = {};
+                 this.journalAnalysis[this.selectedDate] = data;
+                 localStorage.setItem('journalAnalysis', JSON.stringify(this.journalAnalysis));
+
+                 this.notify("Analysis Complete ✨");
+             } catch(e) {
+                 this.notify("Analysis Failed", "error");
+             }
         },
 
         setMood(mood) {
