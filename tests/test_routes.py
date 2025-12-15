@@ -8,7 +8,8 @@ from io import BytesIO
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app import app, sessions
+from app import app
+from session_manager import sessions
 
 class TestRoutes(unittest.TestCase):
     def setUp(self):
@@ -17,13 +18,13 @@ class TestRoutes(unittest.TestCase):
         # Clear sessions
         sessions.clear()
 
-    @patch('app.query_ollama')
+    @patch('routes.core.query_ollama')
     def test_init_context_no_file(self, mock_query):
         response = self.app.post('/init_context')
         self.assertEqual(response.status_code, 400)
         self.assertIn("No file", response.get_json()['error'])
 
-    @patch('app.query_ollama')
+    @patch('routes.core.query_ollama')
     def test_init_context_invalid_extension(self, mock_query):
         file_content = b"fake"
         file = (BytesIO(file_content), 'test.txt')
@@ -31,8 +32,8 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("Invalid file type", response.get_json()['error'])
 
-    @patch('app.query_ollama')
-    @patch('app.pdfplumber.open')
+    @patch('routes.core.query_ollama')
+    @patch('routes.core.pdfplumber.open')
     def test_init_context_success(self, mock_pdf_open, mock_query):
         # Mock PDF
         mock_page = MagicMock()
@@ -59,7 +60,7 @@ class TestRoutes(unittest.TestCase):
         self.assertIn('testtoken', sessions)
         self.assertEqual(sessions['testtoken']['blood_context']['summary'], "Healthy")
 
-    @patch('app.query_ollama')
+    @patch('routes.core.query_ollama')
     def test_generate_week(self, mock_query):
         mock_query.return_value = [{"day": "Mon", "title": "Meal"}]
 
@@ -74,7 +75,7 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()[0]['title'], "Meal")
 
-    @patch('app.query_ollama')
+    @patch('routes.core.query_ollama')
     def test_generate_week_fallback(self, mock_query):
         mock_query.return_value = None # Fail
 
@@ -90,7 +91,7 @@ class TestRoutes(unittest.TestCase):
         self.assertTrue(len(data) > 0)
         self.assertEqual(data[0]['benefit'], "Fallback Meal")
 
-    @patch('app.query_ollama')
+    @patch('routes.core.query_ollama')
     def test_chat_agent(self, mock_query):
         mock_query.return_value = {"response": "Hello"}
         sessions['testtoken'] = {'weekly_plan': [], 'chat_history': []}
@@ -109,7 +110,7 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(history[0]['text'], 'Hi')
         self.assertEqual(history[1]['text'], 'Hello')
 
-    @patch('app.query_ollama')
+    @patch('routes.core.query_ollama')
     def test_get_recipe(self, mock_query):
         mock_query.return_value = {"prep_time": "15m"}
 

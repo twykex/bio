@@ -8,7 +8,7 @@ class TestFeatureFallbacks(unittest.TestCase):
         self.app = app.test_client()
         self.app.testing = True
 
-    @patch('app.query_ollama')
+    @patch('routes.features.query_ollama')
     def test_fallbacks(self, mock_query):
         # Mock query_ollama to return None, triggering fallback
         mock_query.return_value = None

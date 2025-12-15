@@ -1,7 +1,8 @@
 import unittest
 import json
 import io
-from app import app, get_session
+from app import app
+from session_manager import get_session
 
 class FlaskTestCase(unittest.TestCase):
 
