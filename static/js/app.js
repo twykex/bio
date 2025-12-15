@@ -59,12 +59,15 @@ document.addEventListener('alpine:init', () => {
         prefModalOpen: false,
         bioHacksOpen: false,
         customMealModalOpen: false,
+        customExerciseModalOpen: false,
         dragOver: false,
 
         // --- 7. DATA OBJECTS ---
         selectedMeal: null,
+        selectedWorkout: null,
         customMealDate: null,
         customMealForm: { title: '', calories: '', protein: '', carbs: '', fats: '', type: 'Snack' },
+        customExerciseForm: { name: '', sets: '3', reps: '10', rpe: '8' },
         recipeDetails: null,
         shoppingList: null,
         quickPrompts: ['Does this meal plan have enough protein?', 'Can you swap Tuesday dinner?', 'I am feeling tired today.', 'Suggest a healthy snack.'],
@@ -160,6 +163,7 @@ document.addEventListener('alpine:init', () => {
         fitnessTools: [
              { id: 'calculate_1rm', name: '1 Rep Max Calc', desc: 'Estimate your max strength.', inputs: [{k:'weight', l:'Weight (kg/lbs)', p:'100'}, {k:'reps', l:'Reps', p:'5'}] },
              { id: 'heart_rate_zones', name: 'HR Zone Calc', desc: 'Find your training zones.', inputs: [{k:'age', l:'Age', p:'30'}, {k:'resting_hr', l:'Resting HR', p:'60'}] },
+             { id: 'plate_calculator', name: 'Plate Calc', desc: 'Load the bar.', inputs: [{k:'weight', l:'Target Weight', p:'100'}, {k:'bar_weight', l:'Bar Weight', p:'20', options: ['20', '15', '45']}] },
              { id: 'exercise_form_check', name: 'Form Check', desc: 'Key cues for safety.', inputs: [{k:'exercise', l:'Exercise', p:'Deadlift'}] },
         ],
 
@@ -715,6 +719,12 @@ document.addEventListener('alpine:init', () => {
             return `Last: ${h.weight || '-'}kg x ${h.reps || '-'} (${h.date.substring(5)})`;
         },
 
+        getWorkoutProgress(workout) {
+            if (!workout || !workout.exercises || workout.exercises.length === 0) return 0;
+            const completed = workout.exercises.filter(ex => ex.completed).length;
+            return Math.round((completed / workout.exercises.length) * 100);
+        },
+
         // --- LOADING LOGIC ---
         startLoading(phaseType) {
             this.loading = true;
@@ -1038,6 +1048,35 @@ document.addEventListener('alpine:init', () => {
              this.notify("Meal Added");
         },
 
+        openAddExerciseModal(workout) {
+            this.selectedWorkout = workout;
+            this.customExerciseForm = { name: '', sets: '3', reps: '10', rpe: '8' };
+            this.customExerciseModalOpen = true;
+        },
+
+        addCustomExercise() {
+            if (!this.selectedWorkout || !this.customExerciseForm.name) return;
+
+            const newExercise = {
+                name: this.customExerciseForm.name,
+                sets: this.customExerciseForm.sets,
+                reps: this.customExerciseForm.reps,
+                rpe: this.customExerciseForm.rpe,
+                completed: false,
+                weight: '',
+                performedReps: '',
+                notes: '',
+                tip: 'Custom Exercise'
+            };
+
+            if (!this.selectedWorkout.exercises) this.selectedWorkout.exercises = [];
+            this.selectedWorkout.exercises.push(newExercise);
+            localStorage.setItem('workoutPlan', JSON.stringify(this.workoutPlan));
+
+            this.customExerciseModalOpen = false;
+            this.notify("Exercise Added");
+        },
+
         // --- CHAT ---
         async sendMessage() {
             if(!this.chatInput.trim()) return;
@@ -1163,6 +1202,45 @@ document.addEventListener('alpine:init', () => {
         selectTool(tool) { this.selectedTool = tool; this.toolInputs = {}; this.toolResult = null; },
         async runTool() {
             if(!this.selectedTool) return; this.toolLoading = true; this.toolResult = null;
+
+            // CLIENT SIDE TOOLS
+            if (this.selectedTool.id === 'plate_calculator') {
+                await new Promise(r => setTimeout(r, 500)); // Fake loading
+                const target = parseFloat(this.toolInputs['weight']);
+                const bar = parseFloat(this.toolInputs['bar_weight']);
+                if (!target || !bar || target < bar) {
+                     this.toolResult = "Invalid Weight"; this.toolLoading = false; return;
+                }
+                let weight = (target - bar) / 2;
+                const plates = [25, 20, 15, 10, 5, 2.5, 1.25]; // Standard KG plates usually, or LBS. Assuming user knows units.
+                // If user selected 45lbs bar, assume lbs plates: 45, 35, 25, 10, 5, 2.5
+                let plateConfig = [];
+                let currentPlates = plates;
+                let unit = 'kg';
+
+                if (bar === 45) {
+                    currentPlates = [45, 35, 25, 10, 5, 2.5];
+                    unit = 'lbs';
+                }
+
+                let remaining = weight;
+                let resultStr = `Target: ${target} ${unit} (Bar: ${bar})\nSide Loading: ${weight} ${unit}\n\n`;
+
+                for(const p of currentPlates) {
+                    const count = Math.floor(remaining / p);
+                    if(count > 0) {
+                        plateConfig.push(`${count} x ${p}`);
+                        remaining -= (count * p);
+                    }
+                }
+
+                if (remaining > 0) resultStr += `(Remainder: ${remaining.toFixed(2)} - unable to load exactly)\n`;
+
+                this.toolResult = resultStr + plateConfig.join('\n');
+                this.toolLoading = false;
+                return;
+            }
+
             try {
                 const res = await fetch(`/${this.selectedTool.id}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(this.toolInputs) });
                 const data = await res.json(); this.toolResult = this.formatResult(data);
