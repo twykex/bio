@@ -116,6 +116,7 @@ document.addEventListener('alpine:init', () => {
         toolLoading: false,
         nutritionToolIds: ['quick_snack', 'check_food_interaction', 'recipe_variation', 'seasonal_swap', 'budget_swap', 'leftover_idea'],
         tools: [
+            { id: 'symptom_checker', category: 'Wellness', name: 'Symptom Checker', desc: 'Check symptoms with AI.', inputs: [{k:'symptoms', l:'Describe Symptoms', p:'Headache and fatigue'}] },
             { id: 'suggest_supplement', category: 'Wellness', name: 'Supplement Advisor', desc: 'Get supplement recommendations.', inputs: [{k:'focus', l:'Focus', p:'Joint Health', options: ['Joint Health', 'Energy', 'Sleep', 'Immunity', 'Stress', 'Digestion']}] },
             { id: 'check_food_interaction', category: 'Nutrition', name: 'Interaction Checker', desc: 'Check if foods clash.', inputs: [{k:'item1', l:'Item A', p:'Grapefruit'}, {k:'item2', l:'Item B', p:'Medication'}] },
             { id: 'recipe_variation', category: 'Nutrition', name: 'Recipe Variator', desc: 'Modify a recipe.', inputs: [{k:'recipe', l:'Original Recipe', p:'Lasagna'}, {k:'type', l:'Variation Type', p:'Keto', options: ['Keto', 'Vegan', 'Paleo', 'Low-Carb', 'Gluten-Free']}] },

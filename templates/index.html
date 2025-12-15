@@ -258,7 +258,7 @@
                                 <tbody class="text-sm">
                                     <template x-for="marker in context?.biomarkers">
                                         <tr class="border-b border-white/5 hover:bg-white/5 transition">
-                                            <td class="py-4 px-4 font-bold text-white" x-text="marker.name"></td>
+                                            <td class="py-4 px-4 font-bold text-white cursor-help" x-text="marker.name" :data-term="marker.name"></td>
                                             <td class="py-4 px-4 font-medium text-white/80" x-text="marker.value"></td>
                                             <td class="py-4 px-4 text-white/40" x-text="marker.unit"></td>
                                             <td class="py-4 px-4">
