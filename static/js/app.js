@@ -50,6 +50,7 @@ document.addEventListener('alpine:init', () => {
         // --- 6. MODALS ---
         radarChart: null,
         barChart: null,
+        trendChart: null,
         moodChart: null,
         waterChart: null,
         recipeModalOpen: false,
@@ -115,6 +116,9 @@ document.addEventListener('alpine:init', () => {
         fastingElapsed: '',
         fastingInterval: null,
         healthScore: 85,
+        biologicalAge: 0,
+        chronologicalAge: 30,
+        healthHistory: [],
         userName: 'Guest',
         currentMood: null,
 
@@ -414,9 +418,11 @@ document.addEventListener('alpine:init', () => {
 
             const ctxRadar = document.getElementById('healthRadarChart');
             const ctxBar = document.getElementById('biomarkerBarChart');
+            const ctxTrend = document.getElementById('healthTrendChart');
 
             if (this.radarChart) { this.radarChart.destroy(); this.radarChart = null; }
             if (this.barChart) { this.barChart.destroy(); this.barChart = null; }
+            if (this.trendChart) { this.trendChart.destroy(); this.trendChart = null; }
 
             // -- Prepare Radar Data --
             const systems = {
@@ -534,6 +540,67 @@ document.addEventListener('alpine:init', () => {
                     }
                 }
             });
+
+            // -- Prepare Trend Data --
+            if (ctxTrend && this.healthHistory.length > 0) {
+                 this.trendChart = new Chart(ctxTrend, {
+                    type: 'line',
+                    data: {
+                        labels: this.healthHistory.map(h => h.date),
+                        datasets: [{
+                            label: 'Health Score',
+                            data: this.healthHistory.map(h => h.score),
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#10b981'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: false, min: 40, max: 100, display: false },
+                            x: { grid: { display: false }, ticks: { color: 'rgba(255, 255, 255, 0.3)', font: {size: 10} } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        },
+
+        updateBioMetrics() {
+             const ageMap = { '18-29': 24, '30-39': 35, '40-49': 45, '50-59': 55, '60+': 65 };
+             const userAgeStr = this.userChoices?.age || '30-39';
+             this.chronologicalAge = ageMap[userAgeStr] || 30;
+
+             // Bio Age Formula: ChronAge * (1 + (75 - Score)/200) -- scaled down impact
+             const impact = (75 - this.healthScore) / 200;
+             this.biologicalAge = (this.chronologicalAge * (1 + impact)).toFixed(1);
+
+             this.healthHistory = this.generateHealthHistory();
+        },
+
+        generateHealthHistory() {
+            const history = [];
+            const today = new Date();
+            let currentScore = this.healthScore;
+            // Generate last 6 months
+            for(let i=0; i<6; i++) {
+                const d = new Date();
+                d.setMonth(today.getMonth() - i);
+                // Mock historical variation
+                const variance = Math.floor(Math.random() * 10) - 5;
+                let score = currentScore - (i * 2) + variance;
+                if(score > 100) score = 100;
+                if(score < 40) score = 40;
+                if(i === 0) score = this.healthScore;
+
+                history.unshift({ date: d.toLocaleDateString(undefined, {month:'short'}), score: score });
+            }
+            return history;
         },
 
         // --- CALENDAR LOGIC ---
@@ -686,6 +753,7 @@ document.addEventListener('alpine:init', () => {
 
                 this.healthScore = this.context.health_score || 72;
                 this.userName = this.context.patient_name || 'Demo User';
+                this.updateBioMetrics();
 
                 // Simulate delay for effect
                 await new Promise(r => setTimeout(r, 1500));
@@ -718,6 +786,7 @@ document.addEventListener('alpine:init', () => {
 
                 this.healthScore = this.context.health_score || 78;
                 this.userName = this.context.patient_name || 'Guest';
+                this.updateBioMetrics();
 
                 if (this.context.issues && this.context.issues.length > 0) {
                     this.startConsultation();
