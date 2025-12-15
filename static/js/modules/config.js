@@ -41,6 +41,10 @@ export const toolsList = [
     { id: 'circadian_sync', category: 'Wellness', name: 'Circadian Sync', desc: 'Optimize light exposure.', inputs: [{k:'wake_time', l:'Wake Up Time', p:'7:00 AM'}] },
     { id: 'macro_cheat_sheet', category: 'Nutrition', name: 'Macro Cheat Sheet', desc: 'Top sources for macros.', inputs: [{k:'macro_type', l:'Macro', p:'Protein', options: ['Protein', 'Carbs', 'Fats', 'Fiber']}, {k:'diet_preference', l:'Diet', p:'Omnivore', options: ['Omnivore', 'Vegan', 'Vegetarian', 'Keto', 'Paleo']}] },
     { id: 'breathwork_guide', category: 'Wellness', name: 'Breathwork Guide', desc: 'Guided breathing exercises.', inputs: [{k:'technique', l:'Technique', p:'Box Breathing', options: ['Box Breathing', '4-7-8 Relax', 'Wim Hof Style', 'Alternate Nostril']}] },
+    { id: 'cold_plunge_timer', category: 'Wellness', name: 'Cold Plunge Timer', desc: 'Track your cold exposure.', inputs: [{k:'duration', l:'Duration (min)', p:'3'}, {k:'temp', l:'Temperature', p:'10°C'}] },
+    { id: 'sauna_session', category: 'Wellness', name: 'Sauna Protocol', desc: 'Optimize heat exposure.', inputs: [{k:'goal', l:'Goal', p:'Recovery', options: ['Recovery', 'Detox', 'Relaxation', 'HGH Boost']}] },
+    { id: 'hiit_generator', category: 'Performance', name: 'HIIT Generator', desc: 'Quick high intensity workout.', inputs: [{k:'duration', l:'Time Available', p:'15 min', options: ['10 min', '15 min', '20 min', '30 min']}, {k:'focus', l:'Focus', p:'Cardio', options: ['Cardio', 'Full Body', 'Legs', 'Core']}] },
+    { id: 'gut_health_check', category: 'Nutrition', name: 'Gut Health Check', desc: 'Analyze your gut feelings.', inputs: [{k:'symptoms', l:'Symptoms', p:'Bloating after meals'}] },
 ];
 
 export const fitnessToolsList = [
