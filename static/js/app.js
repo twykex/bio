@@ -182,9 +182,23 @@ document.addEventListener('alpine:init', () => {
             return [];
         },
 
+        getWorkoutForSelectedDate() {
+            if(!this.workoutPlan.length) return [];
+            const selectedIndex = this.calendarDays.findIndex(d => d.fullDate === this.selectedDate);
+            if(selectedIndex >= 0 && selectedIndex < this.workoutPlan.length) {
+                return [this.workoutPlan[selectedIndex]];
+            }
+            return [];
+        },
+
         toggleMealCompletion(meal) {
             meal.completed = !meal.completed;
             if(meal.completed) this.notify("Meal Logged! Stats Updated.");
+        },
+
+        toggleExercise(ex) {
+            ex.completed = !ex.completed;
+            if(ex.completed) this.notify("Exercise Complete! 💪");
         },
 
         // --- LOADING LOGIC ---
@@ -331,7 +345,7 @@ document.addEventListener('alpine:init', () => {
                 ]);
 
                 const data = await mealRes.json();
-                this.workoutPlan = await workoutRes.json();
+                const workoutData = await workoutRes.json();
 
                 this.weekPlan = data.map((daily, index) => {
                     const targetDate = new Date();
@@ -348,10 +362,42 @@ document.addEventListener('alpine:init', () => {
                     };
                 });
 
+                // Initialize workout plan state
+                this.workoutPlan = workoutData.map(daily => ({
+                    ...daily,
+                    exercises: daily.exercises ? daily.exercises.map(ex => ({...ex, completed: false})) : []
+                }));
+
                 this.currentTab = 'dashboard';
                 this.notify("Protocol Optimized");
             } catch(e) {
                 this.notify("Generation Failed", "error");
+            } finally {
+                this.stopLoading();
+            }
+        },
+
+        async generateWorkoutOnly() {
+            this.startLoading(['Analyzing Physique...', 'Designing Hypertrophy...', 'Scheduling Rest...']);
+            try {
+                const res = await fetch('/generate_workout', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        token: this.token,
+                        strategy_name: 'Reshuffle',
+                        lifestyle: this.userChoices
+                    })
+                });
+                const workoutData = await res.json();
+
+                this.workoutPlan = workoutData.map(daily => ({
+                    ...daily,
+                    exercises: daily.exercises ? daily.exercises.map(ex => ({...ex, completed: false})) : []
+                }));
+
+                this.notify("New Training Plan Ready");
+            } catch(e) {
+                this.notify("Failed to update workout", "error");
             } finally {
                 this.stopLoading();
             }

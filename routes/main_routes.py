@@ -86,13 +86,72 @@ FALLBACK_MEAL_PLAN = [
 ]
 
 FALLBACK_WORKOUT_PLAN = [
-    {"day": "Mon", "focus": "Cardio", "exercises": ["30m Jog"], "benefit": "Heart Health"},
-    {"day": "Tue", "focus": "Upper Body", "exercises": ["Pushups", "Rows"], "benefit": "Strength"},
-    {"day": "Wed", "focus": "Active Rest", "exercises": ["Yoga"], "benefit": "Recovery"},
-    {"day": "Thu", "focus": "Lower Body", "exercises": ["Squats", "Lunges"], "benefit": "Leg Power"},
-    {"day": "Fri", "focus": "HIIT", "exercises": ["Burpees", "Sprints"], "benefit": "Fat Loss"},
-    {"day": "Sat", "focus": "Outdoors", "exercises": ["Hiking"], "benefit": "Mental Health"},
-    {"day": "Sun", "focus": "Rest", "exercises": ["None"], "benefit": "Recovery"}
+    {
+        "day": "Mon",
+        "focus": "Full Body Strength",
+        "exercises": [
+            {"name": "Squats", "sets": "3", "reps": "12", "rest": "60s", "tip": "Keep weight in heels"},
+            {"name": "Pushups", "sets": "3", "reps": "15", "rest": "45s", "tip": "Core tight"},
+            {"name": "Dumbbell Rows", "sets": "3", "reps": "12", "rest": "60s", "tip": "Squeeze back"}
+        ],
+        "benefit": "Metabolic Boost"
+    },
+    {
+        "day": "Tue",
+        "focus": "Active Recovery",
+        "exercises": [
+            {"name": "Light Jog", "sets": "1", "reps": "30m", "rest": "-", "tip": "Zone 2 Heart Rate"},
+            {"name": "Stretching", "sets": "1", "reps": "15m", "rest": "-", "tip": "Focus on hips"}
+        ],
+        "benefit": "Blood Flow"
+    },
+    {
+        "day": "Wed",
+        "focus": "Lower Body Power",
+        "exercises": [
+            {"name": "Lunges", "sets": "3", "reps": "12/leg", "rest": "60s", "tip": "Knee tracking over toe"},
+            {"name": "Glute Bridge", "sets": "3", "reps": "15", "rest": "45s", "tip": "Squeeze at top"},
+            {"name": "Calf Raises", "sets": "3", "reps": "20", "rest": "30s", "tip": "Full range"}
+        ],
+        "benefit": "Leg Strength"
+    },
+    {
+        "day": "Thu",
+        "focus": "Core & Stability",
+        "exercises": [
+            {"name": "Plank", "sets": "3", "reps": "45s", "rest": "30s", "tip": "Don't sag hips"},
+            {"name": "Bird-Dog", "sets": "3", "reps": "12/side", "rest": "30s", "tip": "Slow control"},
+            {"name": "Side Plank", "sets": "2", "reps": "30s/side", "rest": "30s", "tip": "Lift hips high"}
+        ],
+        "benefit": "Core Stability"
+    },
+    {
+        "day": "Fri",
+        "focus": "HIIT",
+        "exercises": [
+            {"name": "Burpees", "sets": "4", "reps": "30s", "rest": "30s", "tip": "Explosive movement"},
+            {"name": "Mountain Climbers", "sets": "4", "reps": "30s", "rest": "30s", "tip": "Fast pace"},
+            {"name": "Jump Squats", "sets": "4", "reps": "30s", "rest": "30s", "tip": "Soft landing"}
+        ],
+        "benefit": "Fat Burning"
+    },
+    {
+        "day": "Sat",
+        "focus": "Outdoor Activity",
+        "exercises": [
+            {"name": "Hiking / Cycling", "sets": "1", "reps": "60m", "rest": "-", "tip": "Enjoy nature"}
+        ],
+        "benefit": "Mental Health"
+    },
+    {
+        "day": "Sun",
+        "focus": "Rest & Restore",
+        "exercises": [
+            {"name": "Meditation", "sets": "1", "reps": "10m", "rest": "-", "tip": "Focus on breath"},
+            {"name": "Foam Rolling", "sets": "1", "reps": "15m", "rest": "-", "tip": "Target sore spots"}
+        ],
+        "benefit": "Recovery"
+    }
 ]
 
 
@@ -288,7 +347,7 @@ def generate_workout():
     STRATEGY FOCUS: {strategy}
 
     TASK: Create a 7-day workout schedule.
-    Format: JSON Array: [{{ "day": "Mon", "focus": "Cardio", "exercises": ["Run"], "benefit": "Heart" }}]
+    Format: JSON Array: [{{ "day": "Mon", "focus": "Cardio", "exercises": [{{ "name": "Run", "sets": "1", "reps": "30m", "rest": "-", "tip": "Zone 2" }}], "benefit": "Heart" }}]
     """
 
     plan = query_ollama(prompt, system_instruction="You are a Trainer.", temperature=0.1)
