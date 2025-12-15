@@ -64,6 +64,9 @@ class TestWorkout(unittest.TestCase):
         # Verify fallback structure
         first_day = data[0]
         self.assertIn('exercises', first_day)
+        self.assertIn('warmup', first_day)
+        self.assertIn('cooldown', first_day)
+
         first_ex = first_day['exercises'][0]
 
         # Check new fields
@@ -72,6 +75,7 @@ class TestWorkout(unittest.TestCase):
         self.assertIn('reps', first_ex)
         self.assertIn('rest', first_ex)
         self.assertIn('tip', first_ex)
+        self.assertIn('rpe', first_ex)
 
 if __name__ == '__main__':
     unittest.main()

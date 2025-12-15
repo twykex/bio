@@ -46,6 +46,11 @@ document.addEventListener('alpine:init', () => {
         mealStrategies: [],
         selectedStrategy: null,
 
+        // --- FITNESS STATE ---
+        fitnessWizardOpen: false,
+        fitnessStrategies: [],
+        selectedFitnessStrategy: null,
+
         // --- 9. CONSULTATION STATE ---
         consultationActive: false,
         consultationStep: 0,
@@ -100,6 +105,12 @@ document.addEventListener('alpine:init', () => {
             { id: 'stress_relief', name: 'Stress Relief', desc: 'Techniques to calm down.', inputs: [{k:'context', l:'Context', p:'Work Stress', options: ['Work Stress', 'Anxiety', 'Overwhelmed', 'Panic', 'Insomnia']}] },
             { id: 'focus_technique', name: 'Focus Mode', desc: 'Boost your concentration.', inputs: [{k:'task', l:'Task Type', p:'Deep Work', options: ['Deep Work', 'Studying', 'Creative Work', 'Admin Tasks', 'Reading']}] },
             { id: 'exercise_alternative', name: 'Exercise Swap', desc: 'Find an alternative exercise.', inputs: [{k:'exercise', l:'Exercise', p:'Running'}, {k:'reason', l:'Reason', p:'Knee Pain', options: ['Knee Pain', 'Back Pain', 'No Equipment', 'Boredom', 'Time Constraint']}] },
+        ],
+
+        fitnessTools: [
+             { id: 'calculate_1rm', name: '1 Rep Max Calc', desc: 'Estimate your max strength.', inputs: [{k:'weight', l:'Weight (kg/lbs)', p:'100'}, {k:'reps', l:'Reps', p:'5'}] },
+             { id: 'heart_rate_zones', name: 'HR Zone Calc', desc: 'Find your training zones.', inputs: [{k:'age', l:'Age', p:'30'}, {k:'resting_hr', l:'Resting HR', p:'60'}] },
+             { id: 'exercise_form_check', name: 'Form Check', desc: 'Key cues for safety.', inputs: [{k:'exercise', l:'Exercise', p:'Deadlift'}] },
         ],
 
         // --- 13. LIFESTYLE QUESTIONS ---
@@ -341,6 +352,7 @@ document.addEventListener('alpine:init', () => {
                         body: JSON.stringify({
                             token: this.token,
                             strategy_name: strategyName,
+                            fitness_strategy: this.selectedFitnessStrategy?.title || strategyName,
                             lifestyle: this.userChoices
                         })
                     })
@@ -379,6 +391,30 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        async openFitnessWizard() {
+            this.fitnessWizardOpen = true;
+            this.fitnessStrategies = [];
+            this.startLoading(['Analyzing Physique...', 'Designing Splits...']);
+            try {
+                const res = await fetch('/propose_fitness_strategies', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ token: this.token, lifestyle: this.userChoices })
+                });
+                this.fitnessStrategies = await res.json();
+            } catch(e) {
+                this.notify("AI Trainer Offline", "error");
+                this.fitnessWizardOpen = false;
+            } finally {
+                this.stopLoading();
+            }
+        },
+
+        async selectFitnessStrategy(strat) {
+            this.fitnessWizardOpen = false;
+            this.selectedFitnessStrategy = strat;
+            await this.generateWorkoutOnly();
+        },
+
         async generateWorkoutOnly() {
             this.startLoading(['Analyzing Physique...', 'Designing Hypertrophy...', 'Scheduling Rest...']);
             try {
@@ -387,6 +423,7 @@ document.addEventListener('alpine:init', () => {
                     body: JSON.stringify({
                         token: this.token,
                         strategy_name: 'Reshuffle',
+                        fitness_strategy: this.selectedFitnessStrategy?.title || 'Personalized Split',
                         lifestyle: this.userChoices
                     })
                 });
