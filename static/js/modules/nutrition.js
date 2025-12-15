@@ -62,6 +62,33 @@ export function nutritionSlice() {
             return this.tools.filter(t => this.nutritionToolIds.includes(t.id));
         },
 
+        getToolIcon(toolId) {
+            const icons = {
+                'quick_snack': '🍎',
+                'check_food_interaction': '⚠️',
+                'recipe_variation': '🍲',
+                'seasonal_swap': '🍂',
+                'budget_swap': '💰',
+                'leftover_idea': '🥡',
+                'flavor_pairing': '👩‍🍳',
+                'mood_food': '🎭',
+                'low_gi_option': '📉',
+                'high_protein_option': '💪'
+            };
+            return icons[toolId] || '✨';
+        },
+
+        getMealIcon(type) {
+            const t = (type || '').toLowerCase();
+            if(t.includes('breakfast')) return '🍳';
+            if(t.includes('lunch')) return '🥗';
+            if(t.includes('dinner')) return '🍽️';
+            if(t.includes('snack')) return '🥜';
+            if(t.includes('pre')) return '⚡';
+            if(t.includes('post')) return '🥛';
+            return '🍴';
+        },
+
         openAddMealModal(day) {
             this.customMealDate = day;
             this.customMealForm = { title: '', calories: '', protein: '', carbs: '', fats: '', type: 'Snack' };
