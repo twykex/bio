@@ -1,7 +1,12 @@
 import unittest
 import json
 import io
+import sys
+import os
 from unittest.mock import patch, MagicMock
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from app import app
 from flask import session
 

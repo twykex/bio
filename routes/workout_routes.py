@@ -63,8 +63,8 @@ def generate_workout():
 @workout_bp.route('/propose_fitness_strategies', methods=['POST'])
 def propose_fitness_strategies():
     data = request.json
-    session = get_session(data.get('token'))
-    summary = session.get('blood_context', {}).get('summary', 'General Health')
+    user_session = get_session(data.get('token'))
+    summary = user_session.get('blood_context', {}).get('summary', 'General Health')
     lifestyle = data.get('lifestyle', {})
 
     prompt = f"""

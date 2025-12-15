@@ -23,9 +23,9 @@ def init_context():
     safe_chunks = chunks[:60]
     embeddings = [get_embedding(chunk) for chunk in safe_chunks]
 
-    session = get_session(token)
-    session['raw_text_chunks'] = safe_chunks
-    session['embeddings'] = embeddings
+    user_session = get_session(token)
+    user_session['raw_text_chunks'] = safe_chunks
+    user_session['embeddings'] = embeddings
 
     system_prompt = "You are a Functional Doctor. Diagnose the user. Return strict JSON."
     user_prompt = f"""
@@ -96,18 +96,18 @@ def init_context():
             ]
         }
 
-    session["blood_context"] = data
+    user_session["blood_context"] = data
     return jsonify(data)
 
 
 @health_bp.route('/chat_agent', methods=['POST'])
 def chat_agent():
     data = request.json
-    session = get_session(data.get('token'))
+    user_session = get_session(data.get('token'))
     user_msg = data.get('message')
 
-    rag_context = retrieve_relevant_context(session, user_msg)
-    summary = session.get('blood_context', {}).get('summary', 'No data.')
+    rag_context = retrieve_relevant_context(user_session, user_msg)
+    summary = user_session.get('blood_context', {}).get('summary', 'No data.')
 
     system_prompt = f"""
     Medical Assistant.
@@ -119,7 +119,7 @@ def chat_agent():
 
     resp = query_ollama(user_msg, system_instruction=system_prompt, tools_enabled=True)
 
-    history = session.get('chat_history', [])
+    history = user_session.get('chat_history', [])
     history.append({"role": "user", "text": user_msg})
     if resp and 'response' in resp:
         history.append({"role": "ai", "text": resp['response']})
@@ -160,8 +160,8 @@ def load_demo_data():
         ]
     }
 
-    session_data = get_session(token)
-    session_data['blood_context'] = sample_context
+    user_session = get_session(token)
+    user_session['blood_context'] = sample_context
 
     return jsonify(sample_context)
 
@@ -200,9 +200,9 @@ def analyze_food_plate():
 @health_bp.route('/generate_supplement_stack', methods=['POST'])
 def generate_supplement_stack():
     data = request.json
-    session = get_session(data.get('token'))
+    user_session = get_session(data.get('token'))
     current_meds = data.get('current_meds', [])
-    summary = session.get('blood_context', {}).get('summary', 'General Health')
+    summary = user_session.get('blood_context', {}).get('summary', 'General Health')
 
     prompt = f"""
     ROLE: Clinical Pharmacist & Functional Doctor.

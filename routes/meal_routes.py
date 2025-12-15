@@ -9,9 +9,9 @@ meal_bp = Blueprint('meal_bp', __name__)
 @meal_bp.route('/generate_week', methods=['POST'])
 def generate_week():
     data = request.json
-    session = get_session(data.get('token'))
+    user_session = get_session(data.get('token'))
 
-    summary = session.get('blood_context', {}).get('summary', 'General Health')
+    summary = user_session.get('blood_context', {}).get('summary', 'General Health')
     blood_strategies = data.get('blood_strategies', [])
     lifestyle = data.get('lifestyle', {})
 
@@ -71,7 +71,7 @@ def generate_week():
         # FIXED: Use the global variable directly, do NOT import it
         plan = FALLBACK_MEAL_PLAN
 
-    session['weekly_plan'] = plan
+    user_session['weekly_plan'] = plan
     return jsonify(plan)
 
 
@@ -88,8 +88,8 @@ def get_recipe():
 @meal_bp.route('/generate_shopping_list', methods=['POST'])
 def generate_shopping_list():
     data = request.json
-    session = get_session(data.get('token'))
-    weekly_plan = session.get('weekly_plan', [])
+    user_session = get_session(data.get('token'))
+    weekly_plan = user_session.get('weekly_plan', [])
 
     if not weekly_plan:
         prompt = "Healthy shopping list. JSON: {{ 'Produce': ['Apple'], 'Protein': ['Egg'], 'Pantry': ['Oil'] }}"
@@ -113,8 +113,8 @@ def generate_shopping_list():
 @meal_bp.route('/propose_meal_strategies', methods=['POST'])
 def propose_meal_strategies():
     data = request.json
-    session = get_session(data.get('token'))
-    summary = session.get('blood_context', {}).get('summary', 'General Health')
+    user_session = get_session(data.get('token'))
+    summary = user_session.get('blood_context', {}).get('summary', 'General Health')
 
     # Ask AI to brainstorm 3 distinct approaches based on bloodwork
     prompt = f"""
