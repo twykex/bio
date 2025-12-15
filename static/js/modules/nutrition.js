@@ -58,6 +58,31 @@ export function nutritionSlice() {
             }
         },
 
+        getConsumedMacros(day) {
+            let total = { calories: 0, protein: 0, carbs: 0, fats: 0 };
+            if (!day || !day.meals) return total;
+
+            day.meals.forEach(meal => {
+                if (meal.completed) {
+                    total.calories += this.getMacroValue(meal.calories);
+                    total.protein += this.getMacroValue(meal.protein);
+                    total.carbs += this.getMacroValue(meal.carbs);
+                    total.fats += this.getMacroValue(meal.fats);
+                }
+            });
+            return total;
+        },
+
+        getPlanTotals(day) {
+             let total = { calories: 0, protein: 0, carbs: 0, fats: 0 };
+             if (!day || !day.total_macros) return total;
+             total.calories = this.getMacroValue(day.total_macros.calories);
+             total.protein = this.getMacroValue(day.total_macros.protein);
+             total.carbs = this.getMacroValue(day.total_macros.carbs);
+             total.fats = this.getMacroValue(day.total_macros.fats);
+             return total;
+        },
+
         getNutritionTools() {
             return this.tools.filter(t => this.nutritionToolIds.includes(t.id));
         },
