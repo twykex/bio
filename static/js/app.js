@@ -9,6 +9,18 @@ document.addEventListener('alpine:init', () => {
         workoutPlan: [],
         chatHistory: [],
         toasts: [],
+        journalEntries: {},
+        moodHistory: {},
+        achievements: {
+            'hydration_streak': { name: 'Hydration Hero', desc: 'Hit water goal 3 days in a row', icon: '💧', unlocked: false, progress: 0, target: 3 },
+            'workout_warrior': { name: 'Workout Warrior', desc: 'Complete 5 workouts', icon: '💪', unlocked: false, progress: 0, target: 5 },
+            'mindful_master': { name: 'Mindful Master', desc: 'Meditate for 30 mins total', icon: '🧘', unlocked: false, progress: 0, target: 30 }
+        },
+        meditationActive: false,
+        meditationTimeLeft: 0,
+        meditationDuration: 5, // minutes
+        meditationInterval: null,
+        showMeditation: false,
 
         // --- 3. LOADING STATE ---
         loading: false,
@@ -22,6 +34,7 @@ document.addEventListener('alpine:init', () => {
 
         // --- 5. NAVIGATION ---
         currentTab: 'dashboard',
+        journalInput: '',
 
         // --- 6. MODALS ---
         recipeModalOpen: false,
@@ -78,6 +91,7 @@ document.addEventListener('alpine:init', () => {
         fastingInterval: null,
         healthScore: 85,
         userName: 'Guest',
+        currentMood: null,
 
         // --- 12. BIO HACKS TOOLS ---
         selectedTool: null,
@@ -174,9 +188,25 @@ document.addEventListener('alpine:init', () => {
             const savedChoices = localStorage.getItem('userChoices');
             if(savedChoices) this.userChoices = JSON.parse(savedChoices);
 
+            const savedJournal = localStorage.getItem('journalEntries');
+            if(savedJournal) this.journalEntries = JSON.parse(savedJournal);
+
+            const savedMood = localStorage.getItem('moodHistory');
+            if(savedMood) this.moodHistory = JSON.parse(savedMood);
+
+            const savedAchievements = localStorage.getItem('achievements');
+            if(savedAchievements) this.achievements = JSON.parse(savedAchievements);
+
             // Init Calendar
             this.generateCalendar();
-            this.selectedDate = this.calendarDays[0].fullDate;
+            // Default select today
+            const todayStr = new Date().toISOString().split('T')[0];
+            const foundDay = this.calendarDays.find(d => d.fullDate === todayStr);
+            if (foundDay) {
+                this.selectDate(foundDay);
+            } else {
+                 this.selectDate(this.calendarDays[0]);
+            }
 
             // Global Listeners
             document.addEventListener('mouseover', (e) => this.handleTooltipHover(e));
@@ -186,14 +216,17 @@ document.addEventListener('alpine:init', () => {
         generateCalendar() {
             const today = new Date();
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            for(let i=0; i<14; i++) {
+            // Generate -3 to +10 days
+            for(let i=-3; i<11; i++) {
                 const d = new Date();
                 d.setDate(today.getDate() + i);
+                const isToday = i === 0;
                 this.calendarDays.push({
                     day: days[d.getDay()],
                     date: d.getDate(),
                     fullDate: d.toISOString().split('T')[0],
-                    active: i === 0
+                    active: isToday,
+                    isToday: isToday
                 });
             }
         },
@@ -201,6 +234,9 @@ document.addEventListener('alpine:init', () => {
         selectDate(dayObj) {
             this.selectedDate = dayObj.fullDate;
             this.calendarDays.forEach(d => d.active = (d.fullDate === dayObj.fullDate));
+            // Load Journal for this date
+            this.journalInput = this.journalEntries[this.selectedDate] || '';
+            this.currentMood = this.moodHistory[this.selectedDate] || null;
         },
 
         getMealsForSelectedDate() {
@@ -629,10 +665,76 @@ document.addEventListener('alpine:init', () => {
             if(data.definition) return data.definition;
             let output = ""; for(const [key, val] of Object.entries(data)) { output += `${key.replace(/_/g, ' ').toUpperCase()}: ${val}\n`; } return output;
         },
-        addWater() { if(this.waterIntake < this.waterGoal) { this.waterIntake++; localStorage.setItem('waterIntake', this.waterIntake); if(this.waterIntake === this.waterGoal) this.notify("Hydration Goal Met! 💧"); } },
+        addWater() {
+            if(this.waterIntake < this.waterGoal) {
+                this.waterIntake++;
+                localStorage.setItem('waterIntake', this.waterIntake);
+                if(this.waterIntake === this.waterGoal) {
+                    this.notify("Hydration Goal Met! 💧");
+                    this.updateAchievement('hydration_streak', 1);
+                }
+            }
+        },
         resetWater() { this.waterIntake = 0; localStorage.setItem('waterIntake', 0); },
         toggleFasting() { if (this.fastingStart) { this.fastingStart = null; localStorage.removeItem('fastingStart'); clearInterval(this.fastingInterval); this.fastingElapsed = ''; this.notify("Fasting Ended"); } else { this.fastingStart = Date.now(); localStorage.setItem('fastingStart', this.fastingStart); this.startFastingTimer(); this.notify("Fasting Started ⏳"); } },
         startFastingTimer() { this.updateFastingTimer(); this.fastingInterval = setInterval(() => { this.updateFastingTimer(); }, 60000); },
-        updateFastingTimer() { if (!this.fastingStart) return; const diff = Date.now() - this.fastingStart; const hours = Math.floor(diff / (1000 * 60 * 60)); const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)); this.fastingElapsed = `${hours}h ${minutes}m`; }
+        updateFastingTimer() { if (!this.fastingStart) return; const diff = Date.now() - this.fastingStart; const hours = Math.floor(diff / (1000 * 60 * 60)); const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)); this.fastingElapsed = `${hours}h ${minutes}m`; },
+
+        // --- NEW FEATURES ---
+        saveJournal() {
+            this.journalEntries[this.selectedDate] = this.journalInput;
+            localStorage.setItem('journalEntries', JSON.stringify(this.journalEntries));
+            this.notify("Journal Saved ✍️");
+        },
+
+        setMood(mood) {
+            this.currentMood = mood;
+            this.moodHistory[this.selectedDate] = mood;
+            localStorage.setItem('moodHistory', JSON.stringify(this.moodHistory));
+            this.notify(`Mood Recorded: ${mood}`);
+        },
+
+        updateAchievement(id, amount) {
+            if(this.achievements[id] && !this.achievements[id].unlocked) {
+                this.achievements[id].progress += amount;
+                if(this.achievements[id].progress >= this.achievements[id].target) {
+                    this.achievements[id].unlocked = true;
+                    this.notify(`Achievement Unlocked: ${this.achievements[id].name}! 🏆`);
+                }
+                localStorage.setItem('achievements', JSON.stringify(this.achievements));
+            }
+        },
+
+        toggleMeditation() {
+            this.showMeditation = !this.showMeditation;
+            if(!this.showMeditation) {
+                this.stopMeditation();
+            }
+        },
+
+        startMeditation() {
+            if(this.meditationActive) return;
+            this.meditationActive = true;
+            this.meditationTimeLeft = this.meditationDuration * 60;
+            this.meditationInterval = setInterval(() => {
+                this.meditationTimeLeft--;
+                if(this.meditationTimeLeft <= 0) {
+                    this.stopMeditation();
+                    this.notify("Meditation Complete 🧘");
+                    this.updateAchievement('mindful_master', this.meditationDuration);
+                }
+            }, 1000);
+        },
+
+        stopMeditation() {
+            this.meditationActive = false;
+            clearInterval(this.meditationInterval);
+        },
+
+        get formattedMeditationTime() {
+            const m = Math.floor(this.meditationTimeLeft / 60);
+            const s = this.meditationTimeLeft % 60;
+            return `${m}:${s < 10 ? '0' + s : s}`;
+        }
     }))
 });
