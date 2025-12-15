@@ -781,41 +781,80 @@
                 </div>
 
                 <div x-show="currentTab === 'biohacks' || currentTab === 'settings'" class="max-w-5xl mx-auto animate-scale-in">
-                    <div x-show="currentTab === 'biohacks'" class="space-y-12 pb-12">
-                        <template x-for="(groupTools, category) in getGroupedTools()" :key="category">
-                            <div class="animate-scale-in">
-                                 <h3 class="text-2xl font-bold mb-6 pl-2 border-l-4 border-blue-500 flex items-center gap-3">
-                                    <span x-text="category"></span>
-                                    <span class="text-sm font-normal text-white/30" x-text="groupTools.length + ' Tools'"></span>
-                                 </h3>
-                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    <template x-for="tool in groupTools" :key="tool.id">
-                                        <button @click="selectedTool = tool; bioHacksOpen = true"
-                                                class="glass-card p-6 rounded-[24px] text-left hover:bg-white/5 transition-all group relative overflow-hidden border border-white/5 hover:border-blue-500/30">
-
-                                            <div class="absolute top-0 right-0 p-16 bg-gradient-to-br from-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/10 rounded-full blur-[40px] transition-all duration-500"></div>
-
-                                            <div class="relative z-10">
-                                                <div class="flex justify-between items-start mb-4">
-                                                    <div class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-300 border border-white/5 shadow-inner">
-                                                        <span x-show="category === 'Nutrition'">🍎</span>
-                                                        <span x-show="category === 'Wellness'">🌿</span>
-                                                        <span x-show="category === 'Performance'">⚡</span>
-                                                        <span x-show="!['Nutrition', 'Wellness', 'Performance'].includes(category)">🛠️</span>
-                                                    </div>
-                                                    <div class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/20 group-hover:text-white group-hover:border-white/40 transition-all">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
-                                                    </div>
-                                                </div>
-
-                                                <h3 class="font-bold text-lg mb-2 text-white group-hover:text-blue-400 transition-colors" x-text="tool.name"></h3>
-                                                <p class="text-sm text-white/50 leading-relaxed" x-text="tool.desc"></p>
-                                            </div>
-                                        </button>
-                                    </template>
-                                 </div>
+                    <div x-show="currentTab === 'biohacks'" class="space-y-8 pb-12">
+                        <!-- Header -->
+                        <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-8">
+                            <div>
+                                <h2 class="text-3xl font-bold">Biohacks Library</h2>
+                                <p class="text-white/40 text-sm mt-1">AI-powered tools to optimize your biology.</p>
                             </div>
-                        </template>
+                            <!-- Search -->
+                            <div class="relative w-full md:w-64">
+                                <input type="text" x-model="biohackSearch" placeholder="Search tools..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition-all">
+                                <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/30">🔍</div>
+                            </div>
+                        </div>
+
+                        <!-- Categories -->
+                        <div class="flex gap-2 overflow-x-auto custom-scroll pb-2">
+                            <template x-for="cat in ['All', 'Nutrition', 'Wellness', 'Performance', 'Other']">
+                                <button @click="biohackCategory = cat"
+                                        class="px-5 py-2 rounded-full text-xs font-bold transition-all border whitespace-nowrap"
+                                        :class="biohackCategory === cat ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/20' : 'bg-white/5 border-white/5 text-white/40 hover:bg-white/10 hover:text-white'">
+                                    <span x-text="cat"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                        <!-- Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                             <template x-for="tool in getFilteredBiohacks()" :key="tool.id">
+                                <button @click="selectedTool = tool; bioHacksOpen = true"
+                                        class="glass-card p-6 rounded-[28px] text-left hover:bg-white/5 transition-all duration-300 group relative overflow-hidden border border-white/5 hover:border-blue-500/30 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-900/10">
+
+                                    <!-- Background Gradient on Hover -->
+                                    <div class="absolute inset-0 bg-gradient-to-br from-transparent to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                                    <div class="relative z-10 flex flex-col h-full">
+                                        <div class="flex justify-between items-start mb-5">
+                                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110 shadow-inner"
+                                                 :class="{
+                                                    'bg-green-500/10 text-green-400 border border-green-500/20': tool.category === 'Nutrition',
+                                                    'bg-blue-500/10 text-blue-400 border border-blue-500/20': tool.category === 'Wellness',
+                                                    'bg-orange-500/10 text-orange-400 border border-orange-500/20': tool.category === 'Performance',
+                                                    'bg-white/10 text-white/60 border border-white/10': !['Nutrition', 'Wellness', 'Performance'].includes(tool.category)
+                                                 }">
+                                                <span x-show="tool.category === 'Nutrition'">🍎</span>
+                                                <span x-show="tool.category === 'Wellness'">🌿</span>
+                                                <span x-show="tool.category === 'Performance'">⚡</span>
+                                                <span x-show="!['Nutrition', 'Wellness', 'Performance'].includes(tool.category)">🛠️</span>
+                                            </div>
+
+                                            <div class="px-2 py-1 rounded-md bg-white/5 border border-white/5 text-[10px] uppercase font-bold text-white/30 tracking-wider" x-text="tool.category"></div>
+                                        </div>
+
+                                        <div class="flex-1">
+                                            <h3 class="font-bold text-lg mb-2 text-white group-hover:text-blue-400 transition-colors" x-text="tool.name"></h3>
+                                            <p class="text-sm text-white/50 leading-relaxed line-clamp-2" x-text="tool.desc"></p>
+                                        </div>
+
+                                        <div class="mt-6 flex items-center justify-between pt-4 border-t border-white/5 group-hover:border-white/10 transition-colors">
+                                            <span class="text-[10px] font-bold text-white/30 uppercase tracking-widest group-hover:text-blue-400 transition-colors">Use Tool</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-white/30 group-hover:bg-blue-500 group-hover:text-white transition-all transform group-hover:translate-x-1">→</div>
+                                        </div>
+                                    </div>
+                                </button>
+                            </template>
+                        </div>
+
+                        <!-- Empty State -->
+                         <div x-show="getFilteredBiohacks().length === 0" class="text-center py-20 border-2 border-dashed border-white/5 rounded-[32px]">
+                            <div class="text-4xl mb-4 opacity-30">🔍</div>
+                            <h3 class="text-lg font-bold text-white/50">No tools found</h3>
+                            <p class="text-sm text-white/30">Try adjusting your search or category.</p>
+                            <button @click="biohackCategory = 'All'; biohackSearch = ''" class="mt-4 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 text-xs font-bold transition">Clear Filters</button>
+                        </div>
+
                     </div>
 
                     <div x-show="currentTab === 'settings'" class="space-y-6 pb-12">
