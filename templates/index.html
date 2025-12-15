@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BioFlow AI</title>
 
+    <!-- 0. Load Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+
     <!-- 1. Load Tailwind via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -41,6 +44,9 @@
                 'scale-in': 'scaleIn 0.5s cubic-bezier(0.2, 0, 0.2, 1) forwards',
                 'scan': 'scan 3s ease-in-out infinite',
                 'float': 'float 6s ease-in-out infinite',
+                'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                'fade-in': 'fadeIn 1s ease-out forwards',
+                'gradient-x': 'gradient-x 15s ease infinite',
               },
               keyframes: {
                 breathe: {
@@ -59,6 +65,24 @@
                 float: {
                     '0%, 100%': { transform: 'translateY(0)' },
                     '50%': { transform: 'translateY(-10px)' },
+                },
+                slideUp: {
+                  '0%': { transform: 'translateY(20px)', opacity: '0' },
+                  '100%': { transform: 'translateY(0)', opacity: '1' },
+                },
+                fadeIn: {
+                  '0%': { opacity: '0' },
+                  '100%': { opacity: '1' },
+                },
+                'gradient-x': {
+                  '0%, 100%': {
+                    'background-size': '200% 200%',
+                    'background-position': 'left center',
+                  },
+                  '50%': {
+                    'background-size': '200% 200%',
+                    'background-position': 'right center',
+                  },
                 },
               }
             }
