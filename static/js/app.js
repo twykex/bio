@@ -1,12 +1,21 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('app', () => ({
         token: localStorage.getItem('bio_token') || Math.random().toString(36).substring(7),
+
+        // State
         context: null,
         weekPlan: [],
         workoutPlan: [],
         chatHistory: [],
         toasts: [],
+
+        // Loading States
         loading: false,
+        loadingText: 'Initializing...',
+        loadingInterval: null,
+
+        // Chat
+        chatInput: '',
         chatLoading: false,
         chatOpen: false,
 
@@ -25,14 +34,19 @@ document.addEventListener('alpine:init', () => {
         selectedMeal: null,
         recipeDetails: null,
         shoppingList: null,
-        chatInput: '',
         quickPrompts: ['Does this meal plan have enough protein?', 'Can you swap Tuesday dinner?', 'I am feeling tired today.', 'Suggest a healthy snack.'],
-        loadingText: 'Initializing...',
-        loadingInterval: null,
         preferences: '',
         tempStrategy: null,
 
-        // New Features Data
+        // NEW: UX Features Data (Tooltips)
+        tooltipVisible: false,
+        tooltipText: '',
+        tooltipX: 0,
+        tooltipY: 0,
+        tooltipTimeout: null,
+        activeTooltipTerm: null,
+
+        // New Features Data (Trackers)
         waterIntake: 0,
         waterGoal: 8,
         fastingStart: null,
@@ -41,7 +55,7 @@ document.addEventListener('alpine:init', () => {
         healthScore: 85,
         userName: 'Guest',
 
-        // Bio Hacks
+        // Bio Hacks Data
         selectedTool: null,
         toolInputs: {},
         toolResult: null,
@@ -74,6 +88,8 @@ document.addEventListener('alpine:init', () => {
 
         init() {
             localStorage.setItem('bio_token', this.token);
+
+            // Restore Settings
             const savedWater = localStorage.getItem('waterIntake');
             if (savedWater) this.waterIntake = parseInt(savedWater);
 
@@ -85,36 +101,161 @@ document.addEventListener('alpine:init', () => {
 
             const savedName = localStorage.getItem('userName');
             if(savedName) this.userName = savedName;
+
+            // Global listener for Smart Tooltips
+            document.addEventListener('mouseover', (e) => this.handleTooltipHover(e));
         },
 
-        saveSettings() {
-            localStorage.setItem('userName', this.userName);
-            this.notify("Settings Saved");
-        },
-
-        notify(msg, type='success') {
-            const id = Date.now();
-            this.toasts = [];
-            this.$nextTick(() => {
-                this.toasts.push({ id, message: msg, type });
-            });
-            setTimeout(() => { this.toasts = [] }, 4000);
-        },
-
-        startLoading(phases) {
+        // --- UX FEATURE 1: SMART LOADING STREAMS ---
+        startLoading(phaseType) {
             this.loading = true;
+            // Different "Thought Streams" based on context
+            const thoughts = {
+                'upload': ['Scanning PDF structure...', 'Extracting biomarkers...', 'Cross-referencing ranges...', 'Synthesizing health profile...', 'Reviewing hormonal data...'],
+                'plan': ['Calculating TDEE...', 'Balancing Macro splits...', 'Checking food interactions...', 'Optimizing nutrient density...', 'Finalizing weekly architecture...']
+            };
+
+            // Fallback if passing an array (old way)
+            const phases = Array.isArray(phaseType) ? phaseType : (thoughts[phaseType] || thoughts['upload']);
+
             let i = 0;
             this.loadingText = phases[0];
+
+            if(this.loadingInterval) clearInterval(this.loadingInterval);
+
             this.loadingInterval = setInterval(() => {
                 i = (i + 1) % phases.length;
                 this.loadingText = phases[i];
-            }, 1500);
+            }, 1800);
         },
 
         stopLoading() {
             this.loading = false;
             clearInterval(this.loadingInterval);
         },
+
+        // --- UX FEATURE 2: TYPEWRITER CHAT ---
+        async sendMessage() {
+            if(!this.chatInput.trim()) return;
+            const msg = this.chatInput;
+
+            this.chatHistory.push({ role: 'user', text: msg });
+            this.chatInput = '';
+            this.scrollToBottom();
+
+            // Add Placeholder for AI
+            this.chatLoading = true;
+            const aiIndex = this.chatHistory.push({ role: 'ai', text: '', typing: true }) - 1;
+
+            try {
+                const res = await fetch('/chat_agent', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ message: msg, token: this.token })
+                });
+                const data = await res.json();
+
+                // Start Typewriter Effect
+                this.chatLoading = false;
+                await this.typeWriterEffect(aiIndex, data.response);
+
+            } catch(e) {
+                this.chatHistory[aiIndex].text = "Connection interrupted.";
+                this.chatHistory[aiIndex].typing = false;
+            } finally {
+                this.chatLoading = false;
+            }
+        },
+
+        typeWriterEffect(index, fullText) {
+            return new Promise(resolve => {
+                if(!fullText) {
+                    this.chatHistory[index].text = "I couldn't process that.";
+                    this.chatHistory[index].typing = false;
+                    resolve();
+                    return;
+                }
+                let i = 0;
+                const speed = 15; // ms per character
+
+                const type = () => {
+                    if (i < fullText.length) {
+                        this.chatHistory[index].text += fullText.charAt(i);
+                        i++;
+                        this.scrollToBottom();
+                        setTimeout(type, speed);
+                    } else {
+                        this.chatHistory[index].typing = false;
+                        resolve();
+                    }
+                };
+                type();
+            });
+        },
+
+        scrollToBottom() {
+            this.$nextTick(() => {
+                const container = document.getElementById('chat-container');
+                if(container) container.scrollTop = container.scrollHeight;
+            });
+        },
+
+        // --- UX FEATURE 3: AI SMART TOOLTIPS ---
+        handleTooltipHover(e) {
+            const target = e.target.closest('[data-term]');
+
+            if (!target) {
+                this.tooltipVisible = false;
+                this.activeTooltipTerm = null;
+                return;
+            }
+
+            const term = target.getAttribute('data-term');
+
+            // Prevent spamming same term
+            if (this.activeTooltipTerm === term) {
+                this.moveTooltip(e);
+                this.tooltipVisible = true;
+                return;
+            }
+
+            this.activeTooltipTerm = term;
+            this.tooltipText = "Analyzing...";
+            this.tooltipVisible = true;
+            this.moveTooltip(e);
+
+            if (this.tooltipTimeout) clearTimeout(this.tooltipTimeout);
+
+            // 300ms debounce
+            this.tooltipTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch('/define_term', {
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ term: term })
+                    });
+                    const data = await res.json();
+                    if(this.activeTooltipTerm === term) {
+                        this.tooltipText = data.response || data.definition || "No definition found.";
+                    }
+                } catch(err) {
+                    this.tooltipText = "Could not load definition.";
+                }
+            }, 300);
+        },
+
+        moveTooltip(e) {
+            let x = e.clientX + 15;
+            let y = e.clientY + 15;
+
+            // Keep on screen
+            if (x > window.innerWidth - 260) x = e.clientX - 260;
+            if (y > window.innerHeight - 100) y = e.clientY - 100;
+
+            this.tooltipX = x;
+            this.tooltipY = y;
+        },
+
+
+        // --- CORE FUNCTIONS ---
 
         handleDrop(e) {
             this.dragOver = false;
@@ -124,7 +265,7 @@ document.addEventListener('alpine:init', () => {
 
         async uploadData(file) {
             if (!file) return;
-            this.startLoading(['Analyzing Biomarkers...', 'Synthesizing Data...', 'Reviewing Hormonal Profile...']);
+            this.startLoading('upload'); // Use Smart Stream
 
             const fd = new FormData();
             fd.append('file', file);
@@ -150,7 +291,8 @@ document.addEventListener('alpine:init', () => {
         async generateWeek() {
             this.prefModalOpen = false;
             const strategy = this.tempStrategy;
-            this.startLoading(['Architecting Protocol...', 'Balancing Macros...', 'Designing Workouts...', 'Finalizing Plan...']);
+            this.startLoading('plan'); // Use Smart Stream
+
             try {
                 const [mealRes, workoutRes] = await Promise.all([
                     fetch('/generate_week', {
@@ -182,34 +324,19 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        async sendMessage() {
-            if(!this.chatInput.trim()) return;
-            const msg = this.chatInput;
-            this.chatHistory.push({ role: 'user', text: msg });
-            this.chatInput = '';
-            this.chatLoading = true;
-            this.scrollToBottom();
-
-            try {
-                const res = await fetch('/chat_agent', {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ message: msg, token: this.token })
-                });
-                const data = await res.json();
-                this.chatHistory.push({ role: 'ai', text: data.response });
-            } catch(e) {
-                this.chatHistory.push({ role: 'ai', text: "Connection interrupted." });
-            } finally {
-                this.chatLoading = false;
-                this.scrollToBottom();
-            }
+        // --- UTILS ---
+        saveSettings() {
+            localStorage.setItem('userName', this.userName);
+            this.notify("Settings Saved");
         },
 
-        scrollToBottom() {
+        notify(msg, type='success') {
+            const id = Date.now();
+            this.toasts = [];
             this.$nextTick(() => {
-                const container = document.getElementById('chat-container');
-                if(container) container.scrollTop = container.scrollHeight;
+                this.toasts.push({ id, message: msg, type });
             });
+            setTimeout(() => { this.toasts = [] }, 4000);
         },
 
         async openRecipe(meal) {
@@ -307,6 +434,10 @@ document.addEventListener('alpine:init', () => {
             if(data.interaction) return `Status: ${data.interaction}\n${data.details}`;
             if(data.recipe) return `Recipe: ${data.recipe}\n${data.changes || ''}`;
             if(data.pairings) return data.pairings.map(p => `• ${p}`).join('\n');
+
+            // Generic Fallback
+            if(data.response) return data.response;
+            if(data.definition) return data.definition;
 
             let output = "";
             for(const [key, val] of Object.entries(data)) {
