@@ -217,14 +217,28 @@ const app = (userId) => ({
         const aiIndex = this.chatHistory.push({ role: 'ai', text: '', typing: true }) - 1;
 
         try {
-            const res = await fetch('/chat_agent', {
+            const response = await fetch('/chat_agent', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ message: msg, token: this.token })
             });
-            const data = await res.json();
-            this.chatLoading = false;
-            await this.typeWriterEffect(aiIndex, data.response);
+
+            if (!response.ok) throw new Error('Network response was not ok');
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                this.chatHistory[aiIndex].text += chunk;
+                this.scrollToBottom();
+            }
+            this.chatHistory[aiIndex].typing = false;
+
         } catch(e) {
+            console.error(e);
             this.chatHistory[aiIndex].text = "Connection interrupted.";
             this.chatHistory[aiIndex].typing = false;
         } finally { this.chatLoading = false; }

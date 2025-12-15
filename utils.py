@@ -10,6 +10,7 @@ from services.ai_service import (
     remove_json_comments,
     clean_and_parse_json,
     query_ollama,
+    stream_ollama,
     CHAT_ENDPOINT,
     base_url
 )

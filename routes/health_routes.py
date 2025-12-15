@@ -1,9 +1,9 @@
 import logging
 import os
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, Response, stream_with_context
 from werkzeug.utils import secure_filename
 from config import UPLOAD_FOLDER
-from utils import get_session, query_ollama, retrieve_relevant_context, get_embedding, analyze_image
+from utils import get_session, query_ollama, stream_ollama, retrieve_relevant_context, get_embedding, analyze_image
 from services.pdf_service import advanced_pdf_parse
 
 logger = logging.getLogger(__name__)
@@ -116,22 +116,49 @@ def chat_agent():
     rag_context = retrieve_relevant_context(user_session, user_msg)
     summary = user_session.get('blood_context', {}).get('summary', 'No data.')
 
+    # 1. Build History
+    history = user_session.get('chat_history', [])
+    truncated_history = history[-10:] if len(history) > 10 else history
+
+    messages = []
     system_prompt = f"""
-    Medical Assistant.
-    CONTEXT: {summary}
-    EVIDENCE: {rag_context}
-    If user asks for BMI/Calories calculation, output JSON: {{ "tool": "calculate_bmi", ... }}
-    Otherwise output JSON: {{ "response": "Your answer..." }}
+    You are a helpful Functional Doctor Assistant.
+    PATIENT SUMMARY: {summary}
+    RELEVANT MEDICAL CONTEXT: {rag_context}
+
+    INSTRUCTIONS:
+    - Answer naturally and empathetically.
+    - Use the context provided to give specific advice.
+    - If the user asks for a calculation (BMI, Calories), output ONLY JSON: {{ "tool": "calculate_bmi", "args": {{...}} }}
+    - Otherwise, output plain text (Markdown supported). Do NOT use JSON for normal chat.
     """
 
-    resp = query_ollama(user_msg, system_instruction=system_prompt, tools_enabled=True)
+    messages.append({"role": "system", "content": system_prompt})
 
-    history = user_session.get('chat_history', [])
-    history.append({"role": "user", "text": user_msg})
-    if resp and 'response' in resp:
-        history.append({"role": "ai", "text": resp['response']})
+    for msg in truncated_history:
+        messages.append({"role": "user" if msg["role"] == "user" else "assistant", "content": msg["text"]})
 
-    return jsonify(resp or {"response": "I'm having trouble analyzing that."})
+    messages.append({"role": "user", "content": user_msg})
+
+    # 2. Update Session immediately with user message
+    user_session['chat_history'].append({"role": "user", "text": user_msg})
+
+    # 3. Stream Response
+    def generate():
+        full_reply = ""
+        try:
+            for chunk in stream_ollama(messages):
+                full_reply += chunk
+                yield chunk
+
+            # Save AI response to history
+            if full_reply:
+                user_session['chat_history'].append({"role": "ai", "text": full_reply})
+        except Exception as e:
+            logger.error(f"Chat Stream Error: {e}")
+            yield "Sorry, I encountered an error."
+
+    return Response(stream_with_context(generate()), mimetype='text/plain')
 
 
 @health_bp.route('/load_demo_data', methods=['POST'])

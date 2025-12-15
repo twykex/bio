@@ -85,3 +85,76 @@ def query_ollama(prompt, system_instruction=None, tools_enabled=False, temperatu
     except Exception as e:
         logger.error(f"AI Error: {e}")
         return None
+
+def stream_ollama(messages, temperature=0.1):
+    """
+    Streams response from Ollama.
+    Handles tool detection if output looks like JSON.
+    Yields chunks of text.
+    """
+    payload = {
+        "model": OLLAMA_MODEL,
+        "messages": messages,
+        "stream": True,
+        "options": {"temperature": temperature, "num_ctx": 4096}
+    }
+
+    try:
+        with requests.post(CHAT_ENDPOINT, json=payload, stream=True) as r:
+            if r.status_code != 200:
+                logger.error(f"AI Stream Error: {r.status_code}")
+                yield "I'm having trouble connecting to my brain right now."
+                return
+
+            buffer = ""
+            is_tool_check = True
+            is_tool = False
+
+            for line in r.iter_lines():
+                if not line: continue
+                try:
+                    chunk_json = json.loads(line)
+                    chunk_content = chunk_json.get("message", {}).get("content", "")
+
+                    if not chunk_content: continue
+
+                    if is_tool_check:
+                        buffer += chunk_content
+                        stripped = buffer.lstrip()
+                        if not stripped:
+                            continue
+
+                        if stripped.startswith('{') or stripped.startswith('```'):
+                            is_tool = True
+                            is_tool_check = False
+                        elif len(stripped) > 10: # Increased buffer safety
+                            is_tool = False
+                            is_tool_check = False
+                            yield buffer
+                            buffer = ""
+                        continue
+
+                    if is_tool:
+                        buffer += chunk_content
+                    else:
+                        yield chunk_content
+
+                except Exception as e:
+                    logger.error(f"Stream Parse Error: {e}")
+
+            # End of stream
+            if is_tool:
+                # Try to parse buffer as JSON tool call
+                data = clean_and_parse_json(buffer)
+                if data and "tool" in data:
+                    res = execute_tool_call(data["tool"], data.get("args", {}))
+                    yield f"✅ Analysis: {res}"
+                else:
+                    # Failed to parse tool or just weird text, yield the raw buffer
+                    yield buffer
+            elif buffer: # Flush remaining buffer if any (unlikely unless loop exited early)
+                yield buffer
+
+    except Exception as e:
+        logger.error(f"AI Stream Exception: {e}")
+        yield "System Error."
