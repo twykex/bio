@@ -5,13 +5,21 @@ document.addEventListener('alpine:init', () => {
 
         // --- 2. GLOBAL STATE ---
         context: null,
+        workoutHistory: {},
+        restActive: false,
+        restTimeLeft: 0,
+        restTotalTime: 0,
+        restInterval: null,
         streak: 0,
         currentTip: '',
         weekPlan: [],
         workoutPlan: [],
         chatHistory: [],
         toasts: [],
+        activityLog: [],
+        waterHistory: {},
         journalEntries: {},
+        journalAnalysis: {},
         moodHistory: {},
         achievements: {
             'hydration_streak': { name: 'Hydration Hero', desc: 'Hit water goal 3 days in a row', icon: '💧', unlocked: false, progress: 0, target: 3 },
@@ -42,7 +50,9 @@ document.addEventListener('alpine:init', () => {
         // --- 6. MODALS ---
         radarChart: null,
         barChart: null,
+        trendChart: null,
         moodChart: null,
+        waterChart: null,
         recipeModalOpen: false,
         shoppingListOpen: false,
         workoutModalOpen: false,
@@ -106,6 +116,9 @@ document.addEventListener('alpine:init', () => {
         fastingElapsed: '',
         fastingInterval: null,
         healthScore: 85,
+        biologicalAge: 0,
+        chronologicalAge: 30,
+        healthHistory: [],
         userName: 'Guest',
         currentMood: null,
 
@@ -114,12 +127,17 @@ document.addEventListener('alpine:init', () => {
         toolInputs: {},
         toolResult: null,
         toolLoading: false,
+        
+        // Merged Properties
+        biohackCategory: 'All',
+        biohackSearch: '',
         nutritionToolIds: ['quick_snack', 'check_food_interaction', 'recipe_variation', 'seasonal_swap', 'budget_swap', 'leftover_idea', 'flavor_pairing', 'mood_food', 'low_gi_option', 'high_protein_option'],
         nutritionDoughnut: null,
         nutritionTrend: null,
         mealNotesModalOpen: false,
         mealNoteInput: '',
         currentMealForNotes: null,
+
         tools: [
             { id: 'symptom_checker', category: 'Wellness', name: 'Symptom Checker', desc: 'Check symptoms with AI.', inputs: [{k:'symptoms', l:'Describe Symptoms', p:'Headache and fatigue'}] },
             { id: 'suggest_supplement', category: 'Wellness', name: 'Supplement Advisor', desc: 'Get supplement recommendations.', inputs: [{k:'focus', l:'Focus', p:'Joint Health', options: ['Joint Health', 'Energy', 'Sleep', 'Immunity', 'Stress', 'Digestion']}] },
@@ -195,6 +213,7 @@ document.addEventListener('alpine:init', () => {
             return groups;
         },
 
+        // Merged Helper Methods
         getMacroValue(str) {
             return parseInt(String(str).replace(/\D/g, '')) || 0;
         },
@@ -287,6 +306,18 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        getFilteredBiohacks() {
+            let tools = this.tools;
+            if (this.biohackCategory !== 'All') {
+                tools = tools.filter(t => t.category === this.biohackCategory);
+            }
+            if (this.biohackSearch) {
+                const q = this.biohackSearch.toLowerCase();
+                tools = tools.filter(t => t.name.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q));
+            }
+            return tools;
+        },
+
         // --- LIFECYCLE ---
         init() {
             localStorage.setItem('bio_token', this.token);
@@ -317,6 +348,15 @@ document.addEventListener('alpine:init', () => {
             if(this.streak >= 7) this.updateAchievement('streak_star', 7);
 
             // Restore Trackers
+            const savedContext = localStorage.getItem('context');
+            if(savedContext) this.context = JSON.parse(savedContext);
+
+            const savedWeekPlan = localStorage.getItem('weekPlan');
+            if(savedWeekPlan) this.weekPlan = JSON.parse(savedWeekPlan);
+
+            const savedWorkoutPlan = localStorage.getItem('workoutPlan');
+            if(savedWorkoutPlan) this.workoutPlan = JSON.parse(savedWorkoutPlan);
+
             const savedWater = localStorage.getItem('waterIntake');
             if (savedWater) this.waterIntake = parseInt(savedWater);
             const savedFasting = localStorage.getItem('fastingStart');
@@ -330,11 +370,28 @@ document.addEventListener('alpine:init', () => {
             const savedJournal = localStorage.getItem('journalEntries');
             if(savedJournal) this.journalEntries = JSON.parse(savedJournal);
 
+            const savedJournalAnalysis = localStorage.getItem('journalAnalysis');
+            if(savedJournalAnalysis) this.journalAnalysis = JSON.parse(savedJournalAnalysis);
+
             const savedMood = localStorage.getItem('moodHistory');
             if(savedMood) this.moodHistory = JSON.parse(savedMood);
 
+            const savedActivity = localStorage.getItem('activityLog');
+            if(savedActivity) this.activityLog = JSON.parse(savedActivity);
+
+            const savedWaterHistory = localStorage.getItem('waterHistory');
+            if(savedWaterHistory) this.waterHistory = JSON.parse(savedWaterHistory);
+
+            // Sync current day water
+            if(this.waterIntake > 0) {
+                 this.waterHistory[todayStr] = this.waterIntake;
+            }
+
             const savedAchievements = localStorage.getItem('achievements');
             if(savedAchievements) this.achievements = JSON.parse(savedAchievements);
+
+            const savedWorkoutHistory = localStorage.getItem('workoutHistory');
+            if(savedWorkoutHistory) this.workoutHistory = JSON.parse(savedWorkoutHistory);
 
             // Random Tip
             this.currentTip = this.dailyTips[Math.floor(Math.random() * this.dailyTips.length)];
@@ -354,72 +411,105 @@ document.addEventListener('alpine:init', () => {
 
             this.$watch('currentTab', (val) => {
                 if(val === 'health') this.initCharts();
-                if(val === 'dashboard') this.initMoodChart();
+                if(val === 'dashboard') this.initDashboardCharts();
                 if(val === 'nutrition') this.initNutritionCharts();
             });
 
             // Initial chart load if landing on dashboard
-            if(this.currentTab === 'dashboard') this.initMoodChart();
+            if(this.currentTab === 'dashboard') this.initDashboardCharts();
         },
 
-        async initMoodChart() {
+        async initDashboardCharts() {
             // Wait for DOM
             await this.$nextTick();
-            const ctx = document.getElementById('moodTrendChart');
-            if(!ctx) return;
-
-            if (this.moodChart) { this.moodChart.destroy(); this.moodChart = null; }
-
-            // Generate last 7 days data
-            const labels = [];
-            const data = [];
-            for(let i=6; i>=0; i--) {
-                 const d = new Date();
-                 d.setDate(new Date().getDate() - i);
-                 const dateStr = d.toISOString().split('T')[0];
-                 labels.push(d.toLocaleDateString(undefined, {weekday:'short'}));
-                 const mood = this.moodHistory[dateStr];
-                 let val = 0; // 0 = no data
-                 if(mood === '😁') val = 4;
-                 else if(mood === '🙂') val = 3;
-                 else if(mood === '😐') val = 2;
-                 else if(mood === '😔') val = 1;
-                 data.push(val);
-            }
+            const ctxMood = document.getElementById('moodTrendChart');
+            const ctxWater = document.getElementById('waterHistoryChart');
 
             if (typeof Chart === 'undefined') return;
 
-            this.moodChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Mood',
-                        data: data,
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#3b82f6'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            display: false,
-                            min: 0,
-                            max: 5
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { color: 'rgba(255, 255, 255, 0.3)', font: { size: 10 } }
-                        }
-                    },
-                    plugins: { legend: { display: false } }
+            // --- Mood Chart ---
+            if(ctxMood) {
+                if (this.moodChart) { this.moodChart.destroy(); this.moodChart = null; }
+
+                // Generate last 7 days data
+                const labels = [];
+                const data = [];
+                for(let i=6; i>=0; i--) {
+                     const d = new Date();
+                     d.setDate(new Date().getDate() - i);
+                     const dateStr = d.toISOString().split('T')[0];
+                     labels.push(d.toLocaleDateString(undefined, {weekday:'short'}));
+                     const mood = this.moodHistory[dateStr];
+                     let val = 0; // 0 = no data
+                     if(mood === '😁') val = 4;
+                     else if(mood === '🙂') val = 3;
+                     else if(mood === '😐') val = 2;
+                     else if(mood === '😔') val = 1;
+                     data.push(val);
                 }
-            });
+
+                this.moodChart = new Chart(ctxMood, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Mood',
+                            data: data,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#3b82f6'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { display: false, min: 0, max: 5 },
+                            x: { grid: { display: false }, ticks: { color: 'rgba(255, 255, 255, 0.3)', font: { size: 10 } } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            // --- Water Chart ---
+            if(ctxWater) {
+                if (this.waterChart) { this.waterChart.destroy(); this.waterChart = null; }
+
+                const labels = [];
+                const data = [];
+                for(let i=6; i>=0; i--) {
+                     const d = new Date();
+                     d.setDate(new Date().getDate() - i);
+                     const dateStr = d.toISOString().split('T')[0];
+                     labels.push(d.toLocaleDateString(undefined, {weekday:'short'}));
+                     data.push(this.waterHistory[dateStr] || 0);
+                }
+
+                this.waterChart = new Chart(ctxWater, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Glasses',
+                            data: data,
+                            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                            borderRadius: 4,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { display: false, min: 0, suggestMax: 8 },
+                            x: { grid: { display: false }, ticks: { color: 'rgba(255, 255, 255, 0.3)', font: { size: 10 } } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
         },
 
         async initCharts() {
@@ -430,9 +520,11 @@ document.addEventListener('alpine:init', () => {
 
             const ctxRadar = document.getElementById('healthRadarChart');
             const ctxBar = document.getElementById('biomarkerBarChart');
+            const ctxTrend = document.getElementById('healthTrendChart');
 
             if (this.radarChart) { this.radarChart.destroy(); this.radarChart = null; }
             if (this.barChart) { this.barChart.destroy(); this.barChart = null; }
+            if (this.trendChart) { this.trendChart.destroy(); this.trendChart = null; }
 
             // -- Prepare Radar Data --
             const systems = {
@@ -550,6 +642,67 @@ document.addEventListener('alpine:init', () => {
                     }
                 }
             });
+
+            // -- Prepare Trend Data --
+            if (ctxTrend && this.healthHistory.length > 0) {
+                 this.trendChart = new Chart(ctxTrend, {
+                    type: 'line',
+                    data: {
+                        labels: this.healthHistory.map(h => h.date),
+                        datasets: [{
+                            label: 'Health Score',
+                            data: this.healthHistory.map(h => h.score),
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#10b981'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: false, min: 40, max: 100, display: false },
+                            x: { grid: { display: false }, ticks: { color: 'rgba(255, 255, 255, 0.3)', font: {size: 10} } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        },
+
+        updateBioMetrics() {
+             const ageMap = { '18-29': 24, '30-39': 35, '40-49': 45, '50-59': 55, '60+': 65 };
+             const userAgeStr = this.userChoices?.age || '30-39';
+             this.chronologicalAge = ageMap[userAgeStr] || 30;
+
+             // Bio Age Formula: ChronAge * (1 + (75 - Score)/200) -- scaled down impact
+             const impact = (75 - this.healthScore) / 200;
+             this.biologicalAge = (this.chronologicalAge * (1 + impact)).toFixed(1);
+
+             this.healthHistory = this.generateHealthHistory();
+        },
+
+        generateHealthHistory() {
+            const history = [];
+            const today = new Date();
+            let currentScore = this.healthScore;
+            // Generate last 6 months
+            for(let i=0; i<6; i++) {
+                const d = new Date();
+                d.setMonth(today.getMonth() - i);
+                // Mock historical variation
+                const variance = Math.floor(Math.random() * 10) - 5;
+                let score = currentScore - (i * 2) + variance;
+                if(score > 100) score = 100;
+                if(score < 40) score = 40;
+                if(i === 0) score = this.healthScore;
+
+                history.unshift({ date: d.toLocaleDateString(undefined, {month:'short'}), score: score });
+            }
+            return history;
         },
 
         // --- CALENDAR LOGIC ---
@@ -597,12 +750,73 @@ document.addEventListener('alpine:init', () => {
 
         toggleMealCompletion(meal) {
             meal.completed = !meal.completed;
-            if(meal.completed) this.notify("Meal Logged! Stats Updated.");
+            if(meal.completed) {
+                this.notify("Meal Logged! Stats Updated.");
+                this.logActivity(`Ate ${meal.title}`, '🍽️');
+            }
         },
 
         toggleExercise(ex) {
             ex.completed = !ex.completed;
-            if(ex.completed) this.notify("Exercise Complete! 💪");
+            if(ex.completed) {
+                this.notify("Exercise Complete! 💪");
+                this.logActivity(`Did ${ex.name || 'exercise'}`, '💪');
+            }
+        },
+
+        finishWorkout(workout) {
+            let logCount = 0;
+            if (workout.exercises) {
+                workout.exercises.forEach(ex => {
+                    if (ex.weight || ex.performedReps) {
+                        const name = ex.name || "Unknown Exercise";
+                        this.workoutHistory[name] = {
+                            weight: ex.weight,
+                            reps: ex.performedReps,
+                            date: new Date().toISOString().split('T')[0],
+                            notes: ex.notes
+                        };
+                        logCount++;
+                    }
+                });
+            }
+            localStorage.setItem('workoutHistory', JSON.stringify(this.workoutHistory));
+            this.notify(logCount > 0 ? `Workout Saved! ${logCount} Logs Updated.` : "Workout Completed!");
+            this.updateAchievement('workout_warrior', 1);
+        },
+
+        startRest(seconds) {
+            if (this.restActive) {
+                this.stopRest();
+            }
+            this.restTimeLeft = seconds;
+            this.restTotalTime = seconds;
+            this.restActive = true;
+            if (this.restInterval) clearInterval(this.restInterval);
+            this.restInterval = setInterval(() => {
+                this.restTimeLeft--;
+                if (this.restTimeLeft <= 0) {
+                    this.stopRest();
+                    this.notify("Rest Complete! Go!", "success");
+                }
+            }, 1000);
+        },
+
+        stopRest() {
+            this.restActive = false;
+            clearInterval(this.restInterval);
+        },
+
+        get formattedRestTime() {
+            const m = Math.floor(this.restTimeLeft / 60);
+            const s = this.restTimeLeft % 60;
+            return `${m}:${s < 10 ? '0' + s : s}`;
+        },
+
+        getExerciseHistory(exName) {
+            if (!this.workoutHistory || !this.workoutHistory[exName]) return null;
+            const h = this.workoutHistory[exName];
+            return `Last: ${h.weight || '-'}kg x ${h.reps || '-'} (${h.date.substring(5)})`;
         },
 
         // --- LOADING LOGIC ---
@@ -639,9 +853,11 @@ document.addEventListener('alpine:init', () => {
                 });
                 if(!res.ok) throw new Error();
                 this.context = await res.json();
+                localStorage.setItem('context', JSON.stringify(this.context));
 
                 this.healthScore = this.context.health_score || 72;
                 this.userName = this.context.patient_name || 'Demo User';
+                this.updateBioMetrics();
 
                 // Simulate delay for effect
                 await new Promise(r => setTimeout(r, 1500));
@@ -670,9 +886,11 @@ document.addEventListener('alpine:init', () => {
                 const res = await fetch('/init_context', { method: 'POST', body: fd });
                 if(!res.ok) throw new Error();
                 this.context = await res.json();
+                localStorage.setItem('context', JSON.stringify(this.context));
 
                 this.healthScore = this.context.health_score || 78;
                 this.userName = this.context.patient_name || 'Guest';
+                this.updateBioMetrics();
 
                 if (this.context.issues && this.context.issues.length > 0) {
                     this.startConsultation();
@@ -802,8 +1020,20 @@ document.addEventListener('alpine:init', () => {
                 // Initialize workout plan state
                 this.workoutPlan = workoutData.map(daily => ({
                     ...daily,
-                    exercises: daily.exercises ? daily.exercises.map(ex => ({...ex, completed: false})) : []
+                    exercises: daily.exercises ? daily.exercises.map(ex => {
+                        const exObj = (typeof ex === 'string') ? { name: ex } : ex;
+                        return {
+                            ...exObj,
+                            completed: false,
+                            weight: '',
+                            performedReps: '',
+                            notes: ''
+                        };
+                    }) : []
                 }));
+
+                localStorage.setItem('weekPlan', JSON.stringify(this.weekPlan));
+                localStorage.setItem('workoutPlan', JSON.stringify(this.workoutPlan));
 
                 this.currentTab = 'dashboard';
                 this.notify("Protocol Optimized");
@@ -854,8 +1084,18 @@ document.addEventListener('alpine:init', () => {
 
                 this.workoutPlan = workoutData.map(daily => ({
                     ...daily,
-                    exercises: daily.exercises ? daily.exercises.map(ex => ({...ex, completed: false})) : []
+                    exercises: daily.exercises ? daily.exercises.map(ex => {
+                        const exObj = (typeof ex === 'string') ? { name: ex } : ex;
+                        return {
+                            ...exObj,
+                            completed: false,
+                            weight: '',
+                            performedReps: '',
+                            notes: ''
+                        };
+                    }) : []
                 }));
+                localStorage.setItem('workoutPlan', JSON.stringify(this.workoutPlan));
 
                 this.notify("New Training Plan Ready");
             } catch(e) {
@@ -975,6 +1215,13 @@ document.addEventListener('alpine:init', () => {
         },
 
         // --- UTILS ---
+        logActivity(text, icon="📌") {
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            this.activityLog.unshift({ text, time, icon });
+            if(this.activityLog.length > 20) this.activityLog.pop();
+            localStorage.setItem('activityLog', JSON.stringify(this.activityLog));
+        },
+
         saveSettings() {
             localStorage.setItem('userName', this.userName);
             localStorage.setItem('userChoices', JSON.stringify(this.userChoices));
@@ -1040,9 +1287,23 @@ document.addEventListener('alpine:init', () => {
             if(this.waterIntake < this.waterGoal) {
                 this.waterIntake++;
                 localStorage.setItem('waterIntake', this.waterIntake);
+
+                const today = new Date().toISOString().split('T')[0];
+                this.waterHistory[today] = this.waterIntake;
+                localStorage.setItem('waterHistory', JSON.stringify(this.waterHistory));
+                this.logActivity(`Drank water`, '💧');
+
+                // Update chart if exists
+                if(this.waterChart) {
+                    const data = this.waterChart.data.datasets[0].data;
+                    data[data.length - 1] = this.waterIntake;
+                    this.waterChart.update();
+                }
+
                 if(this.waterIntake === this.waterGoal) {
                     this.notify("Hydration Goal Met! 💧");
                     this.updateAchievement('hydration_streak', 1);
+                    this.logActivity("Hit hydration goal!", '🏆');
                 }
             }
         },
@@ -1056,6 +1317,28 @@ document.addEventListener('alpine:init', () => {
             this.journalEntries[this.selectedDate] = this.journalInput;
             localStorage.setItem('journalEntries', JSON.stringify(this.journalEntries));
             this.notify("Journal Saved ✍️");
+            this.logActivity("Wrote in journal", '✍️');
+        },
+
+        async analyzeJournal() {
+             if(!this.journalInput.trim()) return;
+             this.notify("Analyzing Entry... 🧠");
+             try {
+                 const res = await fetch('/analyze_journal', {
+                     method: 'POST',
+                     headers: {'Content-Type': 'application/json'},
+                     body: JSON.stringify({ entry: this.journalInput })
+                 });
+                 const data = await res.json();
+
+                 if(!this.journalAnalysis) this.journalAnalysis = {};
+                 this.journalAnalysis[this.selectedDate] = data;
+                 localStorage.setItem('journalAnalysis', JSON.stringify(this.journalAnalysis));
+
+                 this.notify("Analysis Complete ✨");
+             } catch(e) {
+                 this.notify("Analysis Failed", "error");
+             }
         },
 
         setMood(mood) {
@@ -1063,6 +1346,7 @@ document.addEventListener('alpine:init', () => {
             this.moodHistory[this.selectedDate] = mood;
             localStorage.setItem('moodHistory', JSON.stringify(this.moodHistory));
             this.notify(`Mood Recorded: ${mood}`);
+            this.logActivity(`Mood: ${mood}`, '🎭');
         },
 
         updateAchievement(id, amount) {
@@ -1092,6 +1376,7 @@ document.addEventListener('alpine:init', () => {
                 if(this.meditationTimeLeft <= 0) {
                     this.stopMeditation();
                     this.notify("Meditation Complete 🧘");
+                    this.logActivity(`Meditated ${this.meditationDuration}m`, '🧘');
                     this.updateAchievement('mindful_master', this.meditationDuration);
                 }
             }, 1000);
