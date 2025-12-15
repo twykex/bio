@@ -11,7 +11,7 @@ class TestNewFeatures(unittest.TestCase):
         self.app = app.test_client()
         self.app.testing = True
 
-    @patch('routes.main_routes.query_ollama')
+    @patch('routes.health_routes.query_ollama')
     def test_generate_supplement_stack(self, mock_query_ollama):
         # Mock Response
         mock_response = {
@@ -37,7 +37,7 @@ class TestNewFeatures(unittest.TestCase):
         self.assertEqual(len(data['stack']), 1)
         self.assertEqual(data['stack'][0]['name'], "Vitamin D")
 
-    @patch('routes.main_routes.analyze_image')
+    @patch('routes.health_routes.analyze_image')
     def test_analyze_food_plate(self, mock_analyze_image):
         # Mock Response
         mock_response = {

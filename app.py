@@ -21,10 +21,14 @@ except ImportError:
     OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma3:4b")
 
 try:
-    from routes.main_routes import main_bp
+    from routes.meal_routes import meal_bp
+    from routes.workout_routes import workout_bp
+    from routes.health_routes import health_bp
     from routes.mini_apps import mini_apps_bp
 except ImportError:
-    main_bp = None
+    meal_bp = None
+    workout_bp = None
+    health_bp = None
     mini_apps_bp = None
 
 # Configure Logging
@@ -39,8 +43,12 @@ UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Register Blueprints
-if main_bp:
-    app.register_blueprint(main_bp)
+if meal_bp:
+    app.register_blueprint(meal_bp)
+if workout_bp:
+    app.register_blueprint(workout_bp)
+if health_bp:
+    app.register_blueprint(health_bp)
 if mini_apps_bp:
     app.register_blueprint(mini_apps_bp)
 

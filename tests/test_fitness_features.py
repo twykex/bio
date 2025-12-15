@@ -15,7 +15,7 @@ class TestFitnessFeatures(unittest.TestCase):
         self.app.testing = True
         sessions.clear()
 
-    @patch('routes.main_routes.query_ollama')
+    @patch('routes.workout_routes.query_ollama')
     def test_propose_fitness_strategies(self, mock_query):
         # Mock failure to trigger fallback
         mock_query.return_value = None
