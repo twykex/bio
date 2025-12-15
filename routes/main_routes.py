@@ -153,12 +153,18 @@ def generate_week():
     - AGE: {lifestyle.get('age', 'Not Specified')}
     - ACTIVITY: {lifestyle.get('activity', 'Not Specified')}
     - GOAL: {lifestyle.get('goal', 'General Health')}
+    - MOTIVATION: {lifestyle.get('motivation', 'General Wellness')}
+    - SLEEP: {lifestyle.get('sleep', 'Normal')}
+    - STRESS: {lifestyle.get('stress', 'Moderate')}
 
     LIFESTYLE CONSTRAINTS:
     - CUISINE STYLE: {lifestyle.get('cuisine', 'Varied')}
     - COOKING TIME: {lifestyle.get('time', '30 mins')}
+    - COOKING SKILL: {lifestyle.get('cooking_skill', 'Intermediate')}
     - BUDGET: {lifestyle.get('budget', 'Moderate')}
     - DIET TYPE: {lifestyle.get('diet', 'Balanced')}
+    - MEAL FREQUENCY: {lifestyle.get('meals', '3 Meals')}
+    - HYDRATION HABIT: {lifestyle.get('hydration', 'Average')}
     - ALLERGIES/EXCLUSIONS: {lifestyle.get('allergies', 'None')}
 
     TASK: Create a 7-Day Dinner Plan.
@@ -199,9 +205,12 @@ def generate_workout():
 
     CLIENT PROFILE:
     - GOAL: {lifestyle.get('goal', 'General Fitness')}
+    - MOTIVATION: {lifestyle.get('motivation', 'General Wellness')}
     - ACTIVITY LEVEL: {lifestyle.get('activity', 'Moderate')}
     - GENDER: {lifestyle.get('gender', 'Not Specified')}
     - AGE: {lifestyle.get('age', 'Not Specified')}
+    - SLEEP QUALITY: {lifestyle.get('sleep', 'Normal')}
+    - STRESS LEVEL: {lifestyle.get('stress', 'Moderate')}
     - LIMITATIONS: {lifestyle.get('limitations', 'None')}
     - EQUIPMENT: {lifestyle.get('equipment', 'Basic Home Gym')}
 
