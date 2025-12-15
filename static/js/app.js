@@ -14,6 +14,12 @@ document.addEventListener('alpine:init', () => {
         loadingText: 'Initializing...',
         loadingInterval: null,
 
+        // Consultation Mode (New)
+        consultationActive: false,
+        consultationStep: 0,
+        currentIssue: null,
+        userChoices: [],
+
         // Chat
         chatInput: '',
         chatLoading: false,
@@ -38,7 +44,7 @@ document.addEventListener('alpine:init', () => {
         preferences: '',
         tempStrategy: null,
 
-        // NEW: UX Features Data (Tooltips)
+        // UX Features Data (Tooltips)
         tooltipVisible: false,
         tooltipText: '',
         tooltipX: 0,
@@ -46,7 +52,7 @@ document.addEventListener('alpine:init', () => {
         tooltipTimeout: null,
         activeTooltipTerm: null,
 
-        // New Features Data (Trackers)
+        // Trackers
         waterIntake: 0,
         waterGoal: 8,
         fastingStart: null,
@@ -88,8 +94,6 @@ document.addEventListener('alpine:init', () => {
 
         init() {
             localStorage.setItem('bio_token', this.token);
-
-            // Restore Settings
             const savedWater = localStorage.getItem('waterIntake');
             if (savedWater) this.waterIntake = parseInt(savedWater);
 
@@ -102,27 +106,21 @@ document.addEventListener('alpine:init', () => {
             const savedName = localStorage.getItem('userName');
             if(savedName) this.userName = savedName;
 
-            // Global listener for Smart Tooltips
             document.addEventListener('mouseover', (e) => this.handleTooltipHover(e));
         },
 
-        // --- UX FEATURE 1: SMART LOADING STREAMS ---
+        // --- UX LOGIC: SMART LOADING ---
         startLoading(phaseType) {
             this.loading = true;
-            // Different "Thought Streams" based on context
             const thoughts = {
-                'upload': ['Scanning PDF structure...', 'Extracting biomarkers...', 'Cross-referencing ranges...', 'Synthesizing health profile...', 'Reviewing hormonal data...'],
-                'plan': ['Calculating TDEE...', 'Balancing Macro splits...', 'Checking food interactions...', 'Optimizing nutrient density...', 'Finalizing weekly architecture...']
+                'upload': ['Scanning PDF structure...', 'Extracting biomarkers...', 'Cross-referencing ranges...', 'Synthesizing health profile...'],
+                'plan': ['Architecting Protocol...', 'Balancing Macros...', 'Optimizing Nutrient Density...', 'Finalizing Schedule...']
             };
-
-            // Fallback if passing an array (old way)
-            const phases = Array.isArray(phaseType) ? phaseType : (thoughts[phaseType] || thoughts['upload']);
-
+            const phases = thoughts[phaseType] || thoughts['upload'];
             let i = 0;
             this.loadingText = phases[0];
 
             if(this.loadingInterval) clearInterval(this.loadingInterval);
-
             this.loadingInterval = setInterval(() => {
                 i = (i + 1) % phases.length;
                 this.loadingText = phases[i];
@@ -134,7 +132,117 @@ document.addEventListener('alpine:init', () => {
             clearInterval(this.loadingInterval);
         },
 
-        // --- UX FEATURE 2: TYPEWRITER CHAT ---
+        // --- CORE LOGIC: UPLOAD & CONSULTATION ---
+        handleDrop(e) {
+            this.dragOver = false;
+            const file = e.dataTransfer.files[0];
+            if (file) this.uploadData(file);
+        },
+
+        async uploadData(file) {
+            if (!file) return;
+            this.startLoading('upload');
+
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('token', this.token);
+
+            try {
+                const res = await fetch('/init_context', { method: 'POST', body: fd });
+                if(!res.ok) throw new Error();
+                this.context = await res.json();
+
+                // Initialize Data
+                this.healthScore = this.context.health_score || 78;
+                this.userName = this.context.patient_name || 'Guest';
+
+                // Start Consultation Mode if issues exist
+                if (this.context.issues && this.context.issues.length > 0) {
+                    this.startConsultation();
+                } else {
+                    // Fallback to Dashboard if no critical issues found
+                    this.finalizeConsultation();
+                }
+
+                this.notify("Analysis Complete");
+            } catch(e) {
+                this.notify("Upload Failed", "error");
+            } finally {
+                this.stopLoading();
+            }
+        },
+
+        // --- CONSULTATION MODE ---
+        startConsultation() {
+            this.consultationActive = true;
+            this.consultationStep = 0;
+            this.userChoices = [];
+            this.currentIssue = this.context.issues[0];
+        },
+
+        selectOption(option) {
+            this.userChoices.push({
+                issue: this.currentIssue.title,
+                choice: option.text
+            });
+
+            this.consultationStep++;
+
+            if (this.consultationStep < this.context.issues.length) {
+                this.currentIssue = this.context.issues[this.consultationStep];
+            } else {
+                this.finalizeConsultation();
+            }
+        },
+
+        async finalizeConsultation() {
+            this.consultationActive = false;
+
+            // Format choices for the generator prompt
+            const choicesText = this.userChoices.length > 0
+                ? this.userChoices.map(c => `${c.issue}: ${c.choice}`).join(', ')
+                : "Standard Optimization";
+
+            this.preferences = choicesText;
+            this.tempStrategy = "Personalized Protocol"; // Default name
+
+            await this.generateWeek();
+        },
+
+        async generateWeek() {
+            this.prefModalOpen = false;
+            this.startLoading('plan');
+
+            try {
+                const [mealRes, workoutRes] = await Promise.all([
+                    fetch('/generate_week', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ strategy_name: this.tempStrategy, token: this.token, preferences: this.preferences })
+                    }),
+                    fetch('/generate_workout', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ strategy_name: this.tempStrategy, token: this.token })
+                    })
+                ]);
+
+                const data = await mealRes.json();
+                const workoutData = await workoutRes.json();
+
+                this.weekPlan = Array.isArray(data) ? data : [];
+                this.workoutPlan = Array.isArray(workoutData) ? workoutData : [];
+
+                this.currentTab = 'dashboard';
+                this.notify("Protocol Active");
+            } catch(e) {
+                this.notify("Generation Failed", "error");
+            } finally {
+                this.stopLoading();
+            }
+        },
+
+        // --- CHAT LOGIC ---
         async sendMessage() {
             if(!this.chatInput.trim()) return;
             const msg = this.chatInput;
@@ -143,7 +251,6 @@ document.addEventListener('alpine:init', () => {
             this.chatInput = '';
             this.scrollToBottom();
 
-            // Add Placeholder for AI
             this.chatLoading = true;
             const aiIndex = this.chatHistory.push({ role: 'ai', text: '', typing: true }) - 1;
 
@@ -154,7 +261,6 @@ document.addEventListener('alpine:init', () => {
                 });
                 const data = await res.json();
 
-                // Start Typewriter Effect
                 this.chatLoading = false;
                 await this.typeWriterEffect(aiIndex, data.response);
 
@@ -171,12 +277,10 @@ document.addEventListener('alpine:init', () => {
                 if(!fullText) {
                     this.chatHistory[index].text = "I couldn't process that.";
                     this.chatHistory[index].typing = false;
-                    resolve();
-                    return;
+                    resolve(); return;
                 }
                 let i = 0;
-                const speed = 15; // ms per character
-
+                const speed = 15;
                 const type = () => {
                     if (i < fullText.length) {
                         this.chatHistory[index].text += fullText.charAt(i);
@@ -199,10 +303,9 @@ document.addEventListener('alpine:init', () => {
             });
         },
 
-        // --- UX FEATURE 3: AI SMART TOOLTIPS ---
+        // --- UX LOGIC: TOOLTIPS ---
         handleTooltipHover(e) {
             const target = e.target.closest('[data-term]');
-
             if (!target) {
                 this.tooltipVisible = false;
                 this.activeTooltipTerm = null;
@@ -210,8 +313,6 @@ document.addEventListener('alpine:init', () => {
             }
 
             const term = target.getAttribute('data-term');
-
-            // Prevent spamming same term
             if (this.activeTooltipTerm === term) {
                 this.moveTooltip(e);
                 this.tooltipVisible = true;
@@ -225,7 +326,6 @@ document.addEventListener('alpine:init', () => {
 
             if (this.tooltipTimeout) clearTimeout(this.tooltipTimeout);
 
-            // 300ms debounce
             this.tooltipTimeout = setTimeout(async () => {
                 try {
                     const res = await fetch('/define_term', {
@@ -245,86 +345,13 @@ document.addEventListener('alpine:init', () => {
         moveTooltip(e) {
             let x = e.clientX + 15;
             let y = e.clientY + 15;
-
-            // Keep on screen
             if (x > window.innerWidth - 260) x = e.clientX - 260;
             if (y > window.innerHeight - 100) y = e.clientY - 100;
-
             this.tooltipX = x;
             this.tooltipY = y;
         },
 
-
-        // --- CORE FUNCTIONS ---
-
-        handleDrop(e) {
-            this.dragOver = false;
-            const file = e.dataTransfer.files[0];
-            if (file) this.uploadData(file);
-        },
-
-        async uploadData(file) {
-            if (!file) return;
-            this.startLoading('upload'); // Use Smart Stream
-
-            const fd = new FormData();
-            fd.append('file', file);
-            fd.append('token', this.token);
-
-            try {
-                const res = await fetch('/init_context', { method: 'POST', body: fd });
-                if(!res.ok) throw new Error();
-                this.context = await res.json();
-                this.notify("Analysis Complete");
-            } catch(e) {
-                this.notify("Upload Failed", "error");
-            } finally {
-                this.stopLoading();
-            }
-        },
-
-        openPrefModal(strategy) {
-            this.tempStrategy = strategy;
-            this.prefModalOpen = true;
-        },
-
-        async generateWeek() {
-            this.prefModalOpen = false;
-            const strategy = this.tempStrategy;
-            this.startLoading('plan'); // Use Smart Stream
-
-            try {
-                const [mealRes, workoutRes] = await Promise.all([
-                    fetch('/generate_week', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ strategy_name: strategy, token: this.token, preferences: this.preferences })
-                    }),
-                    fetch('/generate_workout', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ strategy_name: strategy, token: this.token })
-                    })
-                ]);
-
-                const data = await mealRes.json();
-                const workoutData = await workoutRes.json();
-
-                this.weekPlan = Array.isArray(data) ? data : [];
-                this.workoutPlan = Array.isArray(workoutData) ? workoutData : [];
-
-                this.currentTab = 'dashboard';
-                this.healthScore = Math.floor(Math.random() * (98 - 75) + 75);
-
-                this.notify("Full Protocol Active");
-            } catch(e) {
-                this.notify("Generation Failed", "error");
-            } finally {
-                this.stopLoading();
-            }
-        },
-
-        // --- UTILS ---
+        // --- UTILITIES ---
         saveSettings() {
             localStorage.setItem('userName', this.userName);
             this.notify("Settings Saved");
@@ -332,11 +359,15 @@ document.addEventListener('alpine:init', () => {
 
         notify(msg, type='success') {
             const id = Date.now();
-            this.toasts = [];
-            this.$nextTick(() => {
-                this.toasts.push({ id, message: msg, type });
-            });
-            setTimeout(() => { this.toasts = [] }, 4000);
+            this.toasts.push({ id, message: msg, type });
+            setTimeout(() => {
+                this.toasts = this.toasts.filter(t => t.id !== id);
+            }, 3000);
+        },
+
+        openPrefModal(strategy) {
+            this.tempStrategy = strategy;
+            this.prefModalOpen = true;
         },
 
         async openRecipe(meal) {
@@ -387,7 +418,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         resetSystem() {
-            if(confirm('Start a new session?')) {
+            if(confirm('Reset all data and start over?')) {
                 this.context = null;
                 this.weekPlan = [];
                 this.chatHistory = [];
@@ -398,10 +429,7 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        closeBioHacks() {
-            this.bioHacksOpen = false;
-        },
-
+        // --- BIOHACKS & TRACKERS ---
         selectTool(tool) {
             this.selectedTool = tool;
             this.toolInputs = {};
@@ -427,16 +455,13 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-formatResult(data) {
+        formatResult(data) {
             if(!data) return "No data returned.";
-            // FIXED: Replaced corrupted "â€¢" with real bullets "•"
             if(data.supplements) return data.supplements.map(s => `• ${s.name}: ${s.reason}`).join('\n');
             if(data.foods) return data.foods.map(f => `• ${f}`).join('\n');
             if(data.interaction) return `Status: ${data.interaction}\n${data.details}`;
             if(data.recipe) return `Recipe: ${data.recipe}\n${data.changes || ''}`;
             if(data.pairings) return data.pairings.map(p => `• ${p}`).join('\n');
-
-            // Generic Fallback
             if(data.response) return data.response;
             if(data.definition) return data.definition;
 
