@@ -8,7 +8,7 @@ class TestNewFeatures(unittest.TestCase):
         self.app = app.test_client()
         self.app.testing = True
 
-    @patch('app.query_ollama')
+    @patch('routes.mini_apps.query_ollama')
     def test_all_features(self, mock_query):
         features = [
             ('/suggest_supplement', {'focus': 'energy'}, {"supplements": []}),
