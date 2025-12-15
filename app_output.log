@@ -1,0 +1,76 @@
+2025-12-15 21:42:15,595 - INFO - 🔋 HOSTING ON PORT 5000 using model: gemma3:4b
+ * Serving Flask app 'app'
+ * Debug mode: on
+2025-12-15 21:42:15,705 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-12-15 21:42:15,705 - INFO - [33mPress CTRL+C to quit[0m
+2025-12-15 21:42:15,706 - INFO -  * Restarting with stat
+2025-12-15 21:42:16,103 - INFO - 🔋 HOSTING ON PORT 5000 using model: gemma3:4b
+2025-12-15 21:42:16,119 - WARNING -  * Debugger is active!
+2025-12-15 21:42:16,121 - INFO -  * Debugger PIN: 132-491-319
+2025-12-15 21:42:17,604 - INFO - 🌍 Opening browser at http://127.0.0.1:5000...
+xdg-open: unexpected option '-a'
+Try 'xdg-open --help' for more information.
+2025-12-15 21:43:27,015 - INFO - 127.0.0.1 - - [15/Dec/2025 21:43:27] "GET / HTTP/1.1" 200 -
+2025-12-15 21:43:27,196 - INFO - 127.0.0.1 - - [15/Dec/2025 21:43:27] "GET /static/js/app.js HTTP/1.1" 200 -
+2025-12-15 21:43:28,009 - INFO - 127.0.0.1 - - [15/Dec/2025 21:43:28] "GET /static/js/modules/config.js HTTP/1.1" 200 -
+2025-12-15 21:43:28,025 - INFO - 127.0.0.1 - - [15/Dec/2025 21:43:28] "GET /static/js/modules/fitness.js HTTP/1.1" 200 -
+2025-12-15 21:43:28,036 - INFO - 127.0.0.1 - - [15/Dec/2025 21:43:28] "GET /static/js/modules/utils.js HTTP/1.1" 200 -
+2025-12-15 21:43:28,038 - INFO - 127.0.0.1 - - [15/Dec/2025 21:43:28] "GET /static/js/modules/charts.js HTTP/1.1" 200 -
+2025-12-15 21:43:28,039 - INFO - 127.0.0.1 - - [15/Dec/2025 21:43:28] "GET /static/js/modules/journal.js HTTP/1.1" 200 -
+2025-12-15 21:43:28,040 - INFO - 127.0.0.1 - - [15/Dec/2025 21:43:28] "GET /static/js/modules/consultation.js HTTP/1.1" 200 -
+2025-12-15 21:43:28,041 - INFO - 127.0.0.1 - - [15/Dec/2025 21:43:28] "GET /static/js/modules/nutrition.js HTTP/1.1" 200 -
+2025-12-15 21:43:28,041 - INFO - 127.0.0.1 - - [15/Dec/2025 21:43:28] "GET /static/js/modules/api.js HTTP/1.1" 200 -
+2025-12-15 21:44:50,743 - INFO - 127.0.0.1 - - [15/Dec/2025 21:44:50] "GET / HTTP/1.1" 200 -
+2025-12-15 21:44:50,761 - INFO - 127.0.0.1 - - [15/Dec/2025 21:44:50] "GET /static/js/app.js HTTP/1.1" 200 -
+2025-12-15 21:44:51,294 - INFO - 127.0.0.1 - - [15/Dec/2025 21:44:51] "GET /static/js/modules/config.js HTTP/1.1" 200 -
+2025-12-15 21:44:51,301 - INFO - 127.0.0.1 - - [15/Dec/2025 21:44:51] "GET /static/js/modules/journal.js HTTP/1.1" 200 -
+2025-12-15 21:44:51,303 - INFO - 127.0.0.1 - - [15/Dec/2025 21:44:51] "GET /static/js/modules/fitness.js HTTP/1.1" 200 -
+2025-12-15 21:44:51,304 - INFO - 127.0.0.1 - - [15/Dec/2025 21:44:51] "GET /static/js/modules/nutrition.js HTTP/1.1" 200 -
+2025-12-15 21:44:51,305 - INFO - 127.0.0.1 - - [15/Dec/2025 21:44:51] "GET /static/js/modules/charts.js HTTP/1.1" 200 -
+2025-12-15 21:44:51,306 - INFO - 127.0.0.1 - - [15/Dec/2025 21:44:51] "GET /static/js/modules/utils.js HTTP/1.1" 200 -
+2025-12-15 21:44:51,306 - INFO - 127.0.0.1 - - [15/Dec/2025 21:44:51] "GET /static/js/modules/consultation.js HTTP/1.1" 200 -
+2025-12-15 21:44:51,315 - INFO - 127.0.0.1 - - [15/Dec/2025 21:44:51] "GET /static/js/modules/api.js HTTP/1.1" 200 -
+2025-12-15 21:44:51,974 - INFO - 127.0.0.1 - - [15/Dec/2025 21:44:51] "POST /load_demo_data HTTP/1.1" 200 -
+2025-12-15 21:46:57,704 - INFO - 127.0.0.1 - - [15/Dec/2025 21:46:57] "GET / HTTP/1.1" 200 -
+2025-12-15 21:46:57,722 - INFO - 127.0.0.1 - - [15/Dec/2025 21:46:57] "GET /static/js/app.js HTTP/1.1" 200 -
+2025-12-15 21:46:58,264 - INFO - 127.0.0.1 - - [15/Dec/2025 21:46:58] "GET /static/js/modules/fitness.js HTTP/1.1" 200 -
+2025-12-15 21:46:58,266 - INFO - 127.0.0.1 - - [15/Dec/2025 21:46:58] "GET /static/js/modules/config.js HTTP/1.1" 200 -
+2025-12-15 21:46:58,270 - INFO - 127.0.0.1 - - [15/Dec/2025 21:46:58] "GET /static/js/modules/journal.js HTTP/1.1" 200 -
+2025-12-15 21:46:58,271 - INFO - 127.0.0.1 - - [15/Dec/2025 21:46:58] "GET /static/js/modules/charts.js HTTP/1.1" 200 -
+2025-12-15 21:46:58,273 - INFO - 127.0.0.1 - - [15/Dec/2025 21:46:58] "GET /static/js/modules/utils.js HTTP/1.1" 200 -
+2025-12-15 21:46:58,274 - INFO - 127.0.0.1 - - [15/Dec/2025 21:46:58] "GET /static/js/modules/consultation.js HTTP/1.1" 200 -
+2025-12-15 21:46:58,278 - INFO - 127.0.0.1 - - [15/Dec/2025 21:46:58] "GET /static/js/modules/api.js HTTP/1.1" 200 -
+2025-12-15 21:46:58,280 - INFO - 127.0.0.1 - - [15/Dec/2025 21:46:58] "GET /static/js/modules/nutrition.js HTTP/1.1" 200 -
+2025-12-15 21:46:58,903 - INFO - 127.0.0.1 - - [15/Dec/2025 21:46:58] "POST /load_demo_data HTTP/1.1" 200 -
+2025-12-15 21:48:27,674 - INFO - 127.0.0.1 - - [15/Dec/2025 21:48:27] "GET / HTTP/1.1" 200 -
+2025-12-15 21:48:27,688 - INFO - 127.0.0.1 - - [15/Dec/2025 21:48:27] "GET /static/js/app.js HTTP/1.1" 200 -
+2025-12-15 21:48:28,197 - INFO - 127.0.0.1 - - [15/Dec/2025 21:48:28] "GET /static/js/modules/config.js HTTP/1.1" 200 -
+2025-12-15 21:48:28,218 - INFO - 127.0.0.1 - - [15/Dec/2025 21:48:28] "GET /static/js/modules/nutrition.js HTTP/1.1" 200 -
+2025-12-15 21:48:28,218 - INFO - 127.0.0.1 - - [15/Dec/2025 21:48:28] "GET /static/js/modules/fitness.js HTTP/1.1" 200 -
+2025-12-15 21:48:28,222 - INFO - 127.0.0.1 - - [15/Dec/2025 21:48:28] "GET /static/js/modules/journal.js HTTP/1.1" 200 -
+2025-12-15 21:48:28,223 - INFO - 127.0.0.1 - - [15/Dec/2025 21:48:28] "GET /static/js/modules/consultation.js HTTP/1.1" 200 -
+2025-12-15 21:48:28,224 - INFO - 127.0.0.1 - - [15/Dec/2025 21:48:28] "GET /static/js/modules/charts.js HTTP/1.1" 200 -
+2025-12-15 21:48:28,226 - INFO - 127.0.0.1 - - [15/Dec/2025 21:48:28] "GET /static/js/modules/utils.js HTTP/1.1" 200 -
+2025-12-15 21:48:28,239 - INFO - 127.0.0.1 - - [15/Dec/2025 21:48:28] "GET /static/js/modules/api.js HTTP/1.1" 200 -
+2025-12-15 21:48:28,845 - INFO - 127.0.0.1 - - [15/Dec/2025 21:48:28] "POST /load_demo_data HTTP/1.1" 200 -
+2025-12-15 21:49:42,654 - INFO - 127.0.0.1 - - [15/Dec/2025 21:49:42] "GET / HTTP/1.1" 200 -
+2025-12-15 21:49:42,667 - INFO - 127.0.0.1 - - [15/Dec/2025 21:49:42] "GET /static/js/app.js HTTP/1.1" 200 -
+2025-12-15 21:49:43,000 - INFO - 127.0.0.1 - - [15/Dec/2025 21:49:43] "GET /static/js/modules/fitness.js HTTP/1.1" 200 -
+2025-12-15 21:49:43,000 - INFO - 127.0.0.1 - - [15/Dec/2025 21:49:43] "GET /static/js/modules/consultation.js HTTP/1.1" 200 -
+2025-12-15 21:49:43,003 - INFO - 127.0.0.1 - - [15/Dec/2025 21:49:43] "GET /static/js/modules/config.js HTTP/1.1" 200 -
+2025-12-15 21:49:43,002 - INFO - 127.0.0.1 - - [15/Dec/2025 21:49:43] "GET /static/js/modules/charts.js HTTP/1.1" 200 -
+2025-12-15 21:49:43,001 - INFO - 127.0.0.1 - - [15/Dec/2025 21:49:43] "GET /static/js/modules/journal.js HTTP/1.1" 200 -
+2025-12-15 21:49:43,004 - INFO - 127.0.0.1 - - [15/Dec/2025 21:49:43] "GET /static/js/modules/nutrition.js HTTP/1.1" 200 -
+2025-12-15 21:49:43,014 - INFO - 127.0.0.1 - - [15/Dec/2025 21:49:43] "GET /static/js/modules/utils.js HTTP/1.1" 200 -
+2025-12-15 21:49:43,016 - INFO - 127.0.0.1 - - [15/Dec/2025 21:49:43] "GET /static/js/modules/api.js HTTP/1.1" 200 -
+2025-12-15 21:50:21,467 - INFO - 127.0.0.1 - - [15/Dec/2025 21:50:21] "GET / HTTP/1.1" 200 -
+2025-12-15 21:50:21,495 - INFO - 127.0.0.1 - - [15/Dec/2025 21:50:21] "GET /static/js/app.js HTTP/1.1" 200 -
+2025-12-15 21:50:21,878 - INFO - 127.0.0.1 - - [15/Dec/2025 21:50:21] "GET /static/js/modules/consultation.js HTTP/1.1" 200 -
+2025-12-15 21:50:21,878 - INFO - 127.0.0.1 - - [15/Dec/2025 21:50:21] "GET /static/js/modules/fitness.js HTTP/1.1" 200 -
+2025-12-15 21:50:21,879 - INFO - 127.0.0.1 - - [15/Dec/2025 21:50:21] "GET /static/js/modules/config.js HTTP/1.1" 200 -
+2025-12-15 21:50:21,886 - INFO - 127.0.0.1 - - [15/Dec/2025 21:50:21] "GET /static/js/modules/journal.js HTTP/1.1" 200 -
+2025-12-15 21:50:21,887 - INFO - 127.0.0.1 - - [15/Dec/2025 21:50:21] "GET /static/js/modules/charts.js HTTP/1.1" 200 -
+2025-12-15 21:50:21,887 - INFO - 127.0.0.1 - - [15/Dec/2025 21:50:21] "GET /static/js/modules/nutrition.js HTTP/1.1" 200 -
+2025-12-15 21:50:21,889 - INFO - 127.0.0.1 - - [15/Dec/2025 21:50:21] "GET /static/js/modules/utils.js HTTP/1.1" 200 -
+2025-12-15 21:50:21,893 - INFO - 127.0.0.1 - - [15/Dec/2025 21:50:21] "GET /static/js/modules/api.js HTTP/1.1" 200 -
