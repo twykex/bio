@@ -25,7 +25,7 @@ def get_session(token):
     if len(sessions) > 100 and token not in sessions:
         try:
             sessions.pop(next(iter(sessions)), None)
-        except:
+        except (RuntimeError, StopIteration):
             pass
 
     if token not in sessions:
@@ -118,6 +118,7 @@ def clean_json_output(text):
     """
     STACK-BASED CLEANER: Finds the first valid JSON object or array
     and stops exactly when it closes. Ignores trailing text.
+    Handles nested objects and strings correctly.
     """
     text = text.strip()
 
@@ -132,22 +133,36 @@ def clean_json_output(text):
 
     # Stack counting
     stack = []
+    in_string = False
+    escape = False
+
     for i in range(start_idx, len(text)):
         char = text[i]
 
-        if char in ['{', '[']:
-            stack.append(char)
-        elif char in ['}', ']']:
-            if not stack: break  # Error: unbalanced
+        if in_string:
+            if char == '"' and not escape:
+                in_string = False
 
-            # Check for matching pair
-            last = stack[-1]
-            if (last == '{' and char == '}') or (last == '[' and char == ']'):
-                stack.pop()
+            if char == '\\' and not escape:
+                escape = True
+            else:
+                escape = False
+        else:
+            if char == '"':
+                in_string = True
+            elif char in ['{', '[']:
+                stack.append(char)
+            elif char in ['}', ']']:
+                if not stack: break  # Error: unbalanced
 
-            # If stack is empty, we found the full object!
-            if not stack:
-                return text[start_idx: i + 1]
+                # Check for matching pair
+                last = stack[-1]
+                if (last == '{' and char == '}') or (last == '[' and char == ']'):
+                    stack.pop()
+
+                # If stack is empty, we found the full object!
+                if not stack:
+                    return text[start_idx: i + 1]
 
     return text[start_idx:]  # Fallback
 
