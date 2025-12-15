@@ -100,6 +100,9 @@ document.addEventListener('alpine:init', () => {
             { id: 'stress_relief', name: 'Stress Relief', desc: 'Techniques to calm down.', inputs: [{k:'context', l:'Context', p:'Work Stress', options: ['Work Stress', 'Anxiety', 'Overwhelmed', 'Panic', 'Insomnia']}] },
             { id: 'focus_technique', name: 'Focus Mode', desc: 'Boost your concentration.', inputs: [{k:'task', l:'Task Type', p:'Deep Work', options: ['Deep Work', 'Studying', 'Creative Work', 'Admin Tasks', 'Reading']}] },
             { id: 'exercise_alternative', name: 'Exercise Swap', desc: 'Find an alternative exercise.', inputs: [{k:'exercise', l:'Exercise', p:'Running'}, {k:'reason', l:'Reason', p:'Knee Pain', options: ['Knee Pain', 'Back Pain', 'No Equipment', 'Boredom', 'Time Constraint']}] },
+            { id: 'circadian_sync', name: 'Circadian Sync', desc: 'Optimize your daily rhythm.', inputs: [{k:'wake_time', l:'Wake Up Time', p:'07:00 AM'}] },
+            { id: 'lab_interpreter', name: 'Lab Interpreter', desc: 'Understand a specific lab result.', inputs: [{k:'test_name', l:'Test Name', p:'Vitamin D'}, {k:'value', l:'Value', p:'25 ng/mL'}] },
+            { id: 'breathwork_guide', name: 'Breathwork Guide', desc: 'Breathing exercises for mood.', inputs: [{k:'goal', l:'Goal', p:'Relaxation', options: ['Relaxation', 'Energy', 'Sleep', 'Focus', 'Anxiety Relief']}] },
         ],
 
         // --- 13. LIFESTYLE QUESTIONS ---
@@ -535,6 +538,7 @@ document.addEventListener('alpine:init', () => {
             if(data.interaction) return `Status: ${data.interaction}\n${data.details}`;
             if(data.recipe) return `Recipe: ${data.recipe}\n${data.changes || ''}`;
             if(data.pairings) return data.pairings.map(p => `• ${p}`).join('\n');
+            if(data.schedule) return data.schedule.map(s => `• ${s}`).join('\n');
             if(data.response) return data.response;
             if(data.definition) return data.definition;
             let output = ""; for(const [key, val] of Object.entries(data)) { output += `${key.replace(/_/g, ' ').toUpperCase()}: ${val}\n`; } return output;

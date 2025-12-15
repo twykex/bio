@@ -131,6 +131,21 @@ APP_CONFIGS = {
         "system": "You are a Physical Therapist.",
         "prompt": "Alternative to '{exercise}' due to '{reason}'. Output format: {{ 'alternative': '...', 'benefit': '...' }}",
         "temp": 0.2
+    },
+    "circadian_sync": {
+        "system": "You are a Circadian Biologist.",
+        "prompt": "Create a schedule based on wake up time: '{wake_time}'. Output format: {{ 'schedule': ['...', '...'] }}",
+        "temp": 0.3
+    },
+    "lab_interpreter": {
+        "system": "You are a Clinical Pathologist. Be factual.",
+        "prompt": "Interpret lab result: '{test_name}' value '{value}'. Output format: {{ 'analysis': '...', 'recommendation': '...' }}",
+        "temp": 0.1
+    },
+    "breathwork_guide": {
+        "system": "You are a Breathwork Instructor.",
+        "prompt": "Suggest a breathing pattern for '{goal}'. Output format: {{ 'technique': '...', 'instructions': '...' }}",
+        "temp": 0.4
     }
 }
 

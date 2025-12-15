@@ -31,6 +31,9 @@ class TestNewFeatures(unittest.TestCase):
             ('/seasonal_swap', {'ingredient': 'tomato', 'season': 'winter'}, {"swap": "canned"}),
             ('/budget_swap', {'ingredient': 'steak'}, {"swap": "beans"}),
             ('/leftover_idea', {'food': 'chicken'}, {"idea": "sandwich"}),
+            ('/circadian_sync', {'wake_time': '07:00'}, {"schedule": ["wake"]}),
+            ('/lab_interpreter', {'test_name': 'a', 'value': 'b'}, {"analysis": "c"}),
+            ('/breathwork_guide', {'goal': 'relax'}, {"technique": "box"}),
         ]
 
         for route, data, mock_resp in features:
