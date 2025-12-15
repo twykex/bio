@@ -1,128 +1,117 @@
-<div x-show="currentTab === 'biohacks' || currentTab === 'settings'" class="max-w-5xl mx-auto animate-scale-in">
-    <div x-show="currentTab === 'biohacks'" class="space-y-8 pb-12">
-        <!-- Header -->
-        <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-8">
-            <div>
-                <h2 class="text-3xl font-bold">Biohacks Library</h2>
-                <p class="text-white/40 text-sm mt-1">AI-powered tools to optimize your biology.</p>
-            </div>
-            <!-- Search -->
-            <div class="relative w-full md:w-64">
-                <input type="text" x-model="biohackSearch" placeholder="Search tools..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition-all">
-                <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/30">🔍</div>
-            </div>
-        </div>
+<div x-show="currentTab === 'biohacks' || currentTab === 'settings'" class="max-w-7xl mx-auto animate-scale-in px-4 lg:px-8" x-cloak>
 
-        <!-- Favorites Section -->
-        <div x-show="favoriteBiohacks.length > 0" class="mb-8">
-            <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span>⭐</span> Favorites</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <template x-for="id in favoriteBiohacks" :key="id">
-                    <template x-if="getToolById(id)">
-                        <div x-data="{ tool: getToolById(id) }" class="contents">
-                            <!-- Card Component (Inlined) -->
-                            <button @click="openBiohack(tool)"
-                                    class="glass-card p-6 rounded-[28px] text-left hover:bg-white/5 transition-all duration-300 group relative overflow-hidden border border-white/5 hover:border-yellow-500/30">
+    <!-- BIOHACKS TAB -->
+    <div x-show="currentTab === 'biohacks'" class="space-y-12 pb-24">
 
-                                <div class="absolute top-4 right-4 z-20">
-                                    <div @click.stop="toggleFavorite(tool.id)" class="text-yellow-400 hover:scale-110 transition cursor-pointer">⭐</div>
-                                </div>
+        <!-- 1. Hero Section -->
+        <div class="relative overflow-hidden rounded-[40px] bg-gradient-to-br from-blue-900/40 via-purple-900/20 to-black border border-white/10 p-10 lg:p-14 text-center lg:text-left flex flex-col lg:flex-row items-center justify-between gap-8 group">
+             <!-- Background FX -->
+             <div class="absolute -top-24 -right-24 w-96 h-96 bg-blue-500/30 rounded-full blur-[100px] group-hover:bg-blue-500/40 transition duration-1000"></div>
 
-                                <div class="relative z-10 flex flex-col h-full">
-                                    <div class="flex justify-between items-start mb-5">
-                                        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
-                                            <span>⭐</span>
-                                        </div>
-                                    </div>
-                                    <div class="flex-1">
-                                        <h3 class="font-bold text-lg mb-1 text-white group-hover:text-yellow-400 transition-colors" x-text="tool.name"></h3>
-                                        <p class="text-xs text-white/50 leading-relaxed line-clamp-2" x-text="tool.desc"></p>
-                                    </div>
-                                </div>
-                            </button>
-                        </div>
-                    </template>
-                </template>
-            </div>
-        </div>
+             <div class="relative z-10 max-w-2xl">
+                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold uppercase tracking-widest mb-6 border border-blue-500/20">
+                    ✨ Featured Tool
+                 </div>
+                 <h1 class="text-4xl lg:text-6xl font-extrabold tracking-tight mb-4 text-white">
+                    Biohack Your <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Biology</span>
+                 </h1>
+                 <p class="text-lg text-white/60 mb-8 leading-relaxed">
+                     Access our library of AI-powered protocols to optimize sleep, nutrition, and cognitive performance.
+                 </p>
+                 <div class="flex flex-wrap gap-4 justify-center lg:justify-start">
+                     <!-- Try the first tool or symptom checker -->
+                     <button @click="openBiohack(tools.find(t => t.id === 'symptom_checker') || tools[0])" class="px-8 py-4 rounded-2xl bg-white text-black font-bold text-lg hover:scale-105 transition shadow-xl shadow-white/10 flex items-center gap-3">
+                        <span>⚡</span> Try Symptom Checker
+                     </button>
+                     <button @click="document.getElementById('biohack-search').focus()" class="px-8 py-4 rounded-2xl bg-white/5 text-white font-bold text-lg border border-white/10 hover:bg-white/10 transition flex items-center gap-3">
+                        <span>🔍</span> Explore Library
+                     </button>
+                 </div>
+             </div>
 
-        <!-- Recents Section -->
-        <div x-show="recentBiohacks.length > 0 && !biohackSearch" class="mb-8 border-b border-white/5 pb-8">
-             <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span>🕒</span> Recently Used</h3>
-             <div class="flex gap-4 overflow-x-auto custom-scroll pb-4">
-                <template x-for="id in recentBiohacks" :key="'recent-'+id">
-                    <template x-if="getToolById(id)">
-                         <div x-data="{ tool: getToolById(id) }">
-                            <button @click="openBiohack(tool)" class="glass-card p-4 rounded-2xl w-64 flex-shrink-0 hover:bg-white/5 transition border border-white/5 flex gap-4 items-center">
-                                <div class="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-lg">⚡</div>
-                                <div class="text-left overflow-hidden">
-                                    <div class="font-bold text-sm truncate" x-text="tool.name"></div>
-                                    <div class="text-[10px] text-white/40 truncate" x-text="tool.category"></div>
-                                </div>
-                            </button>
-                         </div>
-                    </template>
-                </template>
+             <!-- Hero Illustration (Abstract) -->
+             <div class="relative z-10 w-64 h-64 lg:w-80 lg:h-80 flex-shrink-0 hidden md:block">
+                 <div class="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-purple-500/20 rounded-full animate-blob filter blur-xl"></div>
+                 <div class="glass-card w-full h-full rounded-3xl flex items-center justify-center border border-white/20 relative overflow-hidden bg-white/5">
+                     <div class="text-8xl animate-float">🧬</div>
+                 </div>
              </div>
         </div>
 
-        <!-- Categories Filter -->
-        <div class="flex gap-2 overflow-x-auto custom-scroll pb-2 mb-4">
-            <template x-for="cat in ['All', 'Nutrition', 'Wellness', 'Performance', 'Other']">
-                <button @click="biohackCategory = cat"
-                        class="px-5 py-2 rounded-full text-xs font-bold transition-all border whitespace-nowrap"
-                        :class="biohackCategory === cat ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/20' : 'bg-white/5 border-white/5 text-white/40 hover:bg-white/10 hover:text-white'">
-                    <span x-text="cat"></span>
-                </button>
-            </template>
+        <!-- 2. Search & Filter Bar -->
+        <div class="sticky top-0 z-40 bg-[#050505]/80 backdrop-blur-xl py-6 -mx-4 px-4 lg:-mx-8 lg:px-8 border-b border-white/5">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                <!-- Categories -->
+                <div class="flex gap-2 overflow-x-auto custom-scroll w-full md:w-auto pb-2 md:pb-0 no-scrollbar">
+                     <template x-for="cat in ['All', 'Nutrition', 'Wellness', 'Performance', 'Other']">
+                        <button @click="biohackCategory = cat"
+                                class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all border whitespace-nowrap flex items-center gap-2"
+                                :class="biohackCategory === cat ? 'bg-white text-black border-white shadow-lg shadow-white/20 scale-105' : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:text-white'">
+                            <span x-show="cat === 'All'">🌐</span>
+                            <span x-show="cat === 'Nutrition'">🍎</span>
+                            <span x-show="cat === 'Wellness'">🌿</span>
+                            <span x-show="cat === 'Performance'">⚡</span>
+                            <span x-show="cat === 'Other'">🛠️</span>
+                            <span x-text="cat"></span>
+                        </button>
+                    </template>
+                </div>
+
+                <!-- Search -->
+                <div class="relative w-full md:w-80 group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <span class="text-white/30 group-focus-within:text-blue-400 transition">🔍</span>
+                    </div>
+                    <input id="biohack-search" type="text" x-model="biohackSearch" placeholder="Search for tools..."
+                           class="w-full bg-[#111] border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-[#1A1A1A] transition-all shadow-inner">
+                </div>
+            </div>
         </div>
 
-        <!-- Main Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-             <template x-for="tool in getFilteredBiohacks()" :key="tool.id">
+        <!-- 3. Tool Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-slide-up delay-200">
+            <template x-for="tool in getFilteredBiohacks()" :key="tool.id">
                 <button @click="openBiohack(tool)"
-                        class="glass-card p-6 rounded-[28px] text-left hover:bg-white/5 transition-all duration-300 group relative overflow-hidden border border-white/5 hover:border-blue-500/30 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-900/10">
+                        class="group relative flex flex-col glass-card rounded-[32px] overflow-hidden text-left hover:-translate-y-2 transition-all duration-500 h-full border border-white/5 hover:border-white/20 hover:shadow-2xl hover:shadow-blue-900/10">
 
-                    <!-- Background Gradient on Hover -->
-                    <div class="absolute inset-0 bg-gradient-to-br from-transparent to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <!-- Image / Icon Header -->
+                    <div class="h-32 bg-gradient-to-br w-full relative overflow-hidden transition-colors duration-500"
+                         :class="{
+                            'from-green-900/40 to-emerald-900/10': tool.category === 'Nutrition',
+                            'from-blue-900/40 to-cyan-900/10': tool.category === 'Wellness',
+                            'from-orange-900/40 to-red-900/10': tool.category === 'Performance',
+                            'from-gray-800 to-gray-900': !['Nutrition', 'Wellness', 'Performance'].includes(tool.category)
+                         }">
 
-                    <!-- Favorite Button -->
-                    <div class="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div @click.stop="toggleFavorite(tool.id)" class="hover:scale-110 transition cursor-pointer text-white/20 hover:text-yellow-400">
-                             <span x-text="isFavorite(tool.id) ? '⭐' : '☆'"></span>
-                        </div>
-                    </div>
-                     <!-- Persistent Favorite Icon if Favorite -->
-                    <div x-show="isFavorite(tool.id)" class="absolute top-4 right-4 z-20">
-                         <div @click.stop="toggleFavorite(tool.id)" class="hover:scale-110 transition cursor-pointer text-yellow-400">⭐</div>
-                    </div>
-
-                    <div class="relative z-10 flex flex-col h-full">
-                        <div class="flex justify-between items-start mb-5">
-                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110 shadow-inner"
-                                 :class="{
-                                    'bg-green-500/10 text-green-400 border border-green-500/20': tool.category === 'Nutrition',
-                                    'bg-blue-500/10 text-blue-400 border border-blue-500/20': tool.category === 'Wellness',
-                                    'bg-orange-500/10 text-orange-400 border border-orange-500/20': tool.category === 'Performance',
-                                    'bg-white/10 text-white/60 border border-white/10': !['Nutrition', 'Wellness', 'Performance'].includes(tool.category)
-                                 }">
+                         <!-- Decor -->
+                         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition"></div>
+                         <div class="absolute top-4 left-4">
+                            <div class="w-12 h-12 rounded-xl bg-black/20 backdrop-blur-md flex items-center justify-center text-2xl border border-white/10 shadow-lg group-hover:scale-110 transition-transform">
                                 <span x-show="tool.category === 'Nutrition'">🍎</span>
                                 <span x-show="tool.category === 'Wellness'">🌿</span>
                                 <span x-show="tool.category === 'Performance'">⚡</span>
                                 <span x-show="!['Nutrition', 'Wellness', 'Performance'].includes(tool.category)">🛠️</span>
                             </div>
+                         </div>
+                         <!-- Fav Icon -->
+                         <div class="absolute top-4 right-4 z-20">
+                             <div @click.stop="toggleFavorite(tool.id)" class="w-8 h-8 rounded-full bg-black/20 backdrop-blur flex items-center justify-center hover:bg-white/20 transition cursor-pointer">
+                                  <span x-text="isFavorite(tool.id) ? '⭐' : '☆'" :class="isFavorite(tool.id) ? 'text-yellow-400' : 'text-white/40'"></span>
+                             </div>
+                         </div>
+                    </div>
 
-                            <div class="px-2 py-1 rounded-md bg-white/5 border border-white/5 text-[10px] uppercase font-bold text-white/30 tracking-wider" x-text="tool.category"></div>
+                    <!-- Content -->
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex items-center gap-2 mb-2">
+                             <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-white/5 text-white/40 border border-white/5" x-text="tool.category"></span>
                         </div>
+                        <h3 class="font-bold text-xl mb-2 text-white group-hover:text-blue-400 transition-colors leading-tight" x-text="tool.name"></h3>
+                        <p class="text-sm text-white/50 leading-relaxed line-clamp-3 mb-6" x-text="tool.desc"></p>
 
-                        <div class="flex-1">
-                            <h3 class="font-bold text-lg mb-2 text-white group-hover:text-blue-400 transition-colors" x-text="tool.name"></h3>
-                            <p class="text-sm text-white/50 leading-relaxed line-clamp-2" x-text="tool.desc"></p>
-                        </div>
-
-                        <div class="mt-6 flex items-center justify-between pt-4 border-t border-white/5 group-hover:border-white/10 transition-colors">
-                            <span class="text-[10px] font-bold text-white/30 uppercase tracking-widest group-hover:text-blue-400 transition-colors">Use Tool</span>
-                            <div class="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-white/30 group-hover:bg-blue-500 group-hover:text-white transition-all transform group-hover:translate-x-1">→</div>
+                        <div class="mt-auto flex items-center justify-between pt-4 border-t border-white/5 group-hover:border-white/10 transition-colors">
+                            <span class="text-xs font-medium text-white/30 group-hover:text-white transition-colors">Launch Tool</span>
+                            <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/30 group-hover:bg-blue-500 group-hover:text-white transition-all transform group-hover:rotate-45">↗</div>
                         </div>
                     </div>
                 </button>
@@ -130,43 +119,49 @@
         </div>
 
         <!-- Empty State -->
-         <div x-show="getFilteredBiohacks().length === 0" class="text-center py-20 border-2 border-dashed border-white/5 rounded-[32px]">
-            <div class="text-4xl mb-4 opacity-30">🔍</div>
-            <h3 class="text-lg font-bold text-white/50">No tools found</h3>
-            <p class="text-sm text-white/30">Try adjusting your search or category.</p>
-            <button @click="biohackCategory = 'All'; biohackSearch = ''" class="mt-4 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 text-xs font-bold transition">Clear Filters</button>
+        <div x-show="getFilteredBiohacks().length === 0" class="flex flex-col items-center justify-center py-32 text-center border-2 border-dashed border-white/5 rounded-[40px]">
+            <div class="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center text-4xl mb-6 animate-pulse">🔍</div>
+            <h3 class="text-2xl font-bold text-white mb-2">No tools found</h3>
+            <p class="text-white/40 max-w-md mx-auto mb-8">We couldn't find any biohacks matching your search. Try adjusting your filters.</p>
+            <button @click="biohackCategory = 'All'; biohackSearch = ''" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition shadow-lg shadow-blue-900/20">Clear All Filters</button>
         </div>
 
     </div>
 
-    <div x-show="currentTab === 'settings'" class="space-y-6 pb-12">
-        <div class="glass-card p-8 rounded-[32px]">
-            <div class="flex justify-between items-center mb-8">
-                <h3 class="text-xl font-bold">Settings & Preferences</h3>
-                <button @click="saveSettings" class="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition shadow-lg shadow-blue-900/20">Save Changes</button>
+    <!-- SETTINGS TAB -->
+    <div x-show="currentTab === 'settings'" class="space-y-8 pb-12 max-w-4xl mx-auto animate-slide-up delay-100">
+         <div class="glass-card p-10 rounded-[40px]">
+            <div class="flex justify-between items-center mb-10 pb-6 border-b border-white/5">
+                <div>
+                    <h3 class="text-2xl font-bold">Settings & Preferences</h3>
+                    <p class="text-white/40 mt-1">Manage your profile and data.</p>
+                </div>
+                <button @click="saveSettings" class="px-8 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition shadow-lg shadow-blue-900/20 flex items-center gap-2">
+                    <span>💾</span> Save Changes
+                </button>
             </div>
 
-            <div class="space-y-8">
+             <div class="space-y-10">
                 <!-- Personal Info -->
                 <div>
-                    <h4 class="text-xs font-bold text-white/40 uppercase tracking-widest mb-4 border-b border-white/5 pb-2">Personal Profile</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <h4 class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-6 flex items-center gap-2"><span>👤</span> Personal Profile</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <label class="block text-xs font-bold text-white/60 mb-2">Display Name</label>
-                            <input type="text" x-model="userName" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+                            <label class="block text-xs font-bold text-white/60 mb-3 ml-1">Display Name</label>
+                            <input type="text" x-model="userName" class="w-full bg-[#111] border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-blue-500 transition shadow-inner">
                         </div>
                     </div>
                 </div>
 
-                <!-- Lifestyle Inputs Generated from Logic -->
+                <!-- Lifestyle Inputs -->
                 <div>
-                    <h4 class="text-xs font-bold text-white/40 uppercase tracking-widest mb-4 border-b border-white/5 pb-2">Bio-Data & Lifestyle</h4>
+                    <h4 class="text-xs font-bold text-purple-400 uppercase tracking-widest mb-6 flex items-center gap-2"><span>🧬</span> Bio-Data & Lifestyle</h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <template x-for="q in lifestyleQuestions">
-                            <div>
-                                <label class="block text-xs font-bold text-white/60 mb-2" x-text="q.title"></label>
+                            <div class="bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-white/10 transition">
+                                <label class="block text-xs font-bold text-white/80 mb-3" x-text="q.title"></label>
                                 <div class="relative">
-                                    <select x-model="userChoices[q.id]" class="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition appearance-none cursor-pointer">
+                                    <select x-model="userChoices[q.id]" class="w-full bg-[#050505] border border-white/10 rounded-xl pl-4 pr-10 py-3 text-sm text-white focus:outline-none focus:border-purple-500 transition appearance-none cursor-pointer">
                                         <option value="" disabled>Select Option</option>
                                         <template x-for="opt in q.options">
                                             <option :value="opt.text" x-text="opt.text"></option>
@@ -180,21 +175,23 @@
                 </div>
 
                 <!-- Data Management -->
-                <div class="pt-8 mt-8 border-t border-white/5">
-                    <h4 class="text-xs font-bold text-white/40 uppercase tracking-widest mb-4">Data Management</h4>
-                    <button @click="exportData" class="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-sm transition border border-white/10 flex items-center gap-2">
-                        <span>📥</span> Export Data (JSON)
-                    </button>
+                <div class="pt-10 mt-10 border-t border-white/5">
+                    <h4 class="text-xs font-bold text-white/40 uppercase tracking-widest mb-6">Data Management</h4>
+                    <div class="flex gap-4">
+                        <button @click="exportData" class="px-6 py-4 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-bold text-sm transition border border-white/10 flex items-center gap-3">
+                            <span>📥</span> Export Data (JSON)
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Danger Zone -->
-                <div class="pt-8 mt-8 border-t border-white/5">
-                    <h4 class="text-xs font-bold text-red-400/60 uppercase tracking-widest mb-4">Danger Zone</h4>
-                    <button @click="resetSystem" class="px-6 py-3 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white font-bold text-sm transition border border-red-500/20 flex items-center gap-2">
-                        <span>⚠️</span> Reset All Data
+                <div class="pt-10 mt-10 border-t border-white/5">
+                    <h4 class="text-xs font-bold text-red-500/60 uppercase tracking-widest mb-6">Danger Zone</h4>
+                    <button @click="resetSystem" class="px-6 py-4 rounded-2xl bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white font-bold text-sm transition border border-red-500/20 flex items-center gap-3">
+                        <span>⚠️</span> Reset All System Data
                     </button>
                 </div>
             </div>
-        </div>
+         </div>
     </div>
 </div>

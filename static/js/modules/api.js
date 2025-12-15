@@ -62,12 +62,34 @@ export function apiSlice() {
             if(this.updateBioMetrics) this.updateBioMetrics();
 
             // 4. Generate a placeholder "Week Plan" to trigger the Dashboard View
-            // (In a full app, you might fetch a specific plan from another endpoint here)
-            this.weekPlan = [
-                { day: 'Monday', focus: 'Metabolic Reset', workout: 'Zone 2 Cardio', meal: 'Low Carb' },
-                { day: 'Tuesday', focus: 'Recovery', workout: 'Yoga', meal: 'Balanced' },
-                { day: 'Wednesday', focus: 'Strength', workout: 'Upper Body', meal: 'High Protein' }
-            ];
+
+            // Generate dates for the next 7 days
+            const today = new Date();
+            const days = [];
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(today);
+                d.setDate(today.getDate() + i);
+                days.push({
+                    day: d.toLocaleDateString('en-US', { weekday: 'short' }),
+                    date: d.toISOString().split('T')[0],
+                    fullDate: d.toISOString().split('T')[0]
+                });
+            }
+
+            this.weekPlan = days.map(d => ({
+                day: d.day,
+                date: d.date,
+                fullDate: d.fullDate,
+                completed: false,
+                meals: [
+                    { type: 'Breakfast', title: 'Oatmeal & Berries', calories: '350', protein: '12g', carbs: '60g', fats: '6g', completed: false },
+                    { type: 'Lunch', title: 'Grilled Chicken Salad', calories: '450', protein: '40g', carbs: '15g', fats: '20g', completed: false },
+                    { type: 'Dinner', title: 'Salmon & Asparagus', calories: '500', protein: '35g', carbs: '10g', fats: '25g', completed: false },
+                    { type: 'Snack', title: 'Almonds', calories: '160', protein: '6g', carbs: '6g', fats: '14g', completed: false }
+                ],
+                total_macros: { calories: 1460, protein: '93g', carbs: '91g', fats: '65g' }
+            }));
+
             localStorage.setItem('weekPlan', JSON.stringify(this.weekPlan));
 
             // 5. Success!

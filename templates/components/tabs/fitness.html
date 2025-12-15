@@ -1,7 +1,7 @@
-<div x-show="currentTab === 'fitness'" class="max-w-6xl mx-auto space-y-6 animate-scale-in pb-24">
+<div x-show="currentTab === 'fitness'" class="max-w-6xl mx-auto space-y-6 animate-fade-in pb-24" x-cloak>
 
     <!-- Header -->
-    <div class="flex justify-between items-center">
+    <div class="flex justify-between items-center animate-slide-up delay-100">
         <div>
             <h2 class="text-2xl font-bold tracking-tight">Training Lab</h2>
             <p class="text-white/40 text-xs mt-1">Bio-Individualized Protocol</p>
@@ -14,7 +14,7 @@
     </div>
 
     <!-- Calendar Strip -->
-    <div class="flex gap-2 overflow-x-auto custom-scroll snap-x py-2">
+    <div class="flex gap-2 overflow-x-auto custom-scroll snap-x py-2 animate-slide-up delay-200">
         <template x-for="day in calendarDays">
             <button @click="selectDate(day)"
                     class="flex-shrink-0 w-14 h-16 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all duration-300 snap-center border"
@@ -27,7 +27,7 @@
     </div>
 
     <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-slide-up delay-300">
 
         <!-- Left: Workout Session -->
         <div class="lg:col-span-2 space-y-6">
@@ -168,18 +168,36 @@
                 <p class="text-[10px] text-white/40 mt-3">Ready for high intensity output.</p>
             </div>
 
-            <!-- Volume Chart Placeholder -->
+            <!-- Body Focus Visualization -->
+            <div class="glass-card p-5 rounded-[24px]" x-show="getNextWorkout()">
+                <h4 class="font-bold text-xs text-white/50 mb-4 uppercase tracking-wider">Target Muscles</h4>
+                <div class="relative h-48 w-full bg-white/5 rounded-xl border border-white/5 overflow-hidden flex items-center justify-center">
+                    <!-- Simple CSS Body Viz -->
+                    <div class="grid grid-cols-2 gap-1 w-32 opacity-80">
+                         <div class="h-8 rounded bg-white/10 flex items-center justify-center text-[8px]" :class="isMuscleActive('Shoulders') ? 'bg-orange-500 text-white' : ''">Shoulders</div>
+                         <div class="h-8 rounded bg-white/10 flex items-center justify-center text-[8px]" :class="isMuscleActive('Shoulders') ? 'bg-orange-500 text-white' : ''">Shoulders</div>
+
+                         <div class="h-10 col-span-2 rounded bg-white/10 flex items-center justify-center text-[8px]" :class="isMuscleActive('Chest') ? 'bg-orange-500 text-white' : ''">Chest / Back</div>
+
+                         <div class="h-8 rounded bg-white/10 flex items-center justify-center text-[8px]" :class="isMuscleActive('Arms') ? 'bg-orange-500 text-white' : ''">Arm</div>
+                         <div class="h-8 rounded bg-white/10 flex items-center justify-center text-[8px]" :class="isMuscleActive('Arms') ? 'bg-orange-500 text-white' : ''">Arm</div>
+
+                         <div class="h-6 col-span-2 rounded bg-white/10 flex items-center justify-center text-[8px]" :class="isMuscleActive('Core') ? 'bg-orange-500 text-white' : ''">Abs / Core</div>
+
+                         <div class="h-12 rounded bg-white/10 flex items-center justify-center text-[8px]" :class="isMuscleActive('Legs') ? 'bg-orange-500 text-white' : ''">Leg</div>
+                         <div class="h-12 rounded bg-white/10 flex items-center justify-center text-[8px]" :class="isMuscleActive('Legs') ? 'bg-orange-500 text-white' : ''">Leg</div>
+                    </div>
+                </div>
+                <div class="mt-3 text-center text-[10px] text-white/40">
+                    Focus: <span x-text="getNextWorkout()?.focus || 'Rest'"></span>
+                </div>
+            </div>
+
+            <!-- Volume Chart -->
             <div class="glass-card p-5 rounded-[24px]">
-                 <h4 class="font-bold text-xs text-white/50 mb-4 uppercase tracking-wider">Weekly Volume</h4>
-                 <div class="h-32 flex items-end justify-between gap-2">
-                     <!-- Fake Bars for visual only, Chart.js can be connected later -->
-                     <div class="w-full bg-white/5 rounded-t hover:bg-orange-500/20 transition h-[40%]"></div>
-                     <div class="w-full bg-white/5 rounded-t hover:bg-orange-500/20 transition h-[60%]"></div>
-                     <div class="w-full bg-orange-500 rounded-t hover:bg-orange-400 transition h-[80%] relative group">
-                         <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] bg-black px-1 rounded opacity-0 group-hover:opacity-100 transition">Today</div>
-                     </div>
-                     <div class="w-full bg-white/5 rounded-t hover:bg-orange-500/20 transition h-[30%]"></div>
-                     <div class="w-full bg-white/5 rounded-t hover:bg-orange-500/20 transition h-[50%]"></div>
+                 <h4 class="font-bold text-xs text-white/50 mb-4 uppercase tracking-wider">Weekly Volume (Kg)</h4>
+                 <div class="h-32 w-full">
+                     <canvas id="fitnessVolumeChart"></canvas>
                  </div>
             </div>
 
@@ -188,8 +206,8 @@
                 <h4 class="font-bold text-xs text-white/50 mb-4 uppercase tracking-wider">Tools</h4>
                 <div class="grid grid-cols-2 gap-3">
                     <template x-for="tool in fitnessTools">
-                        <button @click="selectedTool = tool; bioHacksOpen = true" class="glass-card p-3 rounded-xl text-left hover:bg-white/5 transition border border-white/5 hover:border-white/10">
-                            <div class="text-lg mb-1" x-text="tool.icon || '⚙️'"></div>
+                        <button @click="openFitnessTool(tool)" class="glass-card p-3 rounded-xl text-left hover:bg-white/5 transition border border-white/5 hover:border-white/10">
+                            <div class="text-lg mb-1" x-text="tool.icon || '🛠️'"></div>
                             <div class="font-bold text-xs truncate" x-text="tool.name"></div>
                         </button>
                     </template>

@@ -12,4 +12,4 @@ class TestFrontend(unittest.TestCase):
         self.assertIn(b'BioFlow', response.data)
         # Check if new landing content is present
         self.assertIn(b'Your Body', response.data)
-        self.assertIn(b'privacy-focused', response.data)
+        self.assertIn(b'Decoded', response.data)

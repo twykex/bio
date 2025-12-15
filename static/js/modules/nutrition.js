@@ -13,6 +13,7 @@ export function nutritionSlice() {
         customMealForm: { title: '', calories: '', protein: '', carbs: '', fats: '', type: 'Snack' },
         recipeDetails: null,
         shoppingList: null,
+        checkedShoppingItems: [],
         nutritionToolIds: ['quick_snack', 'check_food_interaction', 'recipe_variation', 'seasonal_swap', 'budget_swap', 'leftover_idea', 'flavor_pairing', 'mood_food', 'low_gi_option', 'high_protein_option'],
         mealNotesModalOpen: false,
         mealNoteInput: '',
@@ -181,6 +182,75 @@ export function nutritionSlice() {
 
         async quickSwap(day, ing) {
             this.chatOpen = true; this.chatInput = `I can't eat ${ing} in the ${day.title}. Alternative?`; this.sendMessage();
+        },
+
+        // --- NEW FEATURES ---
+        calculateWeeklyAdherence() {
+            if (!this.weekPlan || this.weekPlan.length === 0) return 0;
+            let totalAdherence = 0;
+            this.weekPlan.forEach(day => {
+                totalAdherence += this.calculateDayAdherence(day);
+            });
+            return Math.round(totalAdherence / this.weekPlan.length);
+        },
+
+        calculateDayAdherence(day) {
+            if (!day || !day.meals || day.meals.length === 0) return 0;
+            const completedMeals = day.meals.filter(m => m.completed).length;
+            return Math.round((completedMeals / day.meals.length) * 100);
+        },
+
+        quickAdd(item) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const dayPlan = this.weekPlan.find(d => d.date === todayStr);
+
+            if (!dayPlan) {
+                // Try to find the selected date instead if today doesn't match
+                const selectedDayPlan = this.weekPlan.find(d => d.date === this.selectedDate);
+                if(selectedDayPlan) {
+                     this.addToDay(selectedDayPlan, item);
+                     return;
+                }
+                this.notify("No plan active for today.", "error");
+                return;
+            }
+            this.addToDay(dayPlan, item);
+        },
+
+        addToDay(dayPlan, item) {
+             let meal = { title: item, completed: true, type: 'Snack', benefit: 'Quick Add' };
+
+            // Default values for quick items
+            if (item === 'Coffee') { meal = { ...meal, calories: 5, protein: '0g', carbs: '1g', fats: '0g' }; }
+            else if (item === 'Protein Shake') { meal = { ...meal, calories: 150, protein: '25g', carbs: '5g', fats: '2g' }; }
+            else if (item === 'Apple') { meal = { ...meal, calories: 95, protein: '0g', carbs: '25g', fats: '0g' }; }
+            else if (item === 'Nuts') { meal = { ...meal, calories: 180, protein: '6g', carbs: '4g', fats: '15g' }; }
+
+            dayPlan.meals.push(meal);
+
+             // Update totals
+             const currentTotals = dayPlan.total_macros;
+             const parseVal = (str) => parseInt(String(str).replace(/\D/g, '')) || 0;
+
+             currentTotals.calories = parseVal(currentTotals.calories) + parseVal(meal.calories);
+             currentTotals.protein = (parseVal(currentTotals.protein) + parseVal(meal.protein)) + 'g';
+             currentTotals.carbs = (parseVal(currentTotals.carbs) + parseVal(meal.carbs)) + 'g';
+             currentTotals.fats = (parseVal(currentTotals.fats) + parseVal(meal.fats)) + 'g';
+
+             this.notify(`Added ${item}!`);
+             if (this.initNutritionCharts) this.initNutritionCharts();
+        },
+
+        toggleShoppingItem(item) {
+            if (this.checkedShoppingItems.includes(item)) {
+                this.checkedShoppingItems = this.checkedShoppingItems.filter(i => i !== item);
+            } else {
+                this.checkedShoppingItems.push(item);
+            }
+        },
+
+        isShoppingItemChecked(item) {
+            return this.checkedShoppingItems.includes(item);
         },
 
         // --- CORE GENERATION LOGIC ---
