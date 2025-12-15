@@ -56,13 +56,13 @@
 </head>
 <body class="h-screen w-screen overflow-hidden relative flex bg-[#050505] text-white selection:bg-blue-500/30" x-data="app()">
 
-    <!-- 1. AMBIENT BACKGROUND (Calm & Flowing) -->
+    <!-- 1. AMBIENT BACKGROUND -->
     <div class="fixed inset-0 pointer-events-none z-0">
         <div class="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] animate-breathe"></div>
         <div class="absolute bottom-[-10%] right-[10%] w-[600px] h-[600px] bg-indigo-600/5 rounded-full blur-[100px]"></div>
     </div>
 
-    <!-- 2. LANDING STATE: THE "BIO-SCANNER" -->
+    <!-- 2. LANDING STATE -->
     <main x-show="weekPlan.length === 0" class="relative z-10 w-full h-full flex flex-col items-center justify-center p-6" x-transition.opacity.duration.700ms>
 
         <!-- Upload Zone -->
@@ -79,7 +79,6 @@
                        class="block w-full h-64 rounded-[40px] border border-white/10 flex flex-col items-center justify-center cursor-pointer transition-all duration-500 relative overflow-hidden"
                        :class="dragOver ? 'bg-blue-500/10 scale-105 border-blue-500/50' : 'bg-white/5 hover:bg-white/10 hover:border-white/20'">
 
-                    <!-- Scanner Line Animation -->
                     <div class="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-blue-500 to-transparent top-0 animate-scan opacity-50"></div>
 
                     <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform border border-white/10">
@@ -91,8 +90,8 @@
             <p class="mt-8 text-xs text-white/20 font-medium">Local LLM Processing • Encrypted • Private</p>
         </div>
 
-        <!-- Strategy Selection (Cards) -->
-        <div x-show="context && !loading" class="w-full max-w-6xl animate-scale-in" x-cloak>
+        <!-- Strategy Selection (Fallback if not using wizard) -->
+        <div x-show="context && !loading && !consultationActive" class="w-full max-w-6xl animate-scale-in" x-cloak>
             <div class="text-center mb-10">
                 <h2 class="text-3xl font-bold mb-2">Analysis Complete</h2>
                 <p class="text-white/40">Select a protocol strategy based on your biomarkers.</p>
@@ -101,9 +100,7 @@
                 <template x-for="strat in context?.strategies">
                     <button @click="openPrefModal(strat.name)"
                             class="glass-card p-8 rounded-[32px] text-left relative overflow-hidden group h-[340px] flex flex-col justify-between">
-                        <!-- Gradient Blob -->
                         <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/20 blur-[50px] rounded-full group-hover:bg-blue-500/40 transition-colors"></div>
-
                         <div>
                             <div class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-4">Recommended</div>
                             <h3 class="text-3xl font-bold mb-4" x-text="strat.name" :data-term="strat.name"></h3>
@@ -119,7 +116,7 @@
             </div>
         </div>
 
-        <!-- Loading State (Minimal) -->
+        <!-- Loading State -->
         <div x-show="loading" class="text-center z-50">
             <div class="w-16 h-16 border-2 border-white/10 border-t-white rounded-full animate-spin mx-auto mb-6"></div>
             <h3 class="text-xl font-medium animate-pulse" x-text="loadingText"></h3>
@@ -129,11 +126,10 @@
     <!-- 3. DASHBOARD STATE -->
     <div x-show="weekPlan.length > 0" class="flex w-full h-full z-20" x-cloak x-transition.opacity.duration.1000ms>
 
-        <!-- Minimal Sidebar -->
+        <!-- Sidebar -->
         <aside class="w-20 lg:w-64 h-full glass-panel flex flex-col justify-between py-8 z-30 transition-all duration-300">
             <div class="flex flex-col items-center lg:items-start px-0 lg:px-6">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold mb-10 shadow-lg shadow-blue-500/20 cursor-pointer" @click="resetSystem">B</div>
-
                 <nav class="space-y-2 w-full">
                     <template x-for="tab in ['dashboard', 'nutrition', 'fitness', 'biohacks', 'settings']">
                         <button @click="currentTab = tab"
@@ -146,7 +142,7 @@
                 </nav>
             </div>
             <div class="px-4">
-                <button @click="chatOpen = !chatOpen" class="w-full h-12 rounded-xl bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white transition-all flex items-center justify-center lg:justify-start lg:px-4 gap-3 border border-blue-500/20">
+                <button @click="chatOpen = true" class="w-full h-12 rounded-xl bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white transition-all flex items-center justify-center lg:justify-start lg:px-4 gap-3 border border-blue-500/20">
                     <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
                     <span class="hidden lg:block text-sm font-bold">Assistant</span>
                 </button>
@@ -157,32 +153,23 @@
         <main class="flex-1 h-full overflow-hidden relative flex flex-col bg-[#050505]">
             <div class="flex-1 overflow-y-auto custom-scroll p-6 lg:p-10">
 
-                <!-- DASHBOARD VIEW -->
+                <!-- DASHBOARD TAB -->
                 <div x-show="currentTab === 'dashboard'" class="max-w-5xl mx-auto space-y-10 animate-scale-in">
-
-                    <!-- Header -->
                     <div class="flex items-center justify-between">
                         <div>
                             <h2 class="text-3xl font-bold">Hello, <span x-text="userName"></span></h2>
                             <p class="text-white/40">Your biometrics are optimizing.</p>
                         </div>
-                        <div class="text-right hidden sm:block">
-                            <div class="text-2xl font-bold" x-text="new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})"></div>
-                            <div class="text-xs text-white/40" x-text="new Date().toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'})"></div>
-                        </div>
                     </div>
 
-                    <!-- Hero: Health Ring -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- THE RING -->
+                        <!-- Ring -->
                         <div class="md:col-span-1 glass-card rounded-[32px] p-8 flex flex-col items-center justify-center relative">
-                            <!-- SVG Ring -->
                             <div class="relative w-40 h-40">
                                 <svg class="w-full h-full transform -rotate-90">
                                     <circle cx="80" cy="80" r="70" stroke="rgba(255,255,255,0.05)" stroke-width="12" fill="none"></circle>
                                     <circle cx="80" cy="80" r="70" stroke="#3b82f6" stroke-width="12" fill="none"
-                                            :stroke-dasharray="440"
-                                            :stroke-dashoffset="440 - (440 * healthScore / 100)"
+                                            :stroke-dasharray="440" :stroke-dashoffset="440 - (440 * healthScore / 100)"
                                             class="transition-all duration-1000 ease-out shadow-[0_0_20px_#3b82f6]"></circle>
                                 </svg>
                                 <div class="absolute inset-0 flex flex-col items-center justify-center">
@@ -190,29 +177,17 @@
                                     <span class="text-[10px] uppercase tracking-widest text-white/40">Score</span>
                                 </div>
                             </div>
-                            <div class="mt-6 text-center">
-                                <h3 class="font-bold">System Status</h3>
-                                <p class="text-xs text-white/40">Optimal based on biomarkers</p>
-                            </div>
                         </div>
 
-                        <!-- Stats & Actions -->
+                        <!-- Trackers -->
                         <div class="md:col-span-2 grid grid-cols-2 gap-6">
-                            <!-- Hydration -->
                             <div class="glass-card rounded-[32px] p-6 flex flex-col justify-between">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <div class="text-xs uppercase tracking-widest text-blue-400 mb-1">Hydration</div>
-                                        <div class="text-2xl font-bold"><span x-text="waterIntake"></span> / <span x-text="waterGoal"></span></div>
-                                    </div>
-                                    <button @click="addWater" class="w-10 h-10 rounded-full bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white flex items-center justify-center transition">+</button>
+                                <div>
+                                    <div class="text-xs uppercase tracking-widest text-blue-400 mb-1">Hydration</div>
+                                    <div class="text-2xl font-bold"><span x-text="waterIntake"></span> / 8</div>
                                 </div>
-                                <div class="w-full bg-white/5 h-2 rounded-full mt-4 overflow-hidden">
-                                    <div class="bg-blue-500 h-full rounded-full transition-all duration-500" :style="`width: ${(waterIntake/waterGoal)*100}%`"></div>
-                                </div>
+                                <button @click="addWater" class="w-10 h-10 rounded-full bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white flex items-center justify-center transition">+</button>
                             </div>
-
-                            <!-- Fasting -->
                             <div class="glass-card rounded-[32px] p-6 flex flex-col justify-between">
                                 <div>
                                     <div class="text-xs uppercase tracking-widest text-purple-400 mb-1">Fasting</div>
@@ -222,84 +197,93 @@
                                     <span x-text="fastingStart ? 'Stop Timer' : 'Start Fast'"></span>
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
 
-                            <!-- Next Meal (Wide) -->
-                            <div class="col-span-2 glass-card rounded-[32px] p-6 flex items-center justify-between cursor-pointer hover:bg-white/5" @click="weekPlan[0] && openRecipe(weekPlan[0])">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-xl">🥗</div>
-                                    <div>
-                                        <div class="text-xs text-white/40 uppercase mb-1">Up Next</div>
-                                        <div class="font-bold" x-text="weekPlan[0] ? weekPlan[0].title : 'Loading...'"></div>
+                <!-- NUTRITION TAB (Advanced Planner) -->
+                <div x-show="currentTab === 'nutrition'" class="max-w-6xl mx-auto space-y-8 animate-scale-in">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <h2 class="text-3xl font-bold">Nutrition Architect</h2>
+                            <p class="text-white/40 text-sm mt-1">AI-Optimized fueling strategy.</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button @click="generateShoppingList" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold transition border border-white/5">Shopping List</button>
+                            <button @click="openMealWizard" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-lg shadow-blue-900/20 flex items-center gap-2"><span>✨</span> Plan New Week</button>
+                        </div>
+                    </div>
+
+                    <!-- Calendar Strip -->
+                    <div class="glass-panel p-4 rounded-[24px] flex gap-3 overflow-x-auto custom-scroll snap-x">
+                        <template x-for="day in calendarDays">
+                            <button @click="selectDate(day)"
+                                    class="flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-300 snap-center border"
+                                    :class="day.active ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/40 transform scale-105' : 'bg-white/5 border-transparent text-white/40 hover:bg-white/10 hover:text-white'">
+                                <span class="text-xs font-bold uppercase tracking-wider" x-text="day.day"></span>
+                                <span class="text-xl font-bold" x-text="day.date"></span>
+                                <div class="w-1 h-1 rounded-full bg-white/50 mt-1" x-show="weekPlan.length > 0"></div>
+                            </button>
+                        </template>
+                    </div>
+
+                    <!-- Tasks View -->
+                    <div class="min-h-[400px]">
+                        <div x-show="weekPlan.length === 0" class="flex flex-col items-center justify-center h-64 text-center border-2 border-dashed border-white/10 rounded-[32px]">
+                            <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 text-2xl">📅</div>
+                            <h3 class="text-lg font-bold text-white">No Protocol Active</h3>
+                            <button @click="openMealWizard" class="mt-6 px-6 py-3 rounded-full bg-white text-black font-bold text-sm hover:bg-gray-200 transition">Launch Architect</button>
+                        </div>
+
+                        <div x-show="weekPlan.length > 0">
+                            <h3 class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-4 pl-2">Tasks for <span x-text="selectedDate"></span></h3>
+                            <div class="space-y-4">
+                                <template x-for="meal in getMealsForSelectedDate()">
+                                    <div class="glass-card p-0 rounded-[24px] overflow-hidden group transition-all duration-300" :class="meal.completed ? 'opacity-50 grayscale' : ''">
+                                        <div class="flex items-stretch">
+                                            <div @click="toggleMealCompletion(meal)" class="w-16 bg-white/5 flex items-center justify-center cursor-pointer hover:bg-green-500/20 transition-colors border-r border-white/5">
+                                                <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all" :class="meal.completed ? 'bg-green-500 border-green-500' : 'border-white/30 group-hover:border-white'">
+                                                    <svg x-show="meal.completed" class="w-3 h-3 text-black font-bold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path d="M5 13l4 4L19 7"></path></svg>
+                                                </div>
+                                            </div>
+                                            <div class="flex-1 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                <div>
+                                                    <div class="flex items-center gap-3 mb-1">
+                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-400 uppercase">Dinner</span>
+                                                    </div>
+                                                    <h3 class="text-xl font-bold text-white mb-1" x-text="meal.title" :class="meal.completed ? 'line-through' : ''"></h3>
+                                                    <p class="text-sm text-white/50" x-text="meal.benefit"></p>
+                                                </div>
+                                                <div class="flex items-center gap-3">
+                                                    <button @click="openRecipe(meal)" class="px-5 py-2.5 rounded-xl bg-white text-black text-xs font-bold hover:scale-105 transition shadow-lg">View Recipe</button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center">→</div>
+                                </template>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- NUTRITION (ZEN CARDS) -->
-                <div x-show="currentTab === 'nutrition'" class="max-w-6xl mx-auto space-y-6 animate-scale-in">
-                    <div class="flex justify-between items-end mb-4">
-                        <h2 class="text-3xl font-bold">Weekly Protocol</h2>
-                        <button @click="generateShoppingList" class="text-xs font-bold text-blue-400 hover:text-white transition">Get Shopping List</button>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <template x-for="(day, index) in weekPlan">
-                            <div class="glass-card rounded-[32px] p-0 overflow-hidden relative group h-[300px] flex flex-col">
-                                <!-- Image Placeholder Gradient -->
-                                <div class="h-32 w-full bg-gradient-to-br from-gray-800 to-gray-900 relative">
-                                    <div class="absolute inset-0 opacity-40 mix-blend-overlay" :class="['bg-blue-600', 'bg-purple-600', 'bg-emerald-600'][index%3]"></div>
-                                    <div class="absolute top-4 left-4 px-3 py-1 bg-black/40 backdrop-blur-md rounded-full text-xs font-bold border border-white/10" x-text="day.day"></div>
-                                </div>
-                                <div class="p-6 flex flex-col flex-1">
-                                    <h3 class="text-lg font-bold leading-tight mb-2" x-text="day.title" :data-term="day.title"></h3>
-                                    <p class="text-xs text-white/50 line-clamp-2 mb-4" x-text="day.benefit" :data-term="day.benefit"></p>
-
-                                    <div class="mt-auto flex gap-2">
-                                        <button @click="openRecipe(day)" class="flex-1 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-gray-200 transition">View Recipe</button>
-                                        <button @click="quickSwap(day, day.ingredients[0])" class="px-3 rounded-xl bg-white/10 hover:bg-white/20 transition">↺</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- BIOHACKS TAB -->
-                <div x-show="currentTab === 'biohacks'" class="max-w-4xl mx-auto animate-scale-in">
-                    <h2 class="text-3xl font-bold mb-6">Bio-Hack Toolbox</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- OTHER TABS -->
+                <div x-show="currentTab === 'fitness' || currentTab === 'biohacks' || currentTab === 'settings'" class="max-w-4xl mx-auto animate-scale-in">
+                    <!-- Biohacks Grid -->
+                    <div x-show="currentTab === 'biohacks'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <template x-for="tool in tools" :key="tool.id">
-                            <button @click="selectedTool = tool; bioHacksOpen = true"
-                                    class="glass-card p-6 rounded-[24px] text-left hover:bg-white/5 transition-all">
+                            <button @click="selectedTool = tool; bioHacksOpen = true" class="glass-card p-6 rounded-[24px] text-left hover:bg-white/5 transition-all">
                                 <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-3 text-blue-400">⚡</div>
                                 <h3 class="font-bold text-sm mb-1" x-text="tool.name"></h3>
                                 <p class="text-xs text-white/40" x-text="tool.desc"></p>
                             </button>
                         </template>
                     </div>
-                </div>
 
-                 <!-- SETTINGS TAB -->
-                <div x-show="currentTab === 'settings'" class="max-w-2xl mx-auto animate-scale-in">
-                    <h2 class="text-3xl font-bold mb-8">Settings</h2>
-                    <div class="space-y-6">
+                    <!-- Settings -->
+                    <div x-show="currentTab === 'settings'" class="space-y-6">
                         <div class="glass-card p-8 rounded-[32px]">
                             <h3 class="text-lg font-bold mb-4">Profile</h3>
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Display Name</label>
-                                    <input type="text" x-model="userName" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition-all">
-                                </div>
-                                <button @click="saveSettings" class="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition">Save Changes</button>
-                            </div>
-                        </div>
-
-                        <div class="glass-card p-8 rounded-[32px]">
-                            <h3 class="text-lg font-bold mb-4 text-red-400">Danger Zone</h3>
-                            <button @click="resetSystem" class="px-6 py-2 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white font-bold text-sm transition border border-red-500/20">Reset System Data</button>
+                            <button @click="resetSystem" class="px-6 py-2 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white font-bold text-sm transition border border-red-500/20">Reset Data</button>
                         </div>
                     </div>
                 </div>
@@ -308,16 +292,16 @@
         </main>
     </div>
 
-    <!-- 4. MODALS & OVERLAYS -->
+    <!-- ================= MODALS & OVERLAYS ================= -->
 
-    <!-- AI Tooltip -->
+    <!-- 1. AI Tooltip -->
     <div class="ai-tooltip" :class="tooltipVisible ? 'visible' : ''" :style="`top: ${tooltipY}px; left: ${tooltipX}px`">
         <span class="text-blue-400 text-[10px] font-bold uppercase block mb-1">AI Insight</span>
         <span x-text="tooltipText"></span>
     </div>
 
-    <!-- Chat Slide Over -->
-    <div class="fixed inset-y-0 right-0 w-[400px] bg-[#0A0A0A] border-l border-white/10 z-50 transform transition-transform duration-500 shadow-2xl flex flex-col"
+    <!-- 2. Chat Slide Over (FIXED: Top Level) -->
+    <div class="fixed inset-y-0 right-0 w-[400px] bg-[#0A0A0A] border-l border-white/10 z-[60] transform transition-transform duration-500 shadow-2xl flex flex-col"
          :class="chatOpen ? 'translate-x-0' : 'translate-x-full'" x-cloak>
         <div class="p-6 border-b border-white/5 flex justify-between items-center">
             <h3 class="font-bold">Assistant</h3>
@@ -343,57 +327,81 @@
         </div>
     </div>
 
-    <!-- PREF MODAL -->
-    <div x-show="prefModalOpen" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" x-cloak>
-        <div @click.outside="prefModalOpen = false" class="glass-card w-full max-w-md rounded-[32px] p-8 animate-scale-in">
-            <h2 class="text-2xl font-bold mb-2">Customize Protocol</h2>
-            <p class="text-sm text-white/40 mb-6">Any allergies or dietary needs?</p>
-            <textarea x-model="preferences" class="w-full h-32 bg-black/30 border border-white/10 rounded-2xl p-4 text-white focus:outline-none focus:border-blue-500 mb-6 resize-none"></textarea>
-            <button @click="generateWeek()" class="w-full py-4 rounded-xl bg-white text-black font-bold hover:bg-gray-200 transition">Generate Plan</button>
+    <!-- 3. Consultation Overlay -->
+    <div x-show="consultationActive" class="fixed inset-0 z-[100] bg-[#050505] flex flex-col items-center justify-center p-6" x-transition.opacity>
+        <div class="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] animate-pulse"></div>
+        <div class="w-full max-w-2xl h-1 bg-white/10 rounded-full mb-12 relative overflow-hidden">
+            <div class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-500 ease-out" :style="`width: ${((consultationStep + 1) / interviewQueue.length) * 100}%`"></div>
+        </div>
+        <div class="max-w-4xl w-full text-center space-y-10 animate-scale-in relative z-10">
+            <h2 class="text-4xl md:text-5xl font-extrabold text-white leading-tight" x-text="currentQuestion?.title"></h2>
+            <p class="text-xl text-white/50 font-light max-w-2xl mx-auto" x-text="currentQuestion?.desc"></p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
+                <template x-for="opt in currentQuestion?.options">
+                    <button @click="selectOption(opt)" class="group relative h-24 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-blue-500/50 hover:scale-[1.02] transition-all duration-200 p-6 flex items-center justify-between text-left overflow-hidden">
+                        <div class="flex items-center gap-4 relative z-10">
+                            <span class="text-2xl" x-text="opt.icon"></span>
+                            <span class="text-lg font-bold text-white" x-text="opt.text"></span>
+                        </div>
+                        <div class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/30 group-hover:bg-blue-500 group-hover:text-white transition-all">→</div>
+                    </button>
+                </template>
+            </div>
         </div>
     </div>
 
-    <!-- RECIPE MODAL -->
+    <!-- 4. Meal Wizard Overlay -->
+    <div x-show="mealWizardOpen" class="fixed inset-0 z-50 bg-[#050505]/90 backdrop-blur-xl flex items-center justify-center p-6" x-cloak>
+        <div @click.outside="mealWizardOpen = false" class="w-full max-w-5xl animate-scale-in">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4">Choose Your Protocol</h2>
+                <p class="text-white/50 text-lg">AI has designed 3 potential paths.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <template x-if="mealStrategies.length === 0">
+                    <div class="col-span-3 text-center py-20">
+                        <div class="w-12 h-12 border-2 border-white/10 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+                        <p class="text-white/40 animate-pulse">Architecting Strategies...</p>
+                    </div>
+                </template>
+                <template x-for="strat in mealStrategies">
+                    <button @click="selectMealStrategy(strat)" class="glass-card text-left p-8 rounded-[40px] border border-white/10 hover:border-blue-500/50 hover:bg-white/5 transition-all duration-300 group relative overflow-hidden h-[400px] flex flex-col">
+                        <div class="absolute inset-0 bg-gradient-to-b from-transparent to-blue-900/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div class="relative z-10 flex-1">
+                            <div class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 text-2xl border border-white/10">✨</div>
+                            <h3 class="text-2xl font-bold mb-3" x-text="strat.title"></h3>
+                            <p class="text-white/60 text-sm leading-relaxed mb-6" x-text="strat.desc"></p>
+                            <div class="inline-block px-3 py-1 rounded-lg bg-green-500/10 text-green-400 text-xs font-bold uppercase tracking-wider mb-2">PRO: <span x-text="strat.pros"></span></div>
+                        </div>
+                    </button>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Recipe Modal -->
     <div x-show="recipeModalOpen" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" x-cloak>
         <div @click.outside="recipeModalOpen = false" class="glass-card w-full max-w-2xl rounded-[32px] p-8 max-h-[85vh] overflow-y-auto custom-scroll animate-scale-in">
             <div class="flex justify-between items-start mb-6">
                 <h2 class="text-3xl font-bold" x-text="selectedMeal?.title"></h2>
                 <button @click="recipeModalOpen = false" class="text-white/50 hover:text-white">✕</button>
             </div>
-
-            <div x-show="!recipeDetails" class="py-10 text-center text-white/30 animate-pulse">Consulting Chef AI...</div>
-
             <div x-show="recipeDetails">
-                <!-- Macros Row -->
                 <div class="flex gap-4 mb-8">
-                    <div class="flex-1 p-4 rounded-2xl bg-white/5 text-center border border-white/5">
-                        <div class="text-xs text-white/40 uppercase">Protein</div>
-                        <div class="text-xl font-bold" x-text="recipeDetails?.macros?.protein"></div>
-                    </div>
-                    <div class="flex-1 p-4 rounded-2xl bg-white/5 text-center border border-white/5">
-                        <div class="text-xs text-white/40 uppercase">Carbs</div>
-                        <div class="text-xl font-bold" x-text="recipeDetails?.macros?.carbs"></div>
-                    </div>
-                    <div class="flex-1 p-4 rounded-2xl bg-white/5 text-center border border-white/5">
-                        <div class="text-xs text-white/40 uppercase">Fats</div>
-                        <div class="text-xl font-bold" x-text="recipeDetails?.macros?.fats"></div>
-                    </div>
+                    <div class="flex-1 p-4 rounded-2xl bg-white/5 text-center border border-white/5"><div class="text-xs text-white/40 uppercase">Protein</div><div class="text-xl font-bold" x-text="recipeDetails?.macros?.protein"></div></div>
+                    <div class="flex-1 p-4 rounded-2xl bg-white/5 text-center border border-white/5"><div class="text-xs text-white/40 uppercase">Carbs</div><div class="text-xl font-bold" x-text="recipeDetails?.macros?.carbs"></div></div>
+                    <div class="flex-1 p-4 rounded-2xl bg-white/5 text-center border border-white/5"><div class="text-xs text-white/40 uppercase">Fats</div><div class="text-xl font-bold" x-text="recipeDetails?.macros?.fats"></div></div>
                 </div>
-
-                <h3 class="font-bold mb-4 text-blue-400 uppercase text-xs tracking-wider">Instructions</h3>
                 <div class="space-y-4">
                     <template x-for="(step, i) in recipeDetails?.steps">
-                        <div class="flex gap-4">
-                            <span class="text-white/30 font-bold" x-text="i+1"></span>
-                            <p class="text-white/80 leading-relaxed" x-text="step"></p>
-                        </div>
+                        <div class="flex gap-4"><span class="text-white/30 font-bold" x-text="i+1"></span><p class="text-white/80 leading-relaxed" x-text="step"></p></div>
                     </template>
                 </div>
             </div>
         </div>
     </div>
 
-     <!-- Bio Tool Modal (for running a specific tool) -->
+    <!-- 6. Tool / Biohacks Modal -->
     <div x-show="bioHacksOpen" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" x-cloak>
         <div @click.outside="bioHacksOpen = false" class="glass-card w-full max-w-lg rounded-[32px] relative flex flex-col max-h-[85vh] overflow-hidden animate-scale-in">
             <div class="p-6 border-b border-white/5 flex justify-between items-center">
@@ -406,32 +414,20 @@
                     <template x-for="input in selectedTool?.inputs">
                         <div>
                             <label class="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-2" x-text="input.l"></label>
-
                             <template x-if="input.options">
                                 <div class="relative">
                                     <select x-model="toolInputs[input.k]" class="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition-all appearance-none cursor-pointer">
                                         <option value="" disabled selected x-text="input.p"></option>
-                                        <template x-for="opt in input.options">
-                                            <option :value="opt" x-text="opt"></option>
-                                        </template>
+                                        <template x-for="opt in input.options"><option :value="opt" x-text="opt"></option></template>
                                     </select>
-                                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-white/50">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                    </div>
                                 </div>
                             </template>
-
                             <template x-if="!input.options">
-                                <input type="text" x-model="toolInputs[input.k]" :placeholder="input.p"
-                                   class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition-all">
+                                <input type="text" x-model="toolInputs[input.k]" :placeholder="input.p" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition-all">
                             </template>
                         </div>
                     </template>
-                    <button @click="runTool" :disabled="toolLoading"
-                            class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow-lg shadow-blue-900/20 disabled:opacity-50 flex items-center justify-center gap-2">
-                        <span x-show="toolLoading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                        <span x-text="toolLoading ? 'Processing...' : 'Generate'"></span>
-                    </button>
+                    <button @click="runTool" :disabled="toolLoading" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow-lg shadow-blue-900/20 disabled:opacity-50">Generate</button>
                 </div>
                 <div x-show="toolResult" class="mt-10 pt-10 border-t border-white/10 animate-scale-in">
                     <h3 class="text-xs font-bold text-green-400 uppercase tracking-wider mb-4">AI Analysis</h3>
@@ -441,7 +437,7 @@
         </div>
     </div>
 
-     <!-- Shopping List Modal -->
+    <!-- 7. Shopping List Modal -->
     <div x-show="shoppingListOpen" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" x-cloak>
         <div @click.outside="shoppingListOpen = false" class="glass-card w-full max-w-lg rounded-[32px] relative max-h-[85vh] flex flex-col border border-white/10 animate-scale-in">
             <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
@@ -472,76 +468,6 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div class="fixed top-6 left-0 right-0 flex justify-center z-[100] pointer-events-none">
-        <template x-for="toast in toasts" :key="toast.id">
-            <div class="island-enter pointer-events-auto bg-black border border-white/10 shadow-2xl rounded-full px-6 py-3 flex items-center gap-4 min-w-[300px] justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-5 h-5 rounded-full flex items-center justify-center" :class="toast.type === 'error' ? 'bg-red-500' : 'bg-green-500'">
-                        <svg x-show="toast.type !== 'error'" class="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path d="M5 13l4 4L19 7"></path></svg>
-                        <svg x-show="toast.type === 'error'" class="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </div>
-                    <span class="text-sm font-medium" x-text="toast.message"></span>
-                </div>
-            </div>
-        </template>
-    </div>
-<!-- ADVANCED CONSULTATION OVERLAY -->
-    <div x-show="consultationActive" class="fixed inset-0 z-[100] bg-[#050505] flex flex-col items-center justify-center p-6" x-transition.opacity>
-
-        <!-- Background Glow -->
-        <div class="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] animate-pulse"></div>
-
-        <!-- Progress Bar -->
-        <div class="w-full max-w-2xl h-1 bg-white/10 rounded-full mb-12 relative overflow-hidden">
-            <div class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-500 ease-out"
-                 :style="`width: ${((consultationStep + 1) / interviewQueue.length) * 100}%`"></div>
-        </div>
-
-        <div class="max-w-4xl w-full text-center space-y-10 animate-scale-in relative z-10" x-data>
-
-            <!-- Question Header -->
-            <div class="space-y-4">
-                <div x-show="currentQuestion?.type === 'bio'" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-bold uppercase tracking-widest">
-                    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                    Biomarker Detected
-                </div>
-
-                <div x-show="currentQuestion?.type === 'lifestyle'" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-bold uppercase tracking-widest">
-                    Design Your Protocol
-                </div>
-
-                <h2 class="text-4xl md:text-5xl font-extrabold text-white leading-tight" x-text="currentQuestion?.title"></h2>
-
-                <p class="text-xl text-white/50 font-light max-w-2xl mx-auto" x-text="currentQuestion?.desc"></p>
-
-                <!-- If it's a bio question, show the specific value -->
-                <p x-show="currentQuestion?.value" class="text-3xl font-bold text-white mt-2" x-text="currentQuestion?.value"></p>
-            </div>
-
-            <!-- Options Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
-                <template x-for="opt in currentQuestion?.options">
-                    <button @click="selectOption(opt)"
-                            class="group relative h-24 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-blue-500/50 hover:scale-[1.02] transition-all duration-200 p-6 flex items-center justify-between text-left overflow-hidden">
-
-                        <div class="flex items-center gap-4 relative z-10">
-                            <span class="text-2xl" x-text="opt.icon"></span>
-                            <span class="text-lg font-bold text-white" x-text="opt.text"></span>
-                        </div>
-
-                        <div class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/30 group-hover:bg-blue-500 group-hover:text-white group-hover:border-blue-500 transition-all">
-                            →
-                        </div>
-                    </button>
-                </template>
-            </div>
-
-            <div class="text-white/20 text-sm mt-8">
-                Step <span x-text="consultationStep + 1"></span> of <span x-text="interviewQueue.length"></span>
-            </div>
-        </div>
-    </div>
     <!-- Load JS -->
     <script src="/static/js/app.js"></script>
 </body>

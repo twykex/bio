@@ -47,11 +47,15 @@ body {
     to { transform: translateY(0); opacity: 1; }
 }
 
-/* --- SCROLLBAR --- */
-.custom-scroll::-webkit-scrollbar { width: 4px; }
-.custom-scroll::-webkit-scrollbar-track { background: transparent; }
-.custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-
+/* Refined Scrollbar */
+.custom-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    border: 2px solid #050505; /* Adds padding effect */
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
 /* --- UTILS --- */
 [x-cloak] { display: none !important; }
 .text-gradient {
@@ -71,3 +75,17 @@ body {
 .ai-tooltip.visible { opacity: 1; transform: translateY(0) scale(1); }
 .typing-cursor::after { content: '▋'; display: inline-block; color: #3b82f6; animation: blink 1s step-end infinite; }
 @keyframes blink { 50% { opacity: 0; } }
+
+/* Add to bottom of style.css */
+@keyframes scan {
+    0% { top: 0%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+}
+
+.animate-scan {
+    animation: scan 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    background: linear-gradient(to right, transparent, #3b82f6, transparent);
+    box-shadow: 0 0 15px #3b82f6;
+}

@@ -244,3 +244,43 @@ def chat_agent():
         history.append({"role": "ai", "text": resp['response']})
 
     return jsonify(resp or {"response": "I'm having trouble analyzing that."})
+
+
+@main_bp.route('/propose_meal_strategies', methods=['POST'])
+def propose_meal_strategies():
+    data = request.json
+    session = get_session(data.get('token'))
+    summary = session.get('blood_context', {}).get('summary', 'General Health')
+
+    # Ask AI to brainstorm 3 distinct approaches based on bloodwork
+    prompt = f"""
+    ROLE: Elite Medical Nutritionist.
+    PATIENT CONTEXT: {summary}
+
+    TASK: Propose 3 distinct weekly meal plan strategies to fix the patient's issues.
+    1. "Aggressive Repair": Hardcore focus on biomarkers.
+    2. "Balanced Lifestyle": 80/20 rule, easier to stick to.
+    3. "Time Saver": Dense nutrients, fast prep.
+
+    OUTPUT: JSON Array only.
+    [
+        {{ "id": "repair", "title": "Aggressive Repair", "desc": "Strict protocol to fix Vitamin D & Iron fast.", "pros": "Fastest Results" }},
+        {{ "id": "balance", "title": "Balanced Flow", "desc": "Sustainable approach allowing some flexibility.", "pros": "High Adherence" }},
+        {{ "id": "quick", "title": "Metabolic Quick", "desc": "15-min meals focused on insulin control.", "pros": "Best for Busy Schedule" }}
+    ]
+    """
+
+    strategies = query_ollama(prompt, system_instruction="Return JSON Array only.", temperature=0.4)
+
+    # Fallback
+    if not strategies or not isinstance(strategies, list):
+        strategies = [
+            {"id": "repair", "title": "Biomarker Repair", "desc": "Focus strictly on optimizing your blood results.",
+             "pros": "Fastest Improvement"},
+            {"id": "balance", "title": "Balanced Lifestyle", "desc": "A sustainable mix of health and flavor.",
+             "pros": "Easy to stick to"},
+            {"id": "quick", "title": "High Performance", "desc": "Nutrient dense meals for high energy.",
+             "pros": "Best for Focus"}
+        ]
+
+    return jsonify(strategies)

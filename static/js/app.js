@@ -1,37 +1,29 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('app', () => ({
+        // --- 1. AUTH & CONFIG ---
         token: localStorage.getItem('bio_token') || Math.random().toString(36).substring(7),
 
-        // State
+        // --- 2. GLOBAL STATE ---
         context: null,
         weekPlan: [],
         workoutPlan: [],
         chatHistory: [],
         toasts: [],
 
-        // Loading States
+        // --- 3. LOADING STATE ---
         loading: false,
         loadingText: 'Initializing...',
         loadingInterval: null,
 
-        // Consultation Mode (New)
-        consultationActive: false,
-        consultationStep: 0,
-        currentIssue: null,
-        userChoices: [],
-        interviewQueue: [],    // <--- ADD THIS
-        currentQuestion: null, // <--- ADD THIS
-        userChoices: {},       // <--- ADD THIS
-        bloodStrategies: [],   // <--- ADD THIS
-        // Chat
+        // --- 4. CHAT STATE ---
         chatInput: '',
         chatLoading: false,
-        chatOpen: false,
+        chatOpen: false,  // <--- This was missing/unreachable causing the error
 
-        // Navigation
+        // --- 5. NAVIGATION ---
         currentTab: 'dashboard',
 
-        // Modals
+        // --- 6. MODALS ---
         recipeModalOpen: false,
         shoppingListOpen: false,
         workoutModalOpen: false,
@@ -39,7 +31,7 @@ document.addEventListener('alpine:init', () => {
         bioHacksOpen: false,
         dragOver: false,
 
-        // Data
+        // --- 7. DATA OBJECTS ---
         selectedMeal: null,
         recipeDetails: null,
         shoppingList: null,
@@ -47,7 +39,22 @@ document.addEventListener('alpine:init', () => {
         preferences: '',
         tempStrategy: null,
 
-        // UX Features Data (Tooltips)
+        // --- 8. CALENDAR STATE ---
+        calendarDays: [],
+        selectedDate: null,
+        mealWizardOpen: false,
+        mealStrategies: [],
+        selectedStrategy: null,
+
+        // --- 9. CONSULTATION STATE ---
+        consultationActive: false,
+        consultationStep: 0,
+        interviewQueue: [],
+        currentQuestion: null,
+        userChoices: {},
+        bloodStrategies: [],
+
+        // --- 10. TOOLTIP STATE ---
         tooltipVisible: false,
         tooltipText: '',
         tooltipX: 0,
@@ -55,7 +62,7 @@ document.addEventListener('alpine:init', () => {
         tooltipTimeout: null,
         activeTooltipTerm: null,
 
-        // Trackers
+        // --- 11. TRACKERS ---
         waterIntake: 0,
         waterGoal: 8,
         fastingStart: null,
@@ -64,7 +71,7 @@ document.addEventListener('alpine:init', () => {
         healthScore: 85,
         userName: 'Guest',
 
-        // Bio Hacks Data
+        // --- 12. BIO HACKS TOOLS ---
         selectedTool: null,
         toolInputs: {},
         toolResult: null,
@@ -95,47 +102,86 @@ document.addEventListener('alpine:init', () => {
             { id: 'exercise_alternative', name: 'Exercise Swap', desc: 'Find an alternative exercise.', inputs: [{k:'exercise', l:'Exercise', p:'Running'}, {k:'reason', l:'Reason', p:'Knee Pain', options: ['Knee Pain', 'Back Pain', 'No Equipment', 'Boredom', 'Time Constraint']}] },
         ],
 
+        // --- 13. LIFESTYLE QUESTIONS ---
+        lifestyleQuestions: [
+            { id: 'diet', title: 'Dietary Philosophy', desc: 'How do you prefer to eat?', options: [{text:'No Restrictions', icon:'🥩'}, {text:'Keto / Low Carb', icon:'🥑'}, {text:'Vegetarian', icon:'🥗'}, {text:'High Protein', icon:'💪'}, {text:'Paleo', icon:'🍖'}] },
+            { id: 'cuisine', title: 'Flavor Palette', desc: 'What cuisines do you enjoy?', options: [{text:'Mediterranean', icon:'🫒'}, {text:'Asian / Stir-Fry', icon:'🥢'}, {text:'Mexican / Spicy', icon:'🌶️'}, {text:'American', icon:'🍔'}, {text:'Global', icon:'🌎'}] },
+            { id: 'time', title: 'Time Commitment', desc: 'How much time for dinner?', options: [{text:'15 Mins (Quick)', icon:'⚡'}, {text:'30 Mins (Standard)', icon:'⏱️'}, {text:'45+ Mins (Chef)', icon:'👨‍🍳'}, {text:'Meal Prep', icon:'📦'}] },
+            { id: 'budget', title: 'Weekly Budget', desc: 'Target spending?', options: [{text:'Budget Friendly', icon:'💵'}, {text:'Moderate', icon:'💰'}, {text:'Premium', icon:'💎'}] }
+        ],
+
+        // --- LIFECYCLE ---
         init() {
             localStorage.setItem('bio_token', this.token);
+
+            // Restore Trackers
             const savedWater = localStorage.getItem('waterIntake');
             if (savedWater) this.waterIntake = parseInt(savedWater);
-
             const savedFasting = localStorage.getItem('fastingStart');
-            if (savedFasting) {
-                this.fastingStart = parseInt(savedFasting);
-                this.startFastingTimer();
-            }
-
+            if (savedFasting) { this.fastingStart = parseInt(savedFasting); this.startFastingTimer(); }
             const savedName = localStorage.getItem('userName');
             if(savedName) this.userName = savedName;
 
+            // Init Calendar
+            this.generateCalendar();
+            this.selectedDate = this.calendarDays[0].fullDate;
+
+            // Global Listeners
             document.addEventListener('mouseover', (e) => this.handleTooltipHover(e));
         },
 
-        // --- UX LOGIC: SMART LOADING ---
+        // --- CALENDAR LOGIC ---
+        generateCalendar() {
+            const today = new Date();
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            for(let i=0; i<14; i++) {
+                const d = new Date();
+                d.setDate(today.getDate() + i);
+                this.calendarDays.push({
+                    day: days[d.getDay()],
+                    date: d.getDate(),
+                    fullDate: d.toISOString().split('T')[0],
+                    active: i === 0
+                });
+            }
+        },
+
+        selectDate(dayObj) {
+            this.selectedDate = dayObj.fullDate;
+            this.calendarDays.forEach(d => d.active = (d.fullDate === dayObj.fullDate));
+        },
+
+        getMealsForSelectedDate() {
+            if(!this.weekPlan.length) return [];
+            const selectedIndex = this.calendarDays.findIndex(d => d.fullDate === this.selectedDate);
+            if(selectedIndex >= 0 && selectedIndex < this.weekPlan.length) {
+                return [this.weekPlan[selectedIndex]];
+            }
+            return [];
+        },
+
+        toggleMealCompletion(meal) {
+            meal.completed = !meal.completed;
+            if(meal.completed) this.notify("Meal Logged! Stats Updated.");
+        },
+
+        // --- LOADING LOGIC ---
         startLoading(phaseType) {
             this.loading = true;
             const thoughts = {
-                'upload': ['Scanning PDF structure...', 'Extracting biomarkers...', 'Cross-referencing ranges...', 'Synthesizing health profile...'],
-                'plan': ['Architecting Protocol...', 'Balancing Macros...', 'Optimizing Nutrient Density...', 'Finalizing Schedule...']
+                'upload': ['Scanning PDF...', 'Extracting biomarkers...', 'Synthesizing health profile...'],
+                'plan': ['Architecting Protocol...', 'Balancing Macros...', 'Finalizing Schedule...']
             };
-            const phases = thoughts[phaseType] || thoughts['upload'];
+            const phases = Array.isArray(phaseType) ? phaseType : (thoughts[phaseType] || thoughts['upload']);
             let i = 0;
             this.loadingText = phases[0];
-
             if(this.loadingInterval) clearInterval(this.loadingInterval);
-            this.loadingInterval = setInterval(() => {
-                i = (i + 1) % phases.length;
-                this.loadingText = phases[i];
-            }, 1800);
+            this.loadingInterval = setInterval(() => { i = (i + 1) % phases.length; this.loadingText = phases[i]; }, 1800);
         },
 
-        stopLoading() {
-            this.loading = false;
-            clearInterval(this.loadingInterval);
-        },
+        stopLoading() { this.loading = false; clearInterval(this.loadingInterval); },
 
-        // --- CORE LOGIC: UPLOAD & CONSULTATION ---
+        // --- UPLOAD & CONSULTATION FLOW ---
         handleDrop(e) {
             this.dragOver = false;
             const file = e.dataTransfer.files[0];
@@ -145,7 +191,6 @@ document.addEventListener('alpine:init', () => {
         async uploadData(file) {
             if (!file) return;
             this.startLoading('upload');
-
             const fd = new FormData();
             fd.append('file', file);
             fd.append('token', this.token);
@@ -155,18 +200,14 @@ document.addEventListener('alpine:init', () => {
                 if(!res.ok) throw new Error();
                 this.context = await res.json();
 
-                // Initialize Data
                 this.healthScore = this.context.health_score || 78;
                 this.userName = this.context.patient_name || 'Guest';
 
-                // Start Consultation Mode if issues exist
                 if (this.context.issues && this.context.issues.length > 0) {
                     this.startConsultation();
                 } else {
-                    // Fallback to Dashboard if no critical issues found
                     this.finalizeConsultation();
                 }
-
                 this.notify("Analysis Complete");
             } catch(e) {
                 this.notify("Upload Failed", "error");
@@ -175,99 +216,36 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        // --- CONSULTATION MODE ---
-        // --- ADVANCED CONSULTATION ENGINE ---
-
-        // Configuration for the "Lifestyle" part of the interview
-        lifestyleQuestions: [
-            {
-                id: 'diet',
-                title: 'Dietary Philosophy',
-                desc: 'How do you prefer to eat?',
-                options: [
-                    { text: 'No Restrictions', icon: '🥩' },
-                    { text: 'Keto / Low Carb', icon: '🥑' },
-                    { text: 'Vegetarian', icon: '🥗' },
-                    { text: 'High Protein', icon: '💪' },
-                    { text: 'Paleo', icon: '🍖' }
-                ]
-            },
-            {
-                id: 'cuisine',
-                title: 'Flavor Palette',
-                desc: 'What cuisines do you enjoy most?',
-                options: [
-                    { text: 'Mediterranean', icon: '🫒' },
-                    { text: 'Asian / Stir-Fry', icon: '🥢' },
-                    { text: 'Mexican / Spicy', icon: '🌶️' },
-                    { text: 'Classic American', icon: '🍔' },
-                    { text: 'Global Mix', icon: '🌎' }
-                ]
-            },
-            {
-                id: 'time',
-                title: 'Time Commitment',
-                desc: 'How much time do you have for dinner?',
-                options: [
-                    { text: '15 Mins (Quick)', icon: '⚡' },
-                    { text: '30 Mins (Standard)', icon: '⏱️' },
-                    { text: '45+ Mins (Chef Mode)', icon: '👨‍🍳' },
-                    { text: 'Meal Prep / Bulk', icon: '📦' }
-                ]
-            },
-            {
-                id: 'budget',
-                title: 'Weekly Budget',
-                desc: 'How much do you want to spend?',
-                options: [
-                    { text: 'Budget Friendly', icon: '💵' },
-                    { text: 'Moderate', icon: '💰' },
-                    { text: 'Premium / Organic', icon: '💎' }
-                ]
-            }
-        ],
-
         startConsultation() {
             this.consultationActive = true;
             this.consultationStep = 0;
-            this.userChoices = {};     // Stores lifestyle answers
-            this.bloodStrategies = []; // Stores choices for blood issues
+            this.userChoices = {};
+            this.bloodStrategies = [];
 
-            // Merge Blood Issues + Lifestyle Questions into one "Queue"
-            // 1. Map Blood Issues to a standard format
             const bioQueue = (this.context.issues || []).map(issue => ({
                 type: 'bio',
                 title: `${issue.title} Detected`,
-                desc: issue.explanation, // "Your Vitamin D is low..."
+                desc: issue.explanation,
                 value: issue.value,
                 options: issue.options.map(opt => ({ text: opt.text, icon: opt.type === 'Diet' ? '🥦' : '🧘' }))
             }));
 
-            // 2. Map Lifestyle Questions to standard format
             const lifeQueue = this.lifestyleQuestions.map(q => ({
-                type: 'lifestyle',
-                id: q.id,
-                title: q.title,
-                desc: q.desc,
-                options: q.options
+                type: 'lifestyle', id: q.id, title: q.title, desc: q.desc, options: q.options
             }));
 
-            // Combine them
             this.interviewQueue = [...bioQueue, ...lifeQueue];
             this.currentQuestion = this.interviewQueue[0];
         },
 
         selectOption(option) {
-            // Save the answer based on the type of question
             if (this.currentQuestion.type === 'bio') {
                 this.bloodStrategies.push(option.text);
             } else {
                 this.userChoices[this.currentQuestion.id] = option.text;
             }
 
-            // Next Step
             this.consultationStep++;
-
             if (this.consultationStep < this.interviewQueue.length) {
                 this.currentQuestion = this.interviewQueue[this.consultationStep];
             } else {
@@ -277,38 +255,70 @@ document.addEventListener('alpine:init', () => {
 
         async finalizeConsultation() {
             this.consultationActive = false;
-            this.startLoading('plan'); // Start the "Architecting..." loading screen
+            // First time generation uses "Personalized" default
+            this.startLoading('plan');
+            await this.executePlanGeneration("Personalized Protocol");
+        },
 
+        // --- MEAL WIZARD ---
+        async openMealWizard() {
+            this.mealWizardOpen = true;
+            this.mealStrategies = [];
+            this.startLoading(['Analyzing Metabolism...', 'Drafting Strategies...']);
+
+            try {
+                const res = await fetch('/propose_meal_strategies', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ token: this.token })
+                });
+                this.mealStrategies = await res.json();
+            } catch(e) {
+                this.notify("AI Brain Offline", "error");
+                this.mealWizardOpen = false;
+            } finally {
+                this.stopLoading();
+            }
+        },
+
+        async selectMealStrategy(strat) {
+            this.mealWizardOpen = false;
+            this.startLoading(['Architecting Full Week...', 'Calibrating Macros...']);
+            await this.executePlanGeneration(strat.title);
+        },
+
+        async executePlanGeneration(strategyName) {
             try {
                 const [mealRes, workoutRes] = await Promise.all([
                     fetch('/generate_week', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        // SEND THE FULL PROFILE
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({
                             token: this.token,
+                            strategy_name: strategyName,
                             blood_strategies: this.bloodStrategies,
                             lifestyle: this.userChoices
                         })
                     }),
                     fetch('/generate_workout', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({
-                            token: this.token,
-                            strategy_name: this.userChoices.diet || "Balanced"
-                        })
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ token: this.token, strategy_name: strategyName })
                     })
                 ]);
 
                 const data = await mealRes.json();
-                const workoutData = await workoutRes.json();
+                this.workoutPlan = await workoutRes.json();
 
-                this.weekPlan = Array.isArray(data) ? data : [];
-                this.workoutPlan = Array.isArray(workoutData) ? workoutData : [];
+                this.weekPlan = data.map((meal, index) => {
+                    const targetDate = new Date();
+                    targetDate.setDate(new Date().getDate() + index);
+                    return {
+                        ...meal,
+                        date: targetDate.toISOString().split('T')[0],
+                        completed: false
+                    };
+                });
 
                 this.currentTab = 'dashboard';
-                this.notify("Protocol Optimized & Active");
+                this.notify("Protocol Optimized");
             } catch(e) {
                 this.notify("Generation Failed", "error");
             } finally {
@@ -316,44 +326,10 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        async generateWeek() {
-            this.prefModalOpen = false;
-            this.startLoading('plan');
-
-            try {
-                const [mealRes, workoutRes] = await Promise.all([
-                    fetch('/generate_week', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ strategy_name: this.tempStrategy, token: this.token, preferences: this.preferences })
-                    }),
-                    fetch('/generate_workout', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ strategy_name: this.tempStrategy, token: this.token })
-                    })
-                ]);
-
-                const data = await mealRes.json();
-                const workoutData = await workoutRes.json();
-
-                this.weekPlan = Array.isArray(data) ? data : [];
-                this.workoutPlan = Array.isArray(workoutData) ? workoutData : [];
-
-                this.currentTab = 'dashboard';
-                this.notify("Protocol Active");
-            } catch(e) {
-                this.notify("Generation Failed", "error");
-            } finally {
-                this.stopLoading();
-            }
-        },
-
-        // --- CHAT LOGIC ---
+        // --- CHAT ---
         async sendMessage() {
             if(!this.chatInput.trim()) return;
             const msg = this.chatInput;
-
             this.chatHistory.push({ role: 'user', text: msg });
             this.chatInput = '';
             this.scrollToBottom();
@@ -367,64 +343,35 @@ document.addEventListener('alpine:init', () => {
                     body: JSON.stringify({ message: msg, token: this.token })
                 });
                 const data = await res.json();
-
                 this.chatLoading = false;
                 await this.typeWriterEffect(aiIndex, data.response);
-
             } catch(e) {
                 this.chatHistory[aiIndex].text = "Connection interrupted.";
                 this.chatHistory[aiIndex].typing = false;
-            } finally {
-                this.chatLoading = false;
-            }
+            } finally { this.chatLoading = false; }
         },
 
         typeWriterEffect(index, fullText) {
             return new Promise(resolve => {
-                if(!fullText) {
-                    this.chatHistory[index].text = "I couldn't process that.";
-                    this.chatHistory[index].typing = false;
-                    resolve(); return;
-                }
-                let i = 0;
-                const speed = 15;
+                if(!fullText) { this.chatHistory[index].typing = false; resolve(); return; }
+                let i = 0; const speed = 15;
                 const type = () => {
                     if (i < fullText.length) {
-                        this.chatHistory[index].text += fullText.charAt(i);
-                        i++;
-                        this.scrollToBottom();
-                        setTimeout(type, speed);
-                    } else {
-                        this.chatHistory[index].typing = false;
-                        resolve();
-                    }
-                };
-                type();
+                        this.chatHistory[index].text += fullText.charAt(i); i++;
+                        this.scrollToBottom(); setTimeout(type, speed);
+                    } else { this.chatHistory[index].typing = false; resolve(); }
+                }; type();
             });
         },
 
-        scrollToBottom() {
-            this.$nextTick(() => {
-                const container = document.getElementById('chat-container');
-                if(container) container.scrollTop = container.scrollHeight;
-            });
-        },
+        scrollToBottom() { this.$nextTick(() => { const c = document.getElementById('chat-container'); if(c) c.scrollTop = c.scrollHeight; }); },
 
-        // --- UX LOGIC: TOOLTIPS ---
+        // --- TOOLTIPS ---
         handleTooltipHover(e) {
             const target = e.target.closest('[data-term]');
-            if (!target) {
-                this.tooltipVisible = false;
-                this.activeTooltipTerm = null;
-                return;
-            }
-
+            if (!target) { this.tooltipVisible = false; this.activeTooltipTerm = null; return; }
             const term = target.getAttribute('data-term');
-            if (this.activeTooltipTerm === term) {
-                this.moveTooltip(e);
-                this.tooltipVisible = true;
-                return;
-            }
+            if (this.activeTooltipTerm === term) { this.moveTooltip(e); this.tooltipVisible = true; return; }
 
             this.activeTooltipTerm = term;
             this.tooltipText = "Analyzing...";
@@ -432,7 +379,6 @@ document.addEventListener('alpine:init', () => {
             this.moveTooltip(e);
 
             if (this.tooltipTimeout) clearTimeout(this.tooltipTimeout);
-
             this.tooltipTimeout = setTimeout(async () => {
                 try {
                     const res = await fetch('/define_term', {
@@ -440,64 +386,36 @@ document.addEventListener('alpine:init', () => {
                         body: JSON.stringify({ term: term })
                     });
                     const data = await res.json();
-                    if(this.activeTooltipTerm === term) {
-                        this.tooltipText = data.response || data.definition || "No definition found.";
-                    }
-                } catch(err) {
-                    this.tooltipText = "Could not load definition.";
-                }
+                    if(this.activeTooltipTerm === term) this.tooltipText = data.response || data.definition || "No definition found.";
+                } catch(err) { this.tooltipText = "Could not load definition."; }
             }, 300);
         },
 
         moveTooltip(e) {
-            let x = e.clientX + 15;
-            let y = e.clientY + 15;
+            let x = e.clientX + 15; let y = e.clientY + 15;
             if (x > window.innerWidth - 260) x = e.clientX - 260;
             if (y > window.innerHeight - 100) y = e.clientY - 100;
-            this.tooltipX = x;
-            this.tooltipY = y;
+            this.tooltipX = x; this.tooltipY = y;
         },
 
-        // --- UTILITIES ---
-        saveSettings() {
-            localStorage.setItem('userName', this.userName);
-            this.notify("Settings Saved");
-        },
+        // --- UTILS ---
+        saveSettings() { localStorage.setItem('userName', this.userName); this.notify("Settings Saved"); },
+        notify(msg, type='success') { const id = Date.now(); this.toasts.push({ id, message: msg, type }); setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 3000); },
 
-        notify(msg, type='success') {
-            const id = Date.now();
-            this.toasts.push({ id, message: msg, type });
-            setTimeout(() => {
-                this.toasts = this.toasts.filter(t => t.id !== id);
-            }, 3000);
-        },
-
-        openPrefModal(strategy) {
-            this.tempStrategy = strategy;
-            this.prefModalOpen = true;
-        },
+        openPrefModal(strategy) { this.tempStrategy = strategy; this.prefModalOpen = true; },
 
         async openRecipe(meal) {
-            this.selectedMeal = meal;
-            this.recipeDetails = null;
-            this.recipeModalOpen = true;
+            this.selectedMeal = meal; this.recipeDetails = null; this.recipeModalOpen = true;
             try {
-                const res = await fetch('/get_recipe', {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ meal_title: meal.title, token: this.token })
-                });
+                const res = await fetch('/get_recipe', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ meal_title: meal.title, token: this.token }) });
                 this.recipeDetails = await res.json();
-            } catch(e) { this.notify("Could not fetch recipe", "error"); }
+            } catch(e) {}
         },
 
         async generateShoppingList() {
-            this.shoppingListOpen = true;
-            if(this.shoppingList) return;
+            this.shoppingListOpen = true; if(this.shoppingList) return;
             try {
-                const res = await fetch('/generate_shopping_list', {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ token: this.token })
-                });
+                const res = await fetch('/generate_shopping_list', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ token: this.token }) });
                 this.shoppingList = await res.json();
             } catch(e) {}
         },
@@ -505,63 +423,28 @@ document.addEventListener('alpine:init', () => {
         downloadList() {
             if (!this.shoppingList) return;
             let text = "BIOFLOW SHOPPING LIST\n=====================\n\n";
-            for (const [cat, items] of Object.entries(this.shoppingList)) {
-                text += `[ ${cat.toUpperCase()} ]\n`;
-                items.forEach(i => text += ` - ${i}\n`);
-                text += "\n";
-            }
+            for (const [cat, items] of Object.entries(this.shoppingList)) { text += `[ ${cat.toUpperCase()} ]\n`; items.forEach(i => text += ` - ${i}\n`); text += "\n"; }
             const blob = new Blob([text], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'shopping-list.txt';
-            a.click();
+            const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'shopping-list.txt'; a.click();
         },
 
         async quickSwap(day, ing) {
-            this.chatOpen = true;
-            this.chatInput = `I can't eat ${ing} in the ${day.title}. What's a good alternative?`;
-            this.sendMessage();
+            this.chatOpen = true; this.chatInput = `I can't eat ${ing} in the ${day.title}. Alternative?`; this.sendMessage();
         },
 
         resetSystem() {
-            if(confirm('Reset all data and start over?')) {
-                this.context = null;
-                this.weekPlan = [];
-                this.chatHistory = [];
-                this.toasts = [];
-                this.currentTab = 'dashboard';
-                localStorage.clear();
-                window.location.reload();
-            }
+            if(confirm('Reset all data?')) { this.context = null; this.weekPlan = []; this.chatHistory = []; this.toasts = []; this.currentTab = 'dashboard'; localStorage.clear(); window.location.reload(); }
         },
 
         // --- BIOHACKS & TRACKERS ---
-        selectTool(tool) {
-            this.selectedTool = tool;
-            this.toolInputs = {};
-            this.toolResult = null;
-        },
-
+        selectTool(tool) { this.selectedTool = tool; this.toolInputs = {}; this.toolResult = null; },
         async runTool() {
-            if(!this.selectedTool) return;
-            this.toolLoading = true;
-            this.toolResult = null;
+            if(!this.selectedTool) return; this.toolLoading = true; this.toolResult = null;
             try {
-                const res = await fetch(`/${this.selectedTool.id}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(this.toolInputs)
-                });
-                const data = await res.json();
-                this.toolResult = this.formatResult(data);
-            } catch(e) {
-                this.toolResult = "Error connecting to Bio-Architect.";
-            } finally {
-                this.toolLoading = false;
-            }
+                const res = await fetch(`/${this.selectedTool.id}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(this.toolInputs) });
+                const data = await res.json(); this.toolResult = this.formatResult(data);
+            } catch(e) { this.toolResult = "Error connecting."; } finally { this.toolLoading = false; }
         },
-
         formatResult(data) {
             if(!data) return "No data returned.";
             if(data.supplements) return data.supplements.map(s => `• ${s.name}: ${s.reason}`).join('\n');
@@ -571,55 +454,12 @@ document.addEventListener('alpine:init', () => {
             if(data.pairings) return data.pairings.map(p => `• ${p}`).join('\n');
             if(data.response) return data.response;
             if(data.definition) return data.definition;
-
-            let output = "";
-            for(const [key, val] of Object.entries(data)) {
-                const label = key.replace(/_/g, ' ').toUpperCase();
-                output += `${label}: ${val}\n`;
-            }
-            return output;
+            let output = ""; for(const [key, val] of Object.entries(data)) { output += `${key.replace(/_/g, ' ').toUpperCase()}: ${val}\n`; } return output;
         },
-
-        addWater() {
-            if(this.waterIntake < this.waterGoal) {
-                this.waterIntake++;
-                localStorage.setItem('waterIntake', this.waterIntake);
-                if(this.waterIntake === this.waterGoal) this.notify("Hydration Goal Met! 💧");
-            }
-        },
-        resetWater() {
-            this.waterIntake = 0;
-            localStorage.setItem('waterIntake', 0);
-        },
-
-        toggleFasting() {
-            if (this.fastingStart) {
-                this.fastingStart = null;
-                localStorage.removeItem('fastingStart');
-                clearInterval(this.fastingInterval);
-                this.fastingElapsed = '';
-                this.notify("Fasting Ended");
-            } else {
-                this.fastingStart = Date.now();
-                localStorage.setItem('fastingStart', this.fastingStart);
-                this.startFastingTimer();
-                this.notify("Fasting Started ⏳");
-            }
-        },
-
-        startFastingTimer() {
-            this.updateFastingTimer();
-            this.fastingInterval = setInterval(() => {
-                this.updateFastingTimer();
-            }, 1000 * 60);
-        },
-
-        updateFastingTimer() {
-            if (!this.fastingStart) return;
-            const diff = Date.now() - this.fastingStart;
-            const hours = Math.floor(diff / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            this.fastingElapsed = `${hours}h ${minutes}m`;
-        }
+        addWater() { if(this.waterIntake < this.waterGoal) { this.waterIntake++; localStorage.setItem('waterIntake', this.waterIntake); if(this.waterIntake === this.waterGoal) this.notify("Hydration Goal Met! 💧"); } },
+        resetWater() { this.waterIntake = 0; localStorage.setItem('waterIntake', 0); },
+        toggleFasting() { if (this.fastingStart) { this.fastingStart = null; localStorage.removeItem('fastingStart'); clearInterval(this.fastingInterval); this.fastingElapsed = ''; this.notify("Fasting Ended"); } else { this.fastingStart = Date.now(); localStorage.setItem('fastingStart', this.fastingStart); this.startFastingTimer(); this.notify("Fasting Started ⏳"); } },
+        startFastingTimer() { this.updateFastingTimer(); this.fastingInterval = setInterval(() => { this.updateFastingTimer(); }, 60000); },
+        updateFastingTimer() { if (!this.fastingStart) return; const diff = Date.now() - this.fastingStart; const hours = Math.floor(diff / (1000 * 60 * 60)); const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)); this.fastingElapsed = `${hours}h ${minutes}m`; }
     }))
 });
