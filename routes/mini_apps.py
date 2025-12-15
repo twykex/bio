@@ -131,6 +131,22 @@ APP_CONFIGS = {
         "system": "You are a Physical Therapist.",
         "prompt": "Alternative to '{exercise}' due to '{reason}'. Output format: {{ 'alternative': '...', 'benefit': '...' }}",
         "temp": 0.2
+    },
+    # --- New Fitness Tools ---
+    "calculate_1rm": {
+        "system": "You are a Strength Coach. Use the Epley Formula: w * (1 + r/30).",
+        "prompt": "Estimate 1 Rep Max for {weight}kg x {reps} reps. Output format: {{ 'estimated_1rm': '...', 'training_tip': '...' }}",
+        "temp": 0.1
+    },
+    "heart_rate_zones": {
+        "system": "You are a Cardiovascular Physiologist.",
+        "prompt": "Calculate heart rate zones for Age: {age}, Resting HR: {resting_hr}. Output format: {{ 'max_hr': '...', 'zone_2': '...-...' }}",
+        "temp": 0.1
+    },
+    "exercise_form_check": {
+        "system": "You are an Elite Biomechanist.",
+        "prompt": "Give 3 critical form cues for '{exercise}'. Output format: {{ 'cues': ['...', '...', '...'], 'common_mistake': '...' }}",
+        "temp": 0.2
     }
 }
 
