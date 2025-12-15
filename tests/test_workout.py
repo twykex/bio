@@ -16,7 +16,7 @@ class TestWorkout(unittest.TestCase):
         self.app.testing = True
         sessions.clear()
 
-    @patch('routes.main_routes.query_ollama')
+    @patch('routes.workout_routes.query_ollama')
     def test_generate_workout_success(self, mock_query):
         # Mock successful AI response with new structure
         mock_response = [{
@@ -44,7 +44,7 @@ class TestWorkout(unittest.TestCase):
         self.assertEqual(data[0]['exercises'][0]['name'], "Test Ex")
         self.assertEqual(data[0]['exercises'][0]['sets'], "3")
 
-    @patch('routes.main_routes.query_ollama')
+    @patch('routes.workout_routes.query_ollama')
     def test_generate_workout_fallback(self, mock_query):
         # Mock failure to trigger fallback
         mock_query.return_value = None
