@@ -528,6 +528,37 @@ document.addEventListener('alpine:init', () => {
             if (file) this.uploadData(file);
         },
 
+        async loadDemoData() {
+            this.startLoading(['Loading Sample Profile...', 'Simulating Analysis...', 'Synthesizing Health Data...']);
+
+            try {
+                const res = await fetch('/load_demo_data', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ token: this.token })
+                });
+                if(!res.ok) throw new Error();
+                this.context = await res.json();
+
+                this.healthScore = this.context.health_score || 72;
+                this.userName = this.context.patient_name || 'Demo User';
+
+                // Simulate delay for effect
+                await new Promise(r => setTimeout(r, 1500));
+
+                if (this.context.issues && this.context.issues.length > 0) {
+                    this.startConsultation();
+                } else {
+                    this.finalizeConsultation();
+                }
+                this.notify("Demo Loaded Successfully");
+            } catch(e) {
+                this.notify("Demo Failed", "error");
+            } finally {
+                this.stopLoading();
+            }
+        },
+
         async uploadData(file) {
             if (!file) return;
             this.startLoading('upload');

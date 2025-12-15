@@ -92,8 +92,8 @@
                     <a href="/login" class="px-8 py-4 rounded-full bg-white text-black font-bold text-lg hover:bg-gray-200 transition shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:scale-105 transform duration-200">
                         Get Started
                     </a>
-                    <a href="#how-it-works" class="px-8 py-4 rounded-full bg-white/5 text-white font-bold text-lg hover:bg-white/10 transition border border-white/10">
-                        Learn More
+                    <a href="/guest-login" class="px-8 py-4 rounded-full bg-white/5 text-white font-bold text-lg hover:bg-white/10 transition border border-white/10">
+                        View Demo
                     </a>
                 {% endif %}
             </div>
@@ -224,6 +224,22 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- Integrations Section -->
+    <section class="py-20 px-6 border-b border-white/5 bg-white/5 relative z-10">
+        <div class="max-w-7xl mx-auto text-center">
+            <h2 class="text-3xl font-bold mb-10 scroll-reveal">Connect Your Ecosystem</h2>
+            <div class="flex flex-wrap justify-center gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-500 scroll-reveal">
+                <!-- Placeholders for logos -->
+                <div class="flex items-center gap-2 text-xl font-bold"><span class="text-3xl"></span> Apple Health</div>
+                <div class="flex items-center gap-2 text-xl font-bold"><span class="text-3xl">💍</span> Oura</div>
+                <div class="flex items-center gap-2 text-xl font-bold"><span class="text-3xl">⌚</span> Whoop</div>
+                <div class="flex items-center gap-2 text-xl font-bold"><span class="text-3xl">📉</span> MyFitnessPal</div>
+                <div class="flex items-center gap-2 text-xl font-bold"><span class="text-3xl">🧬</span> 23andMe</div>
+            </div>
+            <p class="mt-8 text-white/40 text-sm scroll-reveal">Coming soon: Direct API sync with your favorite devices.</p>
         </div>
     </section>
 
@@ -370,6 +386,57 @@
         </div>
     </section>
 
+    <!-- Testimonials Section -->
+    <section class="py-32 px-6 relative z-10 border-t border-white/5">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-4xl font-bold mb-16 text-center scroll-reveal">Trusted by Bio-Hackers</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Review 1 -->
+                <div class="glass-card p-8 rounded-[32px] scroll-reveal delay-100 relative">
+                     <div class="text-4xl text-blue-500 absolute top-8 right-8 opacity-20">"</div>
+                     <p class="text-white/80 leading-relaxed mb-6">
+                        "I had low energy for years. Doctors said everything was 'normal'. BioFlow flagged my Ferritin as suboptimal and built a plan. I feel 10 years younger."
+                     </p>
+                     <div class="flex items-center gap-4">
+                         <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500"></div>
+                         <div>
+                             <div class="font-bold">Sarah J.</div>
+                             <div class="text-xs text-white/40">Verified User</div>
+                         </div>
+                     </div>
+                </div>
+                 <!-- Review 2 -->
+                <div class="glass-card p-8 rounded-[32px] scroll-reveal delay-200 relative">
+                     <div class="text-4xl text-blue-500 absolute top-8 right-8 opacity-20">"</div>
+                     <p class="text-white/80 leading-relaxed mb-6">
+                        "The local AI aspect is a game changer. I'm not comfortable uploading my medical records to the cloud. This runs fast on my M2 Mac."
+                     </p>
+                     <div class="flex items-center gap-4">
+                         <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-teal-500"></div>
+                         <div>
+                             <div class="font-bold">David K.</div>
+                             <div class="text-xs text-white/40">Software Engineer</div>
+                         </div>
+                     </div>
+                </div>
+                 <!-- Review 3 -->
+                <div class="glass-card p-8 rounded-[32px] scroll-reveal delay-300 relative">
+                     <div class="text-4xl text-blue-500 absolute top-8 right-8 opacity-20">"</div>
+                     <p class="text-white/80 leading-relaxed mb-6">
+                        "The meal plans are actually edible. Unlike other apps that give you generic advice, this actually accounts for my gluten sensitivity."
+                     </p>
+                     <div class="flex items-center gap-4">
+                         <div class="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-500"></div>
+                         <div>
+                             <div class="font-bold">Elena R.</div>
+                             <div class="text-xs text-white/40">Athlete</div>
+                         </div>
+                     </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- FAQ Section -->
     <section class="py-32 px-6 relative z-10 border-t border-white/5 bg-white/5">
         <div class="max-w-3xl mx-auto">
@@ -451,6 +518,18 @@
                     </a>
                 {% endif %}
             </div>
+        </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="py-20 px-6 border-t border-white/5 relative z-10 bg-[#0A0A0A]">
+        <div class="max-w-2xl mx-auto text-center">
+            <h2 class="text-3xl font-bold mb-4 scroll-reveal">Stay Optimized</h2>
+            <p class="text-white/50 mb-8 scroll-reveal">Get the latest longevity research and feature updates delivered to your inbox.</p>
+            <form class="flex flex-col sm:flex-row gap-4 scroll-reveal" onsubmit="event.preventDefault(); alert('Subscribed!');">
+                <input type="email" placeholder="Enter your email" class="flex-1 px-6 py-4 rounded-full bg-white/5 border border-white/10 text-white focus:outline-none focus:border-blue-500 transition">
+                <button type="submit" class="px-8 py-4 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold transition shadow-lg">Subscribe</button>
+            </form>
         </div>
     </section>
 
