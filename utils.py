@@ -40,7 +40,7 @@ def get_session(token):
 
 
 # ==========================================
-# 3. RAG ENGINE (FIXED EMBEDDINGS)
+# 3. RAG ENGINE (FIXED: Uses Nomic)
 # ==========================================
 def get_embedding(text):
     """Generates vector embedding using NOMIC (Dedicated Embedding Model)."""
@@ -58,15 +58,20 @@ def get_embedding(text):
             "prompt": text
         })
 
+        # Check if Ollama sent back an error
+        if r.status_code != 200:
+            logger.error(f"Ollama Embedding Error: {r.text}")
+            return []
+
         vector = r.json().get('embedding')
         if vector:
             embedding_cache[text_hash] = vector
+            return vector
         else:
-            logger.warning(f"Embedding failed: {r.text}")
+            return []
 
-        return vector or []
     except Exception as e:
-        logger.error(f"Embedding Error: {e}")
+        logger.error(f"Embedding Connection Error: {e}")
         return []
 
 

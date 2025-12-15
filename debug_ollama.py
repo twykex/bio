@@ -1,98 +1,42 @@
+### FILENAME: debug_ollama.py ###
 import requests
 import json
-import sys
 
-# CONFIGURATION
-MODEL = "gemma3:4b"  # The model you are using
+CHAT_MODEL = "gemma3:4b"
+EMBED_MODEL = "nomic-embed-text"
 BASE_URL = "http://127.0.0.1:11434"
 
-print(f"🔍 DIAGNOSTIC TOOL: Testing {MODEL} at {BASE_URL}...\n")
+print(f"🔍 TESTING HYBRID ARCHITECTURE...")
+print(f"🗣️  Chat Model: {CHAT_MODEL}")
+print(f"🧠 Memory Model: {EMBED_MODEL}")
 
-
-def test_connection():
+def test_chat():
+    print(f"\n1. Testing Chat ({CHAT_MODEL})...")
     try:
-        r = requests.get(f"{BASE_URL}/")
-        if r.status_code == 200:
-            print("✅ CONNECTION: Ollama is running.")
-            return True
-        else:
-            print(f"❌ CONNECTION: Failed with status {r.status_code}")
-            return False
+        r = requests.post(f"{BASE_URL}/api/chat", json={
+            "model": CHAT_MODEL,
+            "messages": [{"role":"user", "content":"say hello in json { 'msg': 'hello' }"}],
+            "format": "json",
+            "stream": False
+        })
+        print("✅ Chat Response:", r.json()['message']['content'])
     except Exception as e:
-        print(f"❌ CONNECTION: Critical Error - {e}")
-        return False
+        print("❌ Chat Failed:", e)
 
-
-def test_model_exists():
-    try:
-        r = requests.get(f"{BASE_URL}/api/tags")
-        models = [m['name'] for m in r.json()['models']]
-        print(f"📋 AVAILABLE MODELS: {models}")
-
-        if MODEL in models or f"{MODEL}:latest" in models:
-            print(f"✅ MODEL CHECK: '{MODEL}' is installed.")
-            return True
-        else:
-            print(f"❌ MODEL CHECK: '{MODEL}' NOT FOUND. Please run: ollama pull {MODEL}")
-            return False
-    except:
-        print("❌ MODEL CHECK: Could not retrieve tags.")
-        return False
-
-
-def test_json_generation():
-    print(f"\n🧠 TESTING GENERATION (JSON Mode)...")
-
-    prompt = "List 3 fruits. Format: JSON { 'fruits': [] }"
-
-    payload = {
-        "model": MODEL,
-        "messages": [{"role": "user", "content": prompt}],
-        "format": "json",
-        "stream": False
-    }
-
-    try:
-        r = requests.post(f"{BASE_URL}/api/chat", json=payload)
-        response = r.json()
-
-        if 'error' in response:
-            print(f"❌ AI ERROR: {response['error']}")
-            return
-
-        content = response.get('message', {}).get('content', '')
-        print(f"📝 RAW OUTPUT: {content}")
-
-        try:
-            data = json.loads(content)
-            print("✅ JSON PARSE: Success!")
-            print(json.dumps(data, indent=2))
-        except:
-            print("❌ JSON PARSE: Failed. The model outputted invalid JSON.")
-
-    except Exception as e:
-        print(f"❌ GENERATION ERROR: {e}")
-
-
-def test_embeddings():
-    print(f"\n📐 TESTING EMBEDDINGS...")
+def test_embed():
+    print(f"\n2. Testing Embeddings ({EMBED_MODEL})...")
     try:
         r = requests.post(f"{BASE_URL}/api/embeddings", json={
-            "model": MODEL,
-            "prompt": "Test sentence"
+            "model": EMBED_MODEL,
+            "prompt": "Medical data"
         })
-        emb = r.json().get('embedding')
-        if emb and len(emb) > 0:
-            print(f"✅ EMBEDDINGS: Success! Vector length: {len(emb)}")
+        if 'embedding' in r.json():
+            print(f"✅ Embeddings Working! Vector Size: {len(r.json()['embedding'])}")
         else:
-            print(f"❌ EMBEDDINGS: Returned empty.")
-            print(r.text)
+            print("❌ Embeddings Failed:", r.text)
     except Exception as e:
-        print(f"❌ EMBEDDINGS ERROR: {e}")
-
+        print("❌ Connection Failed:", e)
 
 if __name__ == "__main__":
-    if test_connection():
-        if test_model_exists():
-            test_json_generation()
-            test_embeddings()
+    test_chat()
+    test_embed()
