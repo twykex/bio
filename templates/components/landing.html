@@ -1,17 +1,19 @@
-<div class="min-h-full w-full relative bg-[#050505] text-white selection:bg-blue-500/30 overflow-x-hidden">
+<div class="min-h-full w-full relative bg-[#050505] text-white selection:bg-blue-500/30 overflow-x-hidden font-sans">
 
     <!-- Navbar -->
-    <nav class="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b border-white/5 bg-[#050505]/80">
+    <nav class="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b border-white/5 bg-[#050505]/70 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <span class="text-2xl">🧬</span>
+            <div class="flex items-center gap-2 group cursor-pointer" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                <span class="text-2xl group-hover:scale-110 transition-transform duration-300">🧬</span>
                 <span class="font-bold text-xl tracking-tight">BioFlow<span class="text-blue-500">.AI</span></span>
             </div>
-            <div class="flex items-center gap-4">
-                <a href="#how-it-works" class="text-sm text-white/60 hover:text-white transition-colors hidden md:block">How It Works</a>
-                <a href="#features" class="text-sm text-white/60 hover:text-white transition-colors hidden md:block">Features</a>
-                <button @click="document.getElementById('upload-section').scrollIntoView({behavior: 'smooth'})" class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-sm font-medium transition-all">
-                    Get Started
+            <div class="flex items-center gap-6">
+                <a href="#how-it-works" class="text-sm text-white/60 hover:text-white transition-colors hidden md:block">Process</a>
+                <a href="#features" class="text-sm text-white/60 hover:text-white transition-colors hidden md:block">Intelligence</a>
+                <a href="#faq" class="text-sm text-white/60 hover:text-white transition-colors hidden md:block">FAQ</a>
+                <button @click="document.getElementById('upload-section').scrollIntoView({behavior: 'smooth'})"
+                        class="px-5 py-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition-all hover:scale-105 active:scale-95">
+                    Launch App
                 </button>
             </div>
         </div>
@@ -19,282 +21,279 @@
 
     <!-- Hero Section -->
     <section class="relative pt-32 pb-20 md:pt-48 md:pb-32 px-6 overflow-hidden">
-        <!-- Background Blobs -->
-        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-600/20 rounded-[100%] blur-[120px] -z-10 animate-breathe pointer-events-none"></div>
+        <!-- Abstract Background -->
+        <div class="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-blue-600/20 rounded-full blur-[120px] -z-10 animate-breathe pointer-events-none"></div>
+        <div class="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
 
-        <div class="max-w-5xl mx-auto text-center relative z-10">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-8 animate-slide-up" style="animation-delay: 0.1s;">
-                <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                Privacy-First Health Intelligence
+        <div class="max-w-6xl mx-auto text-center relative z-10">
+            <!-- Badge -->
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-8 animate-slide-up hover:bg-blue-500/20 transition-colors cursor-default" style="animation-delay: 0.1s;">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </span>
+                Local Privacy • GPU Accelerated
             </div>
 
-            <h1 class="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter mb-8 bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/40 animate-slide-up" style="animation-delay: 0.2s;">
-                Decode Your <br class="hidden md:block" />
-                <span class="text-blue-500">Biology.</span>
+            <!-- Headline -->
+            <h1 class="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight mb-8 leading-[1.1] animate-slide-up" style="animation-delay: 0.2s;">
+                Your Body, <br class="hidden md:block" />
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 animate-gradient-x">Decoded.</span>
             </h1>
 
+            <!-- Subhead -->
             <p class="text-lg md:text-2xl text-white/60 max-w-2xl mx-auto leading-relaxed mb-12 animate-slide-up" style="animation-delay: 0.3s;">
-                Transform raw bloodwork into hyper-personalized nutrition and fitness protocols using local AI agents.
+                The first privacy-focused health intelligence platform. <br class="hidden md:block" />
+                Transform bloodwork into actionable protocols using local AI agents.
             </p>
 
+            <!-- CTAs -->
             <div class="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up" style="animation-delay: 0.4s;">
-                <button @click="document.getElementById('upload-section').scrollIntoView({behavior: 'smooth'})" class="h-14 px-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-lg shadow-blue-500/25 transition-all hover:scale-105 flex items-center gap-2">
+                <button @click="document.getElementById('upload-section').scrollIntoView({behavior: 'smooth'})" class="h-14 px-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-[0_0_40px_-10px_rgba(59,130,246,0.5)] transition-all hover:scale-105 flex items-center gap-2 group">
                     Start Analysis
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                    <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
                 </button>
-                <button @click="loadDemoData" class="h-14 px-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold backdrop-blur-md transition-all hover:scale-105">
-                    Try Demo
+                <button @click="loadDemoData" class="h-14 px-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold backdrop-blur-md transition-all hover:scale-105 flex items-center gap-2">
+                    <span class="text-xl">🧪</span> Try Demo
                 </button>
             </div>
         </div>
 
-        <!-- Hero Visual -->
-        <div class="mt-20 relative max-w-5xl mx-auto animate-slide-up" style="animation-delay: 0.6s;">
-            <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent z-10 h-full w-full"></div>
-            <div class="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-4 md:p-6 shadow-2xl">
-                 <!-- Mock Interface -->
-                 <div class="flex gap-4 mb-6">
-                    <div class="w-1/3 space-y-3">
-                        <div class="h-32 rounded-lg bg-white/5 animate-pulse"></div>
-                        <div class="h-16 rounded-lg bg-white/5 animate-pulse delay-100"></div>
-                    </div>
-                    <div class="w-2/3 space-y-3">
-                        <div class="h-8 w-3/4 rounded bg-white/10"></div>
-                        <div class="h-4 w-1/2 rounded bg-white/5"></div>
-                        <div class="grid grid-cols-2 gap-3 mt-4">
-                            <div class="h-24 rounded-lg bg-blue-500/20 border border-blue-500/30"></div>
-                            <div class="h-24 rounded-lg bg-purple-500/20 border border-purple-500/30"></div>
-                        </div>
-                    </div>
+        <!-- Hero Visual / Dashboard Preview -->
+        <div class="mt-24 relative max-w-5xl mx-auto animate-slide-up" style="animation-delay: 0.6s;">
+            <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-20"></div>
+            <div class="glass-panel rounded-xl border border-white/10 bg-[#0A0A0A]/80 backdrop-blur-xl p-2 md:p-4 shadow-2xl relative overflow-hidden group">
+                 <!-- Top Bar -->
+                 <div class="flex items-center gap-2 mb-4 px-2 opacity-50">
+                     <div class="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50"></div>
+                     <div class="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
+                     <div class="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
+                     <div class="ml-4 h-6 w-64 rounded bg-white/5 text-[10px] flex items-center px-3 text-white/30 font-mono">localhost:5000/dashboard</div>
                  </div>
-                 <div class="text-center text-sm text-white/40 font-mono">
-                    <span class="text-green-400">●</span> System Local • Ollama Engine Active • RAG Pipeline Ready
+
+                 <!-- Inner Content Mockup -->
+                 <div class="grid grid-cols-12 gap-4 h-[300px] md:h-[500px] overflow-hidden relative">
+                    <!-- Sidebar -->
+                    <div class="hidden md:block col-span-2 space-y-2 border-r border-white/5 pr-4">
+                        <div class="h-8 rounded bg-blue-500/20 w-full animate-pulse"></div>
+                        <div class="h-8 rounded bg-white/5 w-full"></div>
+                        <div class="h-8 rounded bg-white/5 w-full"></div>
+                        <div class="h-8 rounded bg-white/5 w-full"></div>
+                    </div>
+                    <!-- Main Area -->
+                    <div class="col-span-12 md:col-span-10 space-y-4 relative">
+                        <!-- Header -->
+                        <div class="flex justify-between items-center">
+                            <div class="h-8 w-48 rounded bg-white/10"></div>
+                            <div class="h-8 w-8 rounded-full bg-white/10"></div>
+                        </div>
+                        <!-- Cards -->
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="h-32 rounded-lg bg-gradient-to-br from-white/5 to-white/0 border border-white/5 p-4 relative overflow-hidden">
+                                <div class="absolute inset-x-0 bottom-0 h-1 bg-blue-500"></div>
+                            </div>
+                            <div class="h-32 rounded-lg bg-gradient-to-br from-white/5 to-white/0 border border-white/5 p-4 relative overflow-hidden">
+                                <div class="absolute inset-x-0 bottom-0 h-1 bg-purple-500"></div>
+                            </div>
+                            <div class="h-32 rounded-lg bg-gradient-to-br from-white/5 to-white/0 border border-white/5 p-4 relative overflow-hidden">
+                                <div class="absolute inset-x-0 bottom-0 h-1 bg-green-500"></div>
+                            </div>
+                        </div>
+                        <!-- Chart Mockup -->
+                        <div class="h-48 rounded-lg bg-white/5 border border-white/5 relative overflow-hidden flex items-end justify-around p-4 gap-2">
+                             <div class="w-full bg-blue-500/20 rounded-t h-[40%] animate-[scan_2s_ease-in-out_infinite]"></div>
+                             <div class="w-full bg-blue-500/30 rounded-t h-[60%]"></div>
+                             <div class="w-full bg-blue-500/40 rounded-t h-[30%]"></div>
+                             <div class="w-full bg-blue-500/50 rounded-t h-[80%]"></div>
+                             <div class="w-full bg-blue-500/60 rounded-t h-[50%]"></div>
+                        </div>
+
+                        <!-- Overlay Scan Line -->
+                        <div class="absolute top-0 left-0 w-full h-1 bg-blue-500 shadow-[0_0_20px_#3b82f6] animate-scan opacity-50 pointer-events-none"></div>
+                    </div>
                  </div>
             </div>
+            <!-- Reflection -->
+            <div class="absolute -bottom-20 left-10 right-10 h-20 bg-gradient-to-b from-blue-500/10 to-transparent blur-xl transform scale-x-90"></div>
         </div>
     </section>
 
-    <!-- Problem / Solution -->
-    <section class="py-24 px-6 relative border-t border-white/5">
-        <div class="max-w-4xl mx-auto">
-            <div class="grid md:grid-cols-2 gap-16 items-center">
-                <div>
-                    <h2 class="text-3xl md:text-4xl font-bold mb-6">Generic advice <br><span class="text-red-500">fails you.</span></h2>
-                    <p class="text-white/60 text-lg leading-relaxed mb-6">
-                        Most health apps guess based on your age and weight. They don't know your Vitamin D levels, your Ferritin, or your metabolic markers.
-                    </p>
-                    <p class="text-white/60 text-lg leading-relaxed">
-                        You're unique. Your protocol should be too.
-                    </p>
-                </div>
-                <div class="relative">
-                    <div class="absolute inset-0 bg-red-500/20 blur-[80px] rounded-full"></div>
-                    <div class="glass-card p-8 rounded-2xl relative z-10 transform rotate-3 hover:rotate-0 transition-transform duration-500">
-                        <div class="flex items-center gap-4 mb-4 border-b border-white/10 pb-4">
-                            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center text-red-400">⚠️</div>
-                            <div>
-                                <div class="font-bold">Standard App</div>
-                                <div class="text-xs text-white/40">Generic Algorithm</div>
-                            </div>
-                        </div>
-                        <div class="space-y-3 opacity-50">
-                            <div class="h-2 w-full bg-white/10 rounded"></div>
-                            <div class="h-2 w-5/6 bg-white/10 rounded"></div>
-                            <div class="h-2 w-4/6 bg-white/10 rounded"></div>
-                        </div>
-                        <div class="mt-6 text-red-400 font-mono text-sm">>> "Eat less, move more."</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="h-24 border-l border-dashed border-white/10 mx-auto my-12 md:hidden"></div>
-
-            <div class="grid md:grid-cols-2 gap-16 items-center mt-24 md:mt-32">
-                 <div class="order-2 md:order-1 relative">
-                    <div class="absolute inset-0 bg-blue-500/20 blur-[80px] rounded-full"></div>
-                    <div class="glass-card p-8 rounded-2xl relative z-10 transform -rotate-3 hover:rotate-0 transition-transform duration-500 border-blue-500/30">
-                        <div class="flex items-center gap-4 mb-4 border-b border-white/10 pb-4">
-                            <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">🧬</div>
-                            <div>
-                                <div class="font-bold">BioFlow AI</div>
-                                <div class="text-xs text-white/40">RAG + Local LLM</div>
-                            </div>
-                        </div>
-                        <div class="space-y-3">
-                            <div class="flex justify-between text-sm">
-                                <span class="text-white/60">Vitamin D</span>
-                                <span class="text-yellow-400">Low (22 ng/mL)</span>
-                            </div>
-                             <div class="flex justify-between text-sm">
-                                <span class="text-white/60">Ferritin</span>
-                                <span class="text-green-400">Optimal</span>
-                            </div>
-                        </div>
-                        <div class="mt-6 text-blue-400 font-mono text-sm">>> "Increase Vit D3 intake to 5000IU + K2..."</div>
-                    </div>
-                </div>
-                <div class="order-1 md:order-2">
-                    <h2 class="text-3xl md:text-4xl font-bold mb-6">Precision Medicine,<br><span class="text-blue-500">Democratized.</span></h2>
-                    <p class="text-white/60 text-lg leading-relaxed mb-6">
-                        BioFlow reads your actual bloodwork PDFs. It creates a vector database of your biology and queries it to build your plan.
-                    </p>
-                    <ul class="space-y-3 text-white/80">
-                        <li class="flex items-center gap-3">
-                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            100% Local Privacy
-                        </li>
-                        <li class="flex items-center gap-3">
-                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            Lab-accurate Recommendations
-                        </li>
-                        <li class="flex items-center gap-3">
-                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            Zero Subscription Fees
-                        </li>
-                    </ul>
-                </div>
+    <!-- Tech Stack Ticker -->
+    <div class="border-y border-white/5 bg-white/[0.02] py-8 overflow-hidden relative">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8">
+            <span class="text-sm font-semibold text-white/40 uppercase tracking-widest whitespace-nowrap">Powered by Local Intelligence</span>
+            <div class="flex items-center gap-8 md:gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+                <!-- Simple Text Logos for reliability -->
+                <div class="flex items-center gap-2"><span class="font-bold text-xl">🦙 Ollama</span></div>
+                <div class="flex items-center gap-2"><span class="font-bold text-xl">🐍 Python</span></div>
+                <div class="flex items-center gap-2"><span class="font-bold text-xl">🧪 Flask</span></div>
+                <div class="flex items-center gap-2"><span class="font-bold text-xl">⚛️ Alpine.js</span></div>
+                <div class="flex items-center gap-2"><span class="font-bold text-xl">🌬️ Tailwind</span></div>
             </div>
         </div>
-    </section>
+    </div>
 
-    <!-- Features Grid -->
-    <section id="features" class="py-24 px-6 bg-white/[0.02]">
+    <!-- Intelligence Engine (Features) -->
+    <section id="features" class="py-32 px-6 relative">
         <div class="max-w-7xl mx-auto">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-5xl font-bold mb-4">Features that empower you.</h2>
-                <p class="text-white/50">Everything you need to optimize your biology.</p>
+            <div class="text-center mb-24">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6">The Intelligence Engine</h2>
+                <p class="text-xl text-white/50 max-w-2xl mx-auto">A multi-agent system working in harmony to decode your biology.</p>
             </div>
 
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Feature 1 -->
-                <div class="glass-card p-8 rounded-3xl hover:bg-white/5 transition-colors group">
-                    <div class="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">🔬</div>
-                    <h3 class="text-xl font-bold mb-3">The Bio-Scan Protocol</h3>
-                    <p class="text-white/60 leading-relaxed">
-                        Upload any blood panel PDF. We extract text, chunk it, and embed it for AI analysis. No manual data entry required.
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Card 1 -->
+                <div class="glass-card p-8 rounded-3xl group cursor-default">
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-2xl mb-6 text-blue-400 group-hover:scale-110 transition-transform">📄</div>
+                    <h3 class="text-xl font-bold mb-3 text-white group-hover:text-blue-400 transition-colors">PDF Ingestion</h3>
+                    <p class="text-white/60 leading-relaxed text-sm">
+                        Raw data extraction from complex medical PDFs. Compatible with Quest, LabCorp, and major hospital exports.
                     </p>
                 </div>
 
-                 <!-- Feature 2 -->
-                <div class="glass-card p-8 rounded-3xl hover:bg-white/5 transition-colors group">
-                    <div class="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">🥗</div>
-                    <h3 class="text-xl font-bold mb-3">Nutrition Architect</h3>
-                    <p class="text-white/60 leading-relaxed">
-                        Get meal plans designed for your deficiencies. Low Iron? Expect steak and spinach. High Cholesterol? More oats and fiber.
+                <!-- Card 2 -->
+                <div class="glass-card p-8 rounded-3xl group cursor-default">
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-2xl mb-6 text-purple-400 group-hover:scale-110 transition-transform">🧠</div>
+                    <h3 class="text-xl font-bold mb-3 text-white group-hover:text-purple-400 transition-colors">RAG Architecture</h3>
+                    <p class="text-white/60 leading-relaxed text-sm">
+                        Retrieval-Augmented Generation ensures the AI grounds every recommendation in your specific lab results.
                     </p>
                 </div>
 
-                 <!-- Feature 3 -->
-                <div class="glass-card p-8 rounded-3xl hover:bg-white/5 transition-colors group">
-                    <div class="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">🔒</div>
-                    <h3 class="text-xl font-bold mb-3">Local Privacy Core</h3>
-                    <p class="text-white/60 leading-relaxed">
-                        Your medical data is sensitive. That's why BioFlow runs entirely on your machine. No cloud, no leaks, no prying eyes.
+                <!-- Card 3 -->
+                <div class="glass-card p-8 rounded-3xl group cursor-default">
+                    <div class="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center text-2xl mb-6 text-green-400 group-hover:scale-110 transition-transform">🛡️</div>
+                    <h3 class="text-xl font-bold mb-3 text-white group-hover:text-green-400 transition-colors">Local Privacy</h3>
+                    <p class="text-white/60 leading-relaxed text-sm">
+                        Zero data egress. Your medical history stays on your hard drive, processed by your own GPU/CPU.
                     </p>
                 </div>
 
-                 <!-- Feature 4 -->
-                <div class="glass-card p-8 rounded-3xl hover:bg-white/5 transition-colors group">
-                    <div class="w-14 h-14 rounded-2xl bg-orange-500/10 flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">🩺</div>
-                    <h3 class="text-xl font-bold mb-3">AI Doctor Consult</h3>
-                    <p class="text-white/60 leading-relaxed">
-                        Chat with a "Doctor" agent that knows your labs. Ask questions like "Why is my TSH high?" and get evidence-based answers.
+                <!-- Card 4 -->
+                <div class="glass-card p-8 rounded-3xl group cursor-default">
+                    <div class="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-2xl mb-6 text-orange-400 group-hover:scale-110 transition-transform">🥗</div>
+                    <h3 class="text-xl font-bold mb-3 text-white group-hover:text-orange-400 transition-colors">Nutrition Architect</h3>
+                    <p class="text-white/60 leading-relaxed text-sm">
+                        Auto-generates meal plans that target your deficiencies. High Cholesterol? The engine prioritizes fiber and sterols.
                     </p>
                 </div>
 
-                 <!-- Feature 5 -->
-                <div class="glass-card p-8 rounded-3xl hover:bg-white/5 transition-colors group">
-                    <div class="w-14 h-14 rounded-2xl bg-pink-500/10 flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">📅</div>
-                    <h3 class="text-xl font-bold mb-3">Smart Calendar</h3>
-                    <p class="text-white/60 leading-relaxed">
-                        Drag-and-drop weekly planner. Schedule your meals, workouts, and supplement stack in one intuitive interface.
+                <!-- Card 5 -->
+                <div class="glass-card p-8 rounded-3xl group cursor-default">
+                    <div class="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center text-2xl mb-6 text-pink-400 group-hover:scale-110 transition-transform">🩺</div>
+                    <h3 class="text-xl font-bold mb-3 text-white group-hover:text-pink-400 transition-colors">Doctor Agent</h3>
+                    <p class="text-white/60 leading-relaxed text-sm">
+                        An interactive chat interface simulated as a functional medicine doctor. Ask "Why?" and get scientific answers.
                     </p>
                 </div>
 
-                 <!-- Feature 6 -->
-                <div class="glass-card p-8 rounded-3xl hover:bg-white/5 transition-colors group">
-                    <div class="w-14 h-14 rounded-2xl bg-cyan-500/10 flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">⚡</div>
-                    <h3 class="text-xl font-bold mb-3">Self-Healing Code</h3>
-                    <p class="text-white/60 leading-relaxed">
-                        Our specialized JSON parser ensures the AI always generates valid data structures for your dashboard.
+                <!-- Card 6 -->
+                <div class="glass-card p-8 rounded-3xl group cursor-default">
+                    <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center text-2xl mb-6 text-cyan-400 group-hover:scale-110 transition-transform">⚡</div>
+                    <h3 class="text-xl font-bold mb-3 text-white group-hover:text-cyan-400 transition-colors">Self-Healing JSON</h3>
+                    <p class="text-white/60 leading-relaxed text-sm">
+                        Proprietary parsing logic that detects hallucinations and forces the model to correct its own output syntax.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it Works -->
+    <section id="how-it-works" class="py-32 px-6 relative border-t border-white/5 bg-[#080808]">
+        <div class="max-w-5xl mx-auto">
+             <div class="flex flex-col md:flex-row justify-between items-end mb-16">
+                <div>
+                    <h2 class="text-4xl font-bold mb-4">From PDF to Protocol</h2>
+                    <p class="text-white/50">Three steps to optimized biology.</p>
+                </div>
+                <div class="hidden md:block">
+                     <button @click="document.getElementById('upload-section').scrollIntoView({behavior: 'smooth'})" class="text-blue-400 hover:text-blue-300 font-medium flex items-center gap-2 group">
+                        Start your journey <span class="group-hover:translate-x-1 transition-transform">→</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="relative grid md:grid-cols-3 gap-8">
+                <!-- Connecting Line -->
+                <div class="hidden md:block absolute top-12 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500/50 via-purple-500/50 to-green-500/50 z-0"></div>
+
+                <!-- Step 1 -->
+                <div class="relative z-10">
+                    <div class="w-24 h-24 rounded-2xl bg-[#0A0A0A] border border-blue-500/30 flex items-center justify-center text-4xl mb-8 shadow-xl shadow-blue-900/10 mx-auto md:mx-0">📄</div>
+                    <h3 class="text-xl font-bold mb-2">1. Upload</h3>
+                    <p class="text-white/60 text-sm leading-relaxed">
+                        Drag & drop your blood panel PDF. The system parses thousands of data points locally.
+                    </p>
+                </div>
+
+                 <!-- Step 2 -->
+                <div class="relative z-10">
+                    <div class="w-24 h-24 rounded-2xl bg-[#0A0A0A] border border-purple-500/30 flex items-center justify-center text-4xl mb-8 shadow-xl shadow-purple-900/10 mx-auto md:mx-0">⚙️</div>
+                    <h3 class="text-xl font-bold mb-2">2. Analyze</h3>
+                    <p class="text-white/60 text-sm leading-relaxed">
+                        The AI compares your markers against optimal ranges and identifies metabolic bottlenecks.
+                    </p>
+                </div>
+
+                 <!-- Step 3 -->
+                <div class="relative z-10">
+                    <div class="w-24 h-24 rounded-2xl bg-[#0A0A0A] border border-green-500/30 flex items-center justify-center text-4xl mb-8 shadow-xl shadow-green-900/10 mx-auto md:mx-0">🥗</div>
+                    <h3 class="text-xl font-bold mb-2">3. Optimize</h3>
+                    <p class="text-white/60 text-sm leading-relaxed">
+                        Receive a fully structured plan: meal prep, supplement stack, and lifestyle adjustments.
                     </p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- How it Works (Timeline) -->
-    <section id="how-it-works" class="py-24 px-6 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-500/10 rounded-full blur-[120px] -z-10"></div>
+    <!-- FAQ Section -->
+    <section id="faq" class="py-24 px-6 relative bg-[#050505]">
+        <div class="max-w-3xl mx-auto">
+            <h2 class="text-3xl font-bold mb-12 text-center">Frequently Asked Questions</h2>
 
-        <div class="max-w-4xl mx-auto">
-            <h2 class="text-3xl md:text-5xl font-bold mb-16 text-center">Your Journey to Optimization</h2>
-
-            <div class="relative">
-                <!-- Vertical Line -->
-                <div class="absolute left-5 md:left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-white/20 to-transparent -translate-x-1/2"></div>
-
-                <div class="space-y-12">
-
-                    <!-- Step 1 -->
-                    <div class="relative flex flex-col md:flex-row items-center md:justify-between group">
-                        <!-- Icon -->
-                        <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white/20 bg-[#050505] shadow shrink-0 z-10 text-sm font-bold text-blue-500 absolute left-0 md:left-1/2 -translate-x-0 md:-translate-x-1/2">1</div>
-
-                        <!-- Content Left (Empty for Step 1 if we want it on Right, or vice versa) -->
-                         <div class="w-full md:w-[45%] pl-16 md:pl-0 md:pr-8 md:text-right">
-                            <!-- Empty on mobile, Content on Desktop Left -->
-                         </div>
-
-                         <!-- Spacer for Center -->
-                         <div class="hidden md:block w-10"></div>
-
-                         <!-- Content Right -->
-                         <div class="w-full md:w-[45%] pl-16 md:pl-8 text-left -mt-8 md:mt-0">
-                             <div class="glass-card p-6 rounded-xl border-blue-500/30">
-                                <h3 class="font-bold text-xl mb-2 text-blue-400">Upload Bloodwork</h3>
-                                <p class="text-white/60 text-sm">Drag and drop your PDF from Quest, LabCorp, or your doctor. We securely parse the text locally.</p>
-                            </div>
-                         </div>
+            <div class="space-y-4" x-data="{ active: null }">
+                <!-- Q1 -->
+                <div class="glass-card rounded-xl overflow-hidden cursor-pointer" @click="active === 1 ? active = null : active = 1">
+                    <div class="p-6 flex justify-between items-center">
+                        <h3 class="font-semibold text-lg">Is my medical data safe?</h3>
+                        <span class="text-2xl transition-transform" :class="active === 1 ? 'rotate-45' : ''">+</span>
                     </div>
-
-                    <!-- Step 2 -->
-                    <div class="relative flex flex-col md:flex-row items-center md:justify-between group">
-                        <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white/20 bg-[#050505] shadow shrink-0 z-10 text-sm font-bold text-purple-500 absolute left-0 md:left-1/2 -translate-x-0 md:-translate-x-1/2">2</div>
-
-                         <div class="w-full md:w-[45%] pl-16 md:pl-0 md:pr-8 md:text-right -mt-8 md:mt-0">
-                            <div class="glass-card p-6 rounded-xl border-purple-500/30">
-                                <h3 class="font-bold text-xl mb-2 text-purple-400">AI Analysis</h3>
-                                <p class="text-white/60 text-sm">Ollama agents analyze your biomarkers against optimal ranges, identifying deficiencies and risks.</p>
-                            </div>
-                         </div>
-
-                         <div class="hidden md:block w-10"></div>
-                         <div class="w-full md:w-[45%] pl-16 md:pl-8 text-left"></div>
+                    <div class="px-6 pb-6 text-white/60 leading-relaxed" x-show="active === 1" x-collapse>
+                        Yes. BioFlow AI runs 100% locally on your machine. Your PDF is parsed in memory, and the AI models (Ollama) run on your hardware. No data is ever sent to the cloud or third-party servers.
                     </div>
+                </div>
 
-                    <!-- Step 3 -->
-                    <div class="relative flex flex-col md:flex-row items-center md:justify-between group">
-                        <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white/20 bg-[#050505] shadow shrink-0 z-10 text-sm font-bold text-green-500 absolute left-0 md:left-1/2 -translate-x-0 md:-translate-x-1/2">3</div>
-
-                         <div class="w-full md:w-[45%] pl-16 md:pl-0 md:pr-8 md:text-right"></div>
-                         <div class="hidden md:block w-10"></div>
-                         <div class="w-full md:w-[45%] pl-16 md:pl-8 text-left -mt-8 md:mt-0">
-                            <div class="glass-card p-6 rounded-xl border-green-500/30">
-                                <h3 class="font-bold text-xl mb-2 text-green-400">Execute Plan</h3>
-                                <p class="text-white/60 text-sm">Receive your grocery list, meal prep guide, and fitness routine. Track progress and re-evaluate.</p>
-                            </div>
-                         </div>
+                <!-- Q2 -->
+                <div class="glass-card rounded-xl overflow-hidden cursor-pointer" @click="active === 2 ? active = null : active = 2">
+                    <div class="p-6 flex justify-between items-center">
+                        <h3 class="font-semibold text-lg">What hardware do I need?</h3>
+                        <span class="text-2xl transition-transform" :class="active === 2 ? 'rotate-45' : ''">+</span>
                     </div>
+                    <div class="px-6 pb-6 text-white/60 leading-relaxed" x-show="active === 2" x-collapse>
+                        You need a computer capable of running Ollama. We recommend at least 8GB of RAM (16GB preferred) and a decent CPU or GPU. Apple Silicon (M1/M2/M3) works exceptionally well.
+                    </div>
+                </div>
 
+                 <!-- Q3 -->
+                <div class="glass-card rounded-xl overflow-hidden cursor-pointer" @click="active === 3 ? active = null : active = 3">
+                    <div class="p-6 flex justify-between items-center">
+                        <h3 class="font-semibold text-lg">What labs can I upload?</h3>
+                        <span class="text-2xl transition-transform" :class="active === 3 ? 'rotate-45' : ''">+</span>
+                    </div>
+                    <div class="px-6 pb-6 text-white/60 leading-relaxed" x-show="active === 3" x-collapse>
+                        The system is optimized for standard blood panels (CBC, CMP, Lipid Panel, Hormones) from major providers like Quest Diagnostics, LabCorp, and hospital systems. It reads text-based PDFs.
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Upload / CTA Section -->
-    <section id="upload-section" class="py-32 px-6 text-center relative">
+    <!-- CTA Area -->
+    <section id="upload-section" class="py-32 px-6 text-center relative overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-t from-blue-900/20 to-transparent pointer-events-none"></div>
+        <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
 
         <div class="max-w-3xl mx-auto relative z-10">
             <h2 class="text-4xl md:text-6xl font-bold mb-8">Ready to take control?</h2>
@@ -302,21 +301,21 @@
 
             <div class="flex flex-col sm:flex-row gap-6 justify-center max-w-xl mx-auto">
                  <!-- 1. Upload PDF Button -->
-                <label class="group relative flex-1 h-20 flex items-center justify-center gap-4 bg-blue-600 hover:bg-blue-500 rounded-2xl cursor-pointer transition-all overflow-hidden shadow-xl shadow-blue-900/40 hover:-translate-y-1">
+                <label class="group relative flex-1 h-24 flex items-center justify-center gap-4 bg-blue-600 hover:bg-blue-500 rounded-2xl cursor-pointer transition-all overflow-hidden shadow-2xl shadow-blue-900/40 hover:-translate-y-1">
                     <input type="file" accept=".pdf" class="hidden" @change="uploadFile">
-                    <span class="text-3xl">📄</span>
+                    <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">📄</div>
                     <div class="text-left">
-                        <div class="font-bold text-lg text-white">Upload PDF</div>
-                        <div class="text-xs text-blue-200">Analyze my bloodwork</div>
+                        <div class="font-bold text-xl text-white">Upload PDF</div>
+                        <div class="text-xs text-blue-200 group-hover:text-white transition-colors">Analyze my bloodwork</div>
                     </div>
                 </label>
 
                 <!-- 2. Demo Button -->
-                <button @click="loadDemoData" class="group relative flex-1 h-20 flex items-center justify-center gap-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all hover:-translate-y-1 backdrop-blur-md">
-                    <span class="text-3xl">🧪</span>
+                <button @click="loadDemoData" class="group relative flex-1 h-24 flex items-center justify-center gap-4 bg-[#111] hover:bg-[#1a1a1a] border border-white/10 rounded-2xl transition-all hover:-translate-y-1">
+                    <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🧪</div>
                     <div class="text-left">
                         <div class="font-bold text-white">Try Demo</div>
-                        <div class="text-xs text-white/40">See how it works</div>
+                        <div class="text-xs text-white/40 group-hover:text-white transition-colors">See how it works</div>
                     </div>
                 </button>
             </div>
@@ -324,9 +323,19 @@
     </section>
 
     <!-- Footer -->
-    <footer class="py-12 border-t border-white/5 text-center text-white/20 text-sm">
-        <p class="mb-2">BioFlow AI © 2024. Open Source Health Intelligence.</p>
-        <p>Powered by Ollama • Built with Python & Flask</p>
+    <footer class="py-12 border-t border-white/5 bg-[#020202]">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-white/40">
+            <div class="flex items-center gap-2">
+                <span class="text-xl grayscale opacity-50">🧬</span>
+                <span class="font-semibold tracking-tight">BioFlow.AI</span>
+            </div>
+            <div class="flex gap-6">
+                <a href="#" class="hover:text-white transition-colors">Privacy</a>
+                <a href="#" class="hover:text-white transition-colors">Documentation</a>
+                <a href="#" class="hover:text-white transition-colors">GitHub</a>
+            </div>
+            <p>© 2024. Open Source Health Intelligence.</p>
+        </div>
     </footer>
 
     <!-- Loading Overlay -->
@@ -334,10 +343,15 @@
         <div class="relative w-24 h-24 mb-8">
             <div class="absolute inset-0 border-t-4 border-blue-500 rounded-full animate-spin"></div>
             <div class="absolute inset-2 border-t-4 border-purple-500 rounded-full animate-spin" style="animation-duration: 1.5s; animation-direction: reverse;"></div>
-            <div class="absolute inset-0 flex items-center justify-center text-3xl">🧬</div>
+            <div class="absolute inset-0 flex items-center justify-center text-3xl animate-pulse">🧬</div>
         </div>
-        <h3 class="text-2xl font-bold text-white mb-2">Analyzing Bio-Data</h3>
-        <p class="text-blue-400 font-mono animate-pulse" x-text="loadingText">Initializing agents...</p>
+        <h3 class="text-3xl font-bold text-white mb-2 tracking-tight">Analyzing Bio-Data</h3>
+        <p class="text-blue-400 font-mono" x-text="loadingText">Initializing agents...</p>
+
+        <!-- Progress Bar Mockup -->
+        <div class="w-64 h-1 bg-white/10 rounded-full mt-8 overflow-hidden">
+            <div class="h-full bg-blue-500 w-1/2 animate-[scan_2s_ease-in-out_infinite]"></div>
+        </div>
     </div>
 
 </div>
