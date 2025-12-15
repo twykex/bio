@@ -342,6 +342,7 @@ def generate_week():
         # FIXED: Use the global variable directly, do NOT import it
         plan = FALLBACK_MEAL_PLAN
 
+    session['weekly_plan'] = plan
     return jsonify(plan)
 
 
@@ -410,7 +411,25 @@ def get_recipe():
 
 @main_bp.route('/generate_shopping_list', methods=['POST'])
 def generate_shopping_list():
-    prompt = "Healthy shopping list. JSON: {{ 'Produce': ['Apple'], 'Protein': ['Egg'], 'Pantry': ['Oil'] }}"
+    data = request.json
+    session = get_session(data.get('token'))
+    weekly_plan = session.get('weekly_plan', [])
+
+    if not weekly_plan:
+        prompt = "Healthy shopping list. JSON: {{ 'Produce': ['Apple'], 'Protein': ['Egg'], 'Pantry': ['Oil'] }}"
+    else:
+        # Extract meal titles to keep prompt short
+        meal_titles = []
+        for day in weekly_plan:
+            if 'meals' in day:
+                meal_titles.extend([m.get('title', 'Meal') for m in day['meals']])
+
+        prompt = f"""
+        Generate a consolidated shopping list for these meals: {", ".join(meal_titles[:25])}
+        Group by category (Produce, Meat/Protein, Pantry, Dairy, Frozen).
+        OUTPUT JSON ONLY: {{ 'Produce': ['Apple', ...], ... }}
+        """
+
     shopping = query_ollama(prompt, system_instruction="Helper. JSON Only.", temperature=0.2)
     return jsonify(shopping or {"Produce": ["Spinach", "Apples"], "Protein": ["Chicken"], "Pantry": ["Rice"]})
 

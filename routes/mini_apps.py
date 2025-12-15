@@ -152,6 +152,11 @@ APP_CONFIGS = {
         "system": "You are an Elite Biomechanist.",
         "prompt": "Give 3 critical form cues for '{exercise}'. Output format: {{ 'cues': ['...', '...', '...'], 'common_mistake': '...' }}",
         "temp": 0.2
+    },
+    "symptom_checker": {
+        "system": "You are a Triage Nurse. Assess symptoms carefully.",
+        "prompt": "Analyze symptoms: '{symptoms}'. List 3 potential causes and 1 recommendation. Output format: {{ 'causes': ['...', '...', '...'], 'recommendation': '...' }}",
+        "temp": 0.1
     }
 }
 
@@ -183,7 +188,8 @@ FALLBACKS = {
     "exercise_alternative": {"alternative": "Swimming", "benefit": "Low impact"},
     "calculate_1rm": {"estimated_1rm": "100kg", "training_tip": "Be safe"},
     "heart_rate_zones": {"max_hr": "180", "zone_2": "110-130"},
-    "exercise_form_check": {"cues": ["Keep back straight"], "common_mistake": "Rounding back"}
+    "exercise_form_check": {"cues": ["Keep back straight"], "common_mistake": "Rounding back"},
+    "symptom_checker": {"causes": ["Dehydration", "Fatigue", "Stress"], "recommendation": "Rest and drink water."}
 }
 
 
