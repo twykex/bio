@@ -27,7 +27,8 @@ def clean_json_output(text):
             start_idx = i
             break
 
-    if start_idx == -1: return text  # No JSON found
+    if start_idx == -1:
+        return text  # No JSON found
 
     # Stack counting
     stack = []
@@ -51,7 +52,8 @@ def clean_json_output(text):
             elif char in ['{', '[']:
                 stack.append(char)
             elif char in ['}', ']']:
-                if not stack: break  # Error: unbalanced
+                if not stack:
+                    break  # Error: unbalanced
 
                 # Check for matching pair
                 last = stack[-1]
@@ -177,7 +179,8 @@ def clean_and_parse_json(text):
 
 def query_ollama(prompt, system_instruction=None, tools_enabled=False, temperature=0.1, retries=1, images=None):
     messages = []
-    if system_instruction: messages.append({"role": "system", "content": system_instruction})
+    if system_instruction:
+        messages.append({"role": "system", "content": system_instruction})
 
     user_msg = {"role": "user", "content": prompt}
     if images:

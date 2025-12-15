@@ -6,13 +6,14 @@ from data.fallbacks import FALLBACK_WORKOUT_PLAN
 logger = logging.getLogger(__name__)
 workout_bp = Blueprint('workout_bp', __name__)
 
+
 @workout_bp.route('/generate_workout', methods=['POST'])
 def generate_workout():
     data = request.json
-    session = get_session(data.get('token'))
+    get_session(data.get('token'))
     strategy = data.get('strategy_name', 'General')
     lifestyle = data.get('lifestyle', {})
-    fitness_strategy = data.get('fitness_strategy', strategy) # Use specific fitness strategy if available
+    fitness_strategy = data.get('fitness_strategy', strategy)  # Use specific fitness strategy if available
 
     logger.info(f"💪 Generating Workout for: {fitness_strategy}")
 
@@ -88,9 +89,12 @@ def propose_fitness_strategies():
 
     if not strategies or not isinstance(strategies, list):
         strategies = [
-            {"id": "build", "title": "Hypertrophy Protocol", "desc": "Optimized for muscle growth and definition.", "pros": "Max Strength"},
-            {"id": "burn", "title": "Metabolic Burn", "desc": "High intensity circuit training for fat loss.", "pros": "Fat Loss"},
-            {"id": "move", "title": "Functional Athlete", "desc": "Focus on mobility, stability, and real-world power.", "pros": "Pain Free"}
+            {"id": "build", "title": "Hypertrophy Protocol", "desc": "Optimized for muscle growth and definition.",
+             "pros": "Max Strength"},
+            {"id": "burn", "title": "Metabolic Burn", "desc": "High intensity circuit training for fat loss.",
+             "pros": "Fat Loss"},
+            {"id": "move", "title": "Functional Athlete", "desc": "Focus on mobility, stability, and real-world power.",
+             "pros": "Pain Free"}
         ]
 
     return jsonify(strategies)

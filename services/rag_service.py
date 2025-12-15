@@ -12,7 +12,8 @@ embedding_cache = {}
 
 # ==========================================
 def get_embedding(text):
-    if not text: return []
+    if not text:
+        return []
     text_hash = hashlib.md5(text.encode('utf-8')).hexdigest()
     if text_hash in embedding_cache:
         return embedding_cache[text_hash]
@@ -32,7 +33,8 @@ def get_embedding(text):
 
 
 def cosine_similarity(v1, v2):
-    if not v1 or not v2: return 0.0
+    if not v1 or not v2:
+        return 0.0
     dot = sum(a * b for a, b in zip(v1, v2))
     mag1 = sum(a * a for a in v1) ** 0.5
     mag2 = sum(b * b for b in v2) ** 0.5
@@ -42,10 +44,12 @@ def cosine_similarity(v1, v2):
 def retrieve_relevant_context(session, query, top_k=3):
     chunks = session.get('raw_text_chunks', [])
     embeddings = session.get('embeddings', [])
-    if not chunks or not embeddings: return ""
+    if not chunks or not embeddings:
+        return ""
 
     q_vec = get_embedding(query)
-    if not q_vec: return ""
+    if not q_vec:
+        return ""
 
     scores = sorted([(cosine_similarity(q_vec, emb), chunk) for emb, chunk in zip(embeddings, chunks)],
                     key=lambda x: x[0], reverse=True)

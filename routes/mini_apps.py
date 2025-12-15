@@ -1,4 +1,4 @@
-### FILENAME: mini_apps.py ###
+# FILENAME: mini_apps.py
 from flask import Blueprint, request, jsonify
 from utils import query_ollama
 
