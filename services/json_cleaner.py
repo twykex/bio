@@ -67,34 +67,77 @@ def repair_lazy_json(text):
 
 def fix_truncated_json(json_str):
     json_str = json_str.strip()
+    # 1. Strip trailing comma
     json_str = re.sub(r',\s*$', '', json_str)
+
+    # 2. Balance Quotes
+    quote_count = 0
+    escape = False
+    for char in json_str:
+        if char == '"' and not escape:
+            quote_count += 1
+
+        if char == '\\' and (quote_count % 2 == 1):
+             escape = not escape
+        else:
+             escape = False
+
+    if quote_count % 2 == 1:
+        json_str += '"'
+
+    # 3. Handle orphaned keys and colons
+    s = json_str.strip()
+    if s.endswith(':'):
+        json_str += ' null'
+
+    # Check if we ended on a key (string without colon in object)
+    # Re-scan to build stack
     stack = []
-    is_inside_string = False
-    escaped = False
+    in_string = False
+    escape = False
 
     for char in json_str:
-        if is_inside_string:
-            if char == '"' and not escaped:
-                is_inside_string = False
-            elif char == '\\':
-                escaped = not escaped
-            else:
-                escaped = False
-        else:
-            if char == '"':
-                is_inside_string = True
-            elif char == '{':
-                stack.append('}')
-            elif char == '[':
-                stack.append(']')
+        if char == '"' and not escape:
+            in_string = not in_string
+
+        if not in_string:
+            if char == '{': stack.append('}')
+            elif char == '[': stack.append(']')
             elif char == '}' or char == ']':
                 if stack and stack[-1] == char:
                     stack.pop()
 
-    if is_inside_string:
-        json_str += '"'
+        if char == '\\' and in_string:
+            escape = not escape
+        else:
+            escape = False
+
+    if stack and stack[-1] == '}':
+        # In object, check if last token is a key
+        idx = len(json_str) - 1
+        while idx >= 0 and json_str[idx].isspace():
+            idx -= 1
+
+        if idx >= 0 and json_str[idx] == '"':
+            # Find start of string
+            idx -= 1
+            while idx >= 0:
+                if json_str[idx] == '"' and (idx == 0 or json_str[idx-1] != '\\'):
+                    break
+                idx -= 1
+
+            # Check char before string
+            idx -= 1
+            while idx >= 0 and json_str[idx].isspace():
+                idx -= 1
+
+            if idx >= 0 and json_str[idx] in [',', '{']:
+                json_str += ': null'
+
+    # 4. Close Stack
     while stack:
         json_str += stack.pop()
+
     return json_str
 
 

@@ -24,6 +24,13 @@ def init_context():
     file.save(filepath)
 
     text, chunks = advanced_pdf_parse(filepath)
+
+    # Clean up uploaded file
+    try:
+        os.remove(filepath)
+    except OSError as e:
+        logger.error(f"Error deleting file {filepath}: {e}")
+
     safe_chunks = chunks[:60]
     embeddings = [get_embedding(chunk) for chunk in safe_chunks]
 
