@@ -1,9 +1,6 @@
 import logging
 import os
-import re
-import json
 import uuid
-import requests
 import socket
 import webbrowser
 import threading
@@ -12,11 +9,12 @@ from time import sleep
 from flask import Flask, render_template, request, session, redirect, url_for, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# Attempt to import config and blueprints from the main branch structure
+import database  # Database module
+
+# Attempt to import config and blueprints
 try:
     from config import PORT, OLLAMA_MODEL
 except ImportError:
-    # Fallback if config.py is missing
     PORT = int(os.getenv("PORT", 5000))
     OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma3:4b")
 
@@ -40,155 +38,16 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
 
+# Initialize Database
+database.init_db()
+
 # Register Blueprints
 if main_bp:
     app.register_blueprint(main_bp)
 if mini_apps_bp:
     app.register_blueprint(mini_apps_bp)
 
-# --- DATA STORES ---
-users = {}
-password_reset_tokens = {}
-sessions = {}
-
-# --- HELPER FUNCTIONS ---
-
-def get_session(token):
-    if len(sessions) > 100 and token not in sessions:
-        try:
-            sessions.pop(next(iter(sessions)), None)
-        except (RuntimeError, StopIteration):
-            pass
-
-    if token not in sessions:
-        sessions[token] = {
-            "blood_context": {},
-            "weekly_plan": [],
-            "workout_plan": [],
-            "chat_history": []
-        }
-    return sessions[token]
-
-def repair_lazy_json(text):
-    text = re.sub(r'("day":\s*"[^"]+",\s*)("[^"]+")(\s*,)', r'\1"title": \2\3', text)
-    text = re.sub(r'(,\s*)("[^"]+")(\s*\})', r'\1"desc": \2\3', text)
-    return text
-
-def fix_truncated_json(json_str):
-    json_str = json_str.strip()
-    json_str = re.sub(r',\s*$', '', json_str)
-    stack = []
-    is_inside_string = False
-    escaped = False
-
-    for char in json_str:
-        if is_inside_string:
-            if char == '"' and not escaped:
-                is_inside_string = False
-            elif char == '\\':
-                escaped = not escaped
-            else:
-                escaped = False
-        else:
-            if char == '"':
-                is_inside_string = True
-            elif char == '{':
-                stack.append('}')
-            elif char == '[':
-                stack.append(']')
-            elif char == '}' or char == ']':
-                if stack and stack[-1] == char:
-                    stack.pop()
-
-    if is_inside_string:
-        json_str += '"'
-    while stack:
-        json_str += stack.pop()
-    return json_str
-
-def remove_json_comments(text):
-    output = []
-    in_string = False
-    escape = False
-    i = 0
-    while i < len(text):
-        char = text[i]
-        if in_string:
-            if char == '"' and not escape:
-                in_string = False
-            if char == '\\' and not escape:
-                escape = True
-            else:
-                escape = False
-            output.append(char)
-            i += 1
-        else:
-            if char == '"':
-                in_string = True
-                output.append(char)
-                i += 1
-            elif char == '/' and i + 1 < len(text) and text[i+1] == '/':
-                i += 2
-                while i < len(text) and text[i] != '\n':
-                    i += 1
-            else:
-                output.append(char)
-                i += 1
-    return "".join(output)
-
-def clean_and_parse_json(text):
-    text = text.replace("```json", "").replace("```", "")
-    match_complete = re.search(r'(\{.*\}|\[.*\])', text, re.DOTALL)
-
-    if match_complete:
-        candidate = match_complete.group(0)
-        try:
-            return json.loads(candidate)
-        except json.JSONDecodeError:
-            text = candidate
-    else:
-        match_start = re.search(r'(\{.*|\[.*)', text, re.DOTALL)
-        if match_start:
-            text = match_start.group(0)
-
-    text = repair_lazy_json(text)
-    text = re.sub(r'\]\s*"\s*\}', '] }', text)
-    text = re.sub(r',\s*\}', '}', text)
-    text = re.sub(r',\s*\]', ']', text)
-    text = remove_json_comments(text)
-
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        logger.warning("JSON Invalid. Attempting auto-balance...")
-        balanced_text = fix_truncated_json(text)
-        try:
-            return json.loads(balanced_text)
-        except json.JSONDecodeError:
-            return None
-
-def query_ollama(prompt, retries=1):
-    logger.info(f"🚀 SENDING PROMPT ({len(prompt)} chars)...")
-    payload = {
-        "model": OLLAMA_MODEL,
-        "prompt": prompt,
-        "stream": False,
-    }
-    try:
-        r = requests.post(OLLAMA_URL, json=payload)
-        if r.status_code != 200: return None
-        result = clean_and_parse_json(r.json().get('response', ''))
-
-        if result is None and retries > 0:
-            logger.warning("🔄 JSON Failed. Retrying with stricter prompt...")
-            prompt += "\nIMPORTANT: You previously outputted invalid JSON. Fix syntax. Ensure all keys are present."
-            return query_ollama(prompt, retries - 1)
-        return result
-    except Exception as e:
-        logger.error(f"❌ CONNECTION ERROR: {e}")
-        return None
-
-# --- NEW UTILITIES: Port Finding & Browser Opening ---
+# --- UTILITIES ---
 
 def find_free_port(start_port):
     port = start_port
@@ -226,7 +85,8 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        user = users.get(email)
+
+        user = database.get_user(email)
 
         if user and check_password_hash(user['password'], password):
             session['user_id'] = email
@@ -242,16 +102,17 @@ def signup():
     email = request.form.get('email')
     password = request.form.get('password')
 
-    if email in users:
+    if database.get_user(email):
         flash('Email already in use', 'error')
         return redirect(url_for('login'))
 
-    users[email] = {
-        'name': name,
-        'password': generate_password_hash(password)
-    }
-    session['user_id'] = email
-    return redirect(url_for('dashboard'))
+    success = database.add_user(email, name, generate_password_hash(password))
+    if success:
+        session['user_id'] = email
+        return redirect(url_for('dashboard'))
+    else:
+        flash('Error creating account', 'error')
+        return redirect(url_for('login'))
 
 @app.route('/guest-login')
 def guest_login():
@@ -268,9 +129,9 @@ def logout():
 @app.route('/forgot-password', methods=['POST'])
 def forgot_password():
     email = request.form.get('email')
-    if email in users:
+    if database.get_user(email):
         token = str(uuid.uuid4())
-        password_reset_tokens[token] = email
+        database.add_reset_token(token, email)
         reset_link = url_for('reset_password', token=token, _external=True)
         logger.info(f"Password reset link for {email}: {reset_link}")
     return redirect(url_for('forgot_password_confirm'))
@@ -281,7 +142,7 @@ def forgot_password_confirm():
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
-    email = password_reset_tokens.get(token)
+    email = database.get_reset_token(token)
     if not email:
         flash('Invalid or expired password reset link.', 'error')
         return redirect(url_for('login'))
@@ -294,8 +155,8 @@ def reset_password(token):
             flash('Passwords do not match.', 'error')
             return render_template('reset_password.html')
 
-        users[email]['password'] = generate_password_hash(password)
-        password_reset_tokens.pop(token, None)
+        database.update_user_password(email, generate_password_hash(password))
+        database.delete_reset_token(token)
         flash('Your password has been reset successfully.', 'success')
         return redirect(url_for('login'))
 

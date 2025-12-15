@@ -6,6 +6,7 @@ import logging
 import hashlib
 import base64
 from config import OLLAMA_MODEL, OLLAMA_URL
+import database
 
 logger = logging.getLogger(__name__)
 
@@ -23,13 +24,23 @@ embedding_cache = {}
 # 2. SESSION MANAGEMENT
 # ==========================================
 def get_session(token):
-    if len(sessions) > 100 and token not in sessions:
+    # Check memory first
+    if token in sessions:
+        return sessions[token]
+
+    # Clean memory if full
+    if len(sessions) > 100:
         try:
             sessions.pop(next(iter(sessions)), None)
         except (RuntimeError, StopIteration):
             pass
 
-    if token not in sessions:
+    # Try DB
+    db_data = database.get_session_data(token)
+    if db_data:
+        sessions[token] = db_data
+    else:
+        # Create new
         sessions[token] = {
             "blood_context": {},
             "raw_text_chunks": [],
@@ -37,6 +48,10 @@ def get_session(token):
             "chat_history": []
         }
     return sessions[token]
+
+def save_session(token):
+    if token in sessions:
+        database.save_session_data(token, sessions[token])
 
 
 # ==========================================

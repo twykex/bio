@@ -463,9 +463,9 @@
                              <div class="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center text-green-400 text-xl">💊</div>
                              <div class="flex-1">
                                  <h3 class="font-bold text-sm">Recommended Stack</h3>
-                                 <p class="text-xs text-white/40 mt-1">Based on your bloodwork: Vitamin D3, Omega-3, Magnesium.</p>
+                                 <p class="text-xs text-white/40 mt-1">AI-generated supplement protocol based on your biomarkers.</p>
                              </div>
-                             <button class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold transition">View Details</button>
+                             <button @click="openStackModal" class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold transition">View Details</button>
                         </div>
 
                         <!-- Achievements Section -->
@@ -500,6 +500,7 @@
                             <p class="text-white/40 text-sm mt-1">AI-Optimized fueling strategy.</p>
                         </div>
                         <div class="flex gap-3">
+                            <button @click="openFoodAnalysisModal" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition shadow-lg shadow-purple-900/20 flex items-center gap-2"><span>📸</span> Food Lens</button>
                             <button @click="generateShoppingList" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold transition border border-white/5">Shopping List</button>
                             <button @click="openMealWizard" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-lg shadow-blue-900/20 flex items-center gap-2"><span>✨</span> Plan New Week</button>
                         </div>
@@ -1107,6 +1108,79 @@
                         </div>
                     </template>
                  </div>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="stackModalOpen" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" x-cloak>
+        <div @click.outside="stackModalOpen = false" class="glass-card w-full max-w-lg rounded-[32px] p-8 animate-scale-in border border-white/10">
+            <div class="flex justify-between items-start mb-6">
+                <h2 class="text-2xl font-bold">Your Supplement Stack</h2>
+                <button @click="stackModalOpen = false" class="text-white/50 hover:text-white">✕</button>
+            </div>
+            <div x-show="toolLoading" class="py-12 text-center text-white/40 animate-pulse">Analyzing Interactions...</div>
+            <div x-show="!toolLoading && stackDetails">
+                 <div class="space-y-4 mb-6">
+                    <template x-for="item in stackDetails?.stack">
+                        <div class="p-4 rounded-2xl bg-white/5 border border-white/5">
+                            <div class="flex justify-between mb-1">
+                                <span class="font-bold text-green-400" x-text="item.name"></span>
+                                <span class="text-xs bg-white/10 px-2 py-1 rounded" x-text="item.dosage"></span>
+                            </div>
+                            <p class="text-sm text-white/60 mb-2" x-text="item.reason"></p>
+                             <template x-if="item.interaction_warning && item.interaction_warning !== 'None'">
+                                <div class="text-xs text-red-400 mt-2 bg-red-500/10 p-2 rounded">⚠ <span x-text="item.interaction_warning"></span></div>
+                             </template>
+                        </div>
+                    </template>
+                 </div>
+                 <div class="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-200 text-xs">
+                    <strong>Note:</strong> <span x-text="stackDetails?.warnings || 'Consult your doctor.'"></span>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="foodAnalysisModalOpen" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" x-cloak>
+        <div @click.outside="foodAnalysisModalOpen = false" class="glass-card w-full max-w-md rounded-[32px] p-8 animate-scale-in border border-white/10">
+            <div class="flex justify-between items-start mb-6">
+                <h2 class="text-2xl font-bold">Food Lens</h2>
+                <button @click="foodAnalysisModalOpen = false" class="text-white/50 hover:text-white">✕</button>
+            </div>
+
+            <div x-show="!foodAnalysisResult && !foodAnalysisLoading">
+                <div class="relative group w-full h-48 border-2 border-dashed border-white/20 rounded-2xl flex flex-col items-center justify-center hover:border-purple-500 transition-colors cursor-pointer bg-white/5">
+                    <input type="file" class="absolute inset-0 opacity-0 cursor-pointer" @change="analyzeFood($event.target.files[0])">
+                    <div class="text-4xl mb-2">📸</div>
+                    <p class="text-sm text-white/50">Upload food photo</p>
+                </div>
+            </div>
+
+            <div x-show="foodAnalysisLoading" class="py-12 text-center">
+                 <div class="w-12 h-12 border-2 border-white/10 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
+                 <p class="text-white/40 animate-pulse">Scanning plate...</p>
+            </div>
+
+            <div x-show="foodAnalysisResult">
+                 <h3 class="text-xl font-bold mb-2" x-text="foodAnalysisResult?.meal_name"></h3>
+                 <div class="flex gap-2 mb-4">
+                    <div class="px-3 py-1 rounded-lg bg-green-500/10 text-green-400 text-xs font-bold">Score: <span x-text="foodAnalysisResult?.health_score"></span></div>
+                 </div>
+
+                 <div class="grid grid-cols-3 gap-2 mb-6">
+                     <div class="bg-white/5 p-2 rounded-xl text-center"><div class="text-[10px] text-white/40">CALORIES</div><div class="font-bold" x-text="foodAnalysisResult?.macros?.calories"></div></div>
+                     <div class="bg-white/5 p-2 rounded-xl text-center"><div class="text-[10px] text-white/40">PROTEIN</div><div class="font-bold" x-text="foodAnalysisResult?.macros?.protein"></div></div>
+                     <div class="bg-white/5 p-2 rounded-xl text-center"><div class="text-[10px] text-white/40">CARBS</div><div class="font-bold" x-text="foodAnalysisResult?.macros?.carbs"></div></div>
+                 </div>
+
+                 <h4 class="text-xs font-bold text-white/40 uppercase mb-2">Ingredients Detected</h4>
+                 <div class="flex flex-wrap gap-2 mb-6">
+                     <template x-for="ing in foodAnalysisResult?.ingredients">
+                         <span class="px-2 py-1 rounded-md bg-white/10 text-xs text-white/80" x-text="ing"></span>
+                     </template>
+                 </div>
+
+                 <button @click="foodAnalysisResult = null" class="w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold transition">Scan Another</button>
             </div>
         </div>
     </div>

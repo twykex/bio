@@ -48,6 +48,13 @@ document.addEventListener('alpine:init', () => {
         customMealModalOpen: false,
         dragOver: false,
 
+        // New Modals
+        stackModalOpen: false,
+        stackDetails: null,
+        foodAnalysisModalOpen: false,
+        foodAnalysisResult: null,
+        foodAnalysisLoading: false,
+
         // --- 7. DATA OBJECTS ---
         selectedMeal: null,
         customMealDate: null,
@@ -113,6 +120,7 @@ document.addEventListener('alpine:init', () => {
         toolLoading: false,
         nutritionToolIds: ['quick_snack', 'check_food_interaction', 'recipe_variation', 'seasonal_swap', 'budget_swap', 'leftover_idea'],
         tools: [
+            { id: 'check_drug_interaction', category: 'Wellness', name: 'Drug Interaction', desc: 'Check for drug interactions.', inputs: [{k:'drug_list', l:'List of Drugs (comma separated)', p:'Aspirin, Ibuprofen'}] },
             { id: 'suggest_supplement', category: 'Wellness', name: 'Supplement Advisor', desc: 'Get supplement recommendations.', inputs: [{k:'focus', l:'Focus', p:'Joint Health', options: ['Joint Health', 'Energy', 'Sleep', 'Immunity', 'Stress', 'Digestion']}] },
             { id: 'check_food_interaction', category: 'Nutrition', name: 'Interaction Checker', desc: 'Check if foods clash.', inputs: [{k:'item1', l:'Item A', p:'Grapefruit'}, {k:'item2', l:'Item B', p:'Medication'}] },
             { id: 'recipe_variation', category: 'Nutrition', name: 'Recipe Variator', desc: 'Modify a recipe.', inputs: [{k:'recipe', l:'Original Recipe', p:'Lasagna'}, {k:'type', l:'Variation Type', p:'Keto', options: ['Keto', 'Vegan', 'Paleo', 'Low-Carb', 'Gluten-Free']}] },
@@ -190,6 +198,9 @@ document.addEventListener('alpine:init', () => {
         init() {
             localStorage.setItem('bio_token', this.token);
 
+            // FETCH PERSISTED STATE
+            this.fetchState();
+
             // Restore Trackers
             const savedWater = localStorage.getItem('waterIntake');
             if (savedWater) this.waterIntake = parseInt(savedWater);
@@ -230,6 +241,27 @@ document.addEventListener('alpine:init', () => {
             this.$watch('currentTab', (val) => {
                 if(val === 'health') this.initCharts();
             });
+        },
+
+        // --- NEW: FETCH STATE ---
+        async fetchState() {
+            try {
+                const res = await fetch('/get_state', {
+                     method: 'POST', headers: {'Content-Type': 'application/json'},
+                     body: JSON.stringify({ token: this.token })
+                });
+                if(res.ok) {
+                    const data = await res.json();
+                    if(data.blood_context && Object.keys(data.blood_context).length > 0) {
+                        this.context = data.blood_context;
+                        this.healthScore = this.context.health_score || 78;
+                        this.userName = this.context.patient_name || 'Guest';
+                    }
+                    if(data.weekly_plan && data.weekly_plan.length > 0) this.weekPlan = data.weekly_plan;
+                    if(data.workout_plan && data.workout_plan.length > 0) this.workoutPlan = data.workout_plan;
+                    if(data.chat_history && data.chat_history.length > 0) this.chatHistory = data.chat_history;
+                }
+            } catch(e) { console.error("Failed to fetch state"); }
         },
 
         async initCharts() {
@@ -679,6 +711,37 @@ document.addEventListener('alpine:init', () => {
 
              this.customMealModalOpen = false;
              this.notify("Meal Added");
+        },
+
+        // --- NEW: STACK MODAL & FOOD ANALYSIS ---
+        async openStackModal() {
+             this.stackModalOpen = true;
+             // Always refresh stack
+             this.toolLoading = true;
+             try {
+                 const res = await fetch('/generate_supplement_stack', {
+                     method: 'POST', headers: {'Content-Type': 'application/json'},
+                     body: JSON.stringify({ token: this.token })
+                 });
+                 this.stackDetails = await res.json();
+             } catch(e) { this.stackDetails = { error: "Failed to load stack." }; }
+             finally { this.toolLoading = false; }
+        },
+
+        openFoodAnalysisModal() {
+            this.foodAnalysisModalOpen = true;
+        },
+
+        async analyzeFood(file) {
+            this.foodAnalysisLoading = true;
+            this.foodAnalysisResult = null;
+            const fd = new FormData();
+            fd.append('file', file);
+            try {
+                const res = await fetch('/analyze_food_plate', { method: 'POST', body: fd });
+                this.foodAnalysisResult = await res.json();
+            } catch(e) { this.foodAnalysisResult = { error: "Analysis Failed" }; }
+            finally { this.foodAnalysisLoading = false; }
         },
 
         // --- CHAT ---

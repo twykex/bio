@@ -1,3 +1,6 @@
 __pycache__/
 app.log
 uploads/
+*.db
+server.log
+verify_frontend.py

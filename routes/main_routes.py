@@ -6,7 +6,7 @@ import pdfplumber
 from flask import Blueprint, request, jsonify
 from werkzeug.utils import secure_filename
 from config import UPLOAD_FOLDER
-from utils import get_session, query_ollama, get_embedding, retrieve_relevant_context, analyze_image
+from utils import get_session, query_ollama, get_embedding, retrieve_relevant_context, analyze_image, save_session
 
 logger = logging.getLogger(__name__)
 main_bp = Blueprint('main_bp', __name__)
@@ -274,13 +274,15 @@ def init_context():
         }
 
     session["blood_context"] = data
+    save_session(token)
     return jsonify(data)
 
 
 @main_bp.route('/generate_week', methods=['POST'])
 def generate_week():
     data = request.json
-    session = get_session(data.get('token'))
+    token = data.get('token')
+    session = get_session(token)
 
     summary = session.get('blood_context', {}).get('summary', 'General Health')
     blood_strategies = data.get('blood_strategies', [])
@@ -339,16 +341,18 @@ def generate_week():
 
     if not plan or not isinstance(plan, list) or len(plan) == 0:
         logger.warning("❌ AI PLAN FAILED. Using Fallback.")
-        # FIXED: Use the global variable directly, do NOT import it
         plan = FALLBACK_MEAL_PLAN
 
+    session['weekly_plan'] = plan
+    save_session(token)
     return jsonify(plan)
 
 
 @main_bp.route('/generate_workout', methods=['POST'])
 def generate_workout():
     data = request.json
-    session = get_session(data.get('token'))
+    token = data.get('token')
+    session = get_session(token)
     strategy = data.get('strategy_name', 'General')
     lifestyle = data.get('lifestyle', {})
     fitness_strategy = data.get('fitness_strategy', strategy) # Use specific fitness strategy if available
@@ -395,6 +399,8 @@ def generate_workout():
         logger.warning("❌ AI WORKOUT FAILED. Using Fallback.")
         plan = FALLBACK_WORKOUT_PLAN
 
+    session['workout_plan'] = plan
+    save_session(token)
     return jsonify(plan)
 
 
@@ -418,7 +424,8 @@ def generate_shopping_list():
 @main_bp.route('/chat_agent', methods=['POST'])
 def chat_agent():
     data = request.json
-    session = get_session(data.get('token'))
+    token = data.get('token')
+    session = get_session(token)
     user_msg = data.get('message')
 
     rag_context = retrieve_relevant_context(session, user_msg)
@@ -439,6 +446,7 @@ def chat_agent():
     if resp and 'response' in resp:
         history.append({"role": "ai", "text": resp['response']})
 
+    save_session(token)
     return jsonify(resp or {"response": "I'm having trouble analyzing that."})
 
 
@@ -587,3 +595,16 @@ def propose_fitness_strategies():
         ]
 
     return jsonify(strategies)
+
+@main_bp.route('/get_state', methods=['POST'])
+def get_state():
+    data = request.json
+    s = get_session(data.get('token'))
+    # Return state to frontend.
+    # Excluding 'raw_text_chunks' and 'embeddings' to reduce payload size as they are not needed on frontend.
+    return jsonify({
+        "blood_context": s.get('blood_context'),
+        "weekly_plan": s.get('weekly_plan', []),
+        "workout_plan": s.get('workout_plan', []),
+        "chat_history": s.get('chat_history', [])
+    })
