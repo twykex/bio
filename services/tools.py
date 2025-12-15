@@ -1,6 +1,11 @@
 def calculate_bmi(weight_kg, height_m):
     try:
-        return f"BMI: {float(weight_kg) / (float(height_m) ** 2):.2f}"
+        w = float(weight_kg)
+        h = float(height_m)
+        # Unit correction: if height is > 3.0, assume it's cm and convert to m
+        if h > 3.0:
+            h = h / 100.0
+        return f"BMI: {w / (h ** 2):.2f}"
     except Exception:
         return "Error."
 
@@ -10,6 +15,10 @@ def estimate_daily_calories(weight_kg, height_cm=170, age=30, gender="male", act
         weight = float(weight_kg)
         height = float(height_cm)
         age = float(age)
+
+        # Unit correction: if height is < 3.0, assume it's m and convert to cm
+        if height < 3.0:
+            height = height * 100.0
 
         # Mifflin-St Jeor Equation
         bmr = 10 * weight + 6.25 * height - 5 * age
@@ -29,9 +38,10 @@ def estimate_daily_calories(weight_kg, height_cm=170, age=30, gender="male", act
         # Simple fuzzy matching for activity
         act = activity_level.lower()
         multiplier = 1.2
-        for key, val in multipliers.items():
+        # Sort keys by length descending to match "extremely active" to "extreme" before "active"
+        for key in sorted(multipliers.keys(), key=len, reverse=True):
             if key in act:
-                multiplier = val
+                multiplier = multipliers[key]
                 break
 
         tdee = int(bmr * multiplier)

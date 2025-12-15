@@ -37,6 +37,10 @@ def signup():
         flash('Email is required', 'error')
         return redirect(url_for('auth_bp.login'))
 
+    if not password:
+        flash('Password is required', 'error')
+        return redirect(url_for('auth_bp.login'))
+
     if email in users:
         flash('Email already in use', 'error')
         return redirect(url_for('auth_bp.login'))
