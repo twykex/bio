@@ -5,6 +5,7 @@ document.addEventListener('alpine:init', () => {
 
         // --- 2. GLOBAL STATE ---
         context: null,
+        currentTip: '',
         weekPlan: [],
         workoutPlan: [],
         chatHistory: [],
@@ -52,6 +53,16 @@ document.addEventListener('alpine:init', () => {
         recipeDetails: null,
         shoppingList: null,
         quickPrompts: ['Does this meal plan have enough protein?', 'Can you swap Tuesday dinner?', 'I am feeling tired today.', 'Suggest a healthy snack.'],
+        dailyTips: [
+            "Hydration increases energy levels by up to 20%.",
+            "Walking 10 mins after meals lowers blood sugar spikes.",
+            "Magnesium helps muscle recovery and sleep quality.",
+            "Cold showers can boost dopamine by 250%.",
+            "Morning sunlight sets your circadian rhythm for better sleep.",
+            "Eating protein for breakfast reduces cravings later.",
+            "7-8 hours of sleep is the best performance enhancer.",
+            "Fiber feeds your gut microbiome, boosting immunity."
+        ],
         preferences: '',
         tempStrategy: null,
 
@@ -196,6 +207,9 @@ document.addEventListener('alpine:init', () => {
 
             const savedAchievements = localStorage.getItem('achievements');
             if(savedAchievements) this.achievements = JSON.parse(savedAchievements);
+
+            // Random Tip
+            this.currentTip = this.dailyTips[Math.floor(Math.random() * this.dailyTips.length)];
 
             // Init Calendar
             this.generateCalendar();
