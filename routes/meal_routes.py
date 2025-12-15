@@ -17,7 +17,7 @@ def generate_week():
 
     summary = user_session.get('blood_context', {}).get('summary', 'General Health')
     blood_strategies = data.get('blood_strategies', [])
-    lifestyle = data.get('lifestyle', {})
+    lifestyle = data.get('lifestyle') or {}
 
     logger.info(f"🍳 ARCHITECTING PLAN: {lifestyle.get('cuisine')} | {lifestyle.get('time')} | {summary}")
 

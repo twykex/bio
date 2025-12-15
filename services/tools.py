@@ -5,9 +5,37 @@ def calculate_bmi(weight_kg, height_m):
         return "Error."
 
 
-def estimate_daily_calories(weight_kg, activity_level="sedentary"):
+def estimate_daily_calories(weight_kg, height_cm=170, age=30, gender="male", activity_level="sedentary"):
     try:
-        return f"TDEE: {int(10 * float(weight_kg) + 6.25 * 170 - 5 * 30 + 5)} kcal"
+        weight = float(weight_kg)
+        height = float(height_cm)
+        age = float(age)
+
+        # Mifflin-St Jeor Equation
+        bmr = 10 * weight + 6.25 * height - 5 * age
+        if gender.lower().startswith('m'):
+            bmr += 5
+        else:
+            bmr -= 161
+
+        multipliers = {
+            "sedentary": 1.2,
+            "light": 1.375,
+            "moderate": 1.55,
+            "active": 1.725,
+            "extreme": 1.9
+        }
+
+        # Simple fuzzy matching for activity
+        act = activity_level.lower()
+        multiplier = 1.2
+        for key, val in multipliers.items():
+            if key in act:
+                multiplier = val
+                break
+
+        tdee = int(bmr * multiplier)
+        return f"BMR: {int(bmr)} kcal | TDEE: {tdee} kcal"
     except Exception:
         return "Error."
 
