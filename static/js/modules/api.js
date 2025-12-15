@@ -56,6 +56,11 @@ export function apiSlice() {
             this.context = data;
             localStorage.setItem('context', JSON.stringify(data));
 
+            // Update Metrics
+            this.healthScore = this.context.health_score || 75;
+            this.userName = this.context.patient_name || 'Guest';
+            if(this.updateBioMetrics) this.updateBioMetrics();
+
             // 4. Generate a placeholder "Week Plan" to trigger the Dashboard View
             // (In a full app, you might fetch a specific plan from another endpoint here)
             this.weekPlan = [
@@ -68,6 +73,7 @@ export function apiSlice() {
             // 5. Success!
             this.stopLoading();
             this.notify("Analysis Complete! 🧬");
+            this.showOnboarding = true;
         }
     }
 }
