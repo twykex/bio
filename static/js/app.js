@@ -119,6 +119,8 @@ document.addEventListener('alpine:init', () => {
         toolInputs: {},
         toolResult: null,
         toolLoading: false,
+        biohackCategory: 'All',
+        biohackSearch: '',
         nutritionToolIds: ['quick_snack', 'check_food_interaction', 'recipe_variation', 'seasonal_swap', 'budget_swap', 'leftover_idea'],
         tools: [
             { id: 'symptom_checker', category: 'Wellness', name: 'Symptom Checker', desc: 'Check symptoms with AI.', inputs: [{k:'symptoms', l:'Describe Symptoms', p:'Headache and fatigue'}] },
@@ -193,6 +195,18 @@ document.addEventListener('alpine:init', () => {
                 groups[cat].push(tool);
             });
             return groups;
+        },
+
+        getFilteredBiohacks() {
+            let tools = this.tools;
+            if (this.biohackCategory !== 'All') {
+                tools = tools.filter(t => t.category === this.biohackCategory);
+            }
+            if (this.biohackSearch) {
+                const q = this.biohackSearch.toLowerCase();
+                tools = tools.filter(t => t.name.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q));
+            }
+            return tools;
         },
 
         // --- LIFECYCLE ---
