@@ -258,6 +258,14 @@ def signup():
     return redirect(url_for('dashboard'))
 
 
+@app.route('/guest-login')
+def guest_login():
+    guest_id = f"guest_{uuid.uuid4()}"
+    session['user_id'] = guest_id
+    logger.info(f"Guest login: {guest_id}")
+    return redirect(url_for('dashboard'))
+
+
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
