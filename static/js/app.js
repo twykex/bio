@@ -1259,6 +1259,30 @@ document.addEventListener('alpine:init', () => {
             this.chatOpen = true; this.chatInput = `I can't eat ${ing} in the ${day.title}. Alternative?`; this.sendMessage();
         },
 
+        exportData() {
+            const data = {
+                context: this.context,
+                weekPlan: this.weekPlan,
+                workoutPlan: this.workoutPlan,
+                workoutHistory: this.workoutHistory,
+                journalEntries: this.journalEntries,
+                journalAnalysis: this.journalAnalysis,
+                userChoices: this.userChoices,
+                achievements: this.achievements,
+                waterHistory: this.waterHistory,
+                moodHistory: this.moodHistory,
+                activityLog: this.activityLog
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bioflow_data_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            this.notify("Data Exported 📥");
+        },
+
         resetSystem() {
             if(confirm('Reset all data?')) { this.context = null; this.weekPlan = []; this.chatHistory = []; this.toasts = []; this.currentTab = 'dashboard'; localStorage.clear(); window.location.reload(); }
         },
