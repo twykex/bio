@@ -1,4 +1,5 @@
-__pycache__/
+__pycharge__/
 app.log
+app_output.log
 uploads/
-node_modules/
+node_modules
