@@ -1,0 +1,21 @@
+<div x-show="consultationActive" class="fixed inset-0 z-[100] bg-[#050505] flex flex-col items-center justify-center p-6" x-transition.opacity>
+    <div class="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] animate-pulse"></div>
+    <div class="w-full max-w-2xl h-1 bg-white/10 rounded-full mb-12 relative overflow-hidden">
+        <div class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-500 ease-out" :style="`width: ${((consultationStep + 1) / interviewQueue.length) * 100}%`"></div>
+    </div>
+    <div class="max-w-4xl w-full text-center space-y-10 animate-scale-in relative z-10">
+        <h2 class="text-4xl md:text-5xl font-extrabold text-white leading-tight" x-text="currentQuestion?.title"></h2>
+        <p class="text-xl text-white/50 font-light max-w-2xl mx-auto" x-text="currentQuestion?.desc"></p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
+            <template x-for="opt in currentQuestion?.options">
+                <button @click="selectOption(opt)" class="group relative h-24 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-blue-500/50 hover:scale-[1.02] transition-all duration-200 p-6 flex items-center justify-between text-left overflow-hidden">
+                    <div class="flex items-center gap-4 relative z-10">
+                        <span class="text-2xl" x-text="opt.icon"></span>
+                        <span class="text-lg font-bold text-white" x-text="opt.text"></span>
+                    </div>
+                    <div class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/30 group-hover:bg-blue-500 group-hover:text-white transition-all">→</div>
+                </button>
+            </template>
+        </div>
+    </div>
+</div>

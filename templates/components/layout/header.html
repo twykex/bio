@@ -1,0 +1,13 @@
+<header class="h-20 flex items-center justify-between px-8 border-b border-white/5 bg-black/20 backdrop-blur-sm">
+    <div class="flex items-center gap-4">
+        <h1 class="text-xl font-bold capitalize" x-text="currentTab"></h1>
+        <div x-show="streak > 0" class="flex items-center gap-1 px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">
+            <span class="text-xs">🔥</span>
+            <span class="text-xs font-bold" x-text="streak + ' Day Streak'"></span>
+        </div>
+    </div>
+    <div class="flex items-center gap-4">
+        <div class="text-xs text-white/50" x-text="new Date().toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'})"></div>
+        <a href="/logout" class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold transition">Logout</a>
+    </div>
+</header>
