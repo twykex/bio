@@ -289,6 +289,37 @@ export function chartsSlice() {
                     }
                 });
             }
+
+            // -- Trend Chart --
+            if (ctxTrend && this.healthHistory && this.healthHistory.length > 0) {
+                 const labels = this.healthHistory.map(h => h.date);
+                 const data = this.healthHistory.map(h => h.score);
+
+                 this.trendChart = new Chart(ctxTrend, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Bio-Score',
+                            data: data,
+                            borderColor: '#10b981', // Emerald 500
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#10b981'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { display: false, min: 40, max: 100 },
+                            x: { grid: { display: false }, ticks: { color: 'rgba(255, 255, 255, 0.3)', font: { size: 10 } } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
         }
     };
 }

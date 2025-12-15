@@ -9,6 +9,9 @@ export function consultationSlice() {
         bloodStrategies: [],
         dragOver: false,
         healthScore: 85,
+        sleepScore: 78,
+        hrv: 45,
+        rhr: 62,
         biologicalAge: 0,
         chronologicalAge: 30,
         healthHistory: [],
@@ -137,7 +140,24 @@ export function consultationSlice() {
              const impact = (75 - this.healthScore) / 200;
              this.biologicalAge = (this.chronologicalAge * (1 + impact)).toFixed(1);
 
+             // Update Mock Metrics based on Health Score
+             this.sleepScore = Math.min(100, Math.max(50, Math.floor(this.healthScore * 0.9 + (Math.random() * 10))));
+             this.hrv = Math.floor(this.healthScore * 0.6 + 10);
+             this.rhr = Math.floor(80 - (this.healthScore * 0.2));
+
              this.healthHistory = this.generateHealthHistory();
+        },
+
+        getBiomarkersByCategory(category) {
+            if (!this.context || !this.context.biomarkers) return [];
+            return this.context.biomarkers.filter(b => {
+                const n = b.name.toLowerCase();
+                if (category === 'Metabolic') return ['glucose', 'hba1c', 'insulin', 'cholesterol', 'triglycerides', 'ldl', 'hdl'].some(k => n.includes(k));
+                if (category === 'Hormonal') return ['cortisol', 'testosterone', 'estrogen', 'tsh', 'thyroid'].some(k => n.includes(k));
+                if (category === 'Inflammation') return ['crp', 'ferritin', 'homocysteine'].some(k => n.includes(k));
+                if (category === 'Nutrients') return ['vitamin', 'iron', 'magnesium', 'zinc', 'sodium', 'potassium'].some(k => n.includes(k));
+                return false;
+            });
         },
 
         generateHealthHistory() {
