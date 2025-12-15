@@ -18,6 +18,8 @@ export function utilsSlice() {
         biohackCategory: 'All',
         biohackSearch: '',
         bioHacksOpen: false,
+        favoriteBiohacks: [],
+        recentBiohacks: [],
 
         // --- METHODS ---
         notify(msg, type='success') {
@@ -101,6 +103,33 @@ export function utilsSlice() {
 
         // --- TOOLS ---
         selectTool(tool) { this.selectedTool = tool; this.toolInputs = {}; this.toolResult = null; },
+        toggleFavorite(toolId) {
+            if (this.favoriteBiohacks.includes(toolId)) {
+                this.favoriteBiohacks = this.favoriteBiohacks.filter(id => id !== toolId);
+                this.notify('Removed from Favorites');
+            } else {
+                this.favoriteBiohacks.push(toolId);
+                this.notify('Added to Favorites');
+            }
+            localStorage.setItem('favoriteBiohacks', JSON.stringify(this.favoriteBiohacks));
+        },
+        addToRecent(toolId) {
+            this.recentBiohacks = this.recentBiohacks.filter(id => id !== toolId);
+            this.recentBiohacks.unshift(toolId);
+            if (this.recentBiohacks.length > 5) this.recentBiohacks.pop();
+            localStorage.setItem('recentBiohacks', JSON.stringify(this.recentBiohacks));
+        },
+        isFavorite(toolId) {
+            return this.favoriteBiohacks.includes(toolId);
+        },
+        getToolById(id) {
+            return this.tools ? this.tools.find(t => t.id === id) : null;
+        },
+        openBiohack(tool) {
+            this.selectTool(tool);
+            this.bioHacksOpen = true;
+            this.addToRecent(tool.id);
+        },
         async runTool() {
             if(!this.selectedTool) return; this.toolLoading = true; this.toolResult = null;
             try {

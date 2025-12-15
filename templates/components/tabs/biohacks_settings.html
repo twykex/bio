@@ -13,8 +13,61 @@
             </div>
         </div>
 
-        <!-- Categories -->
-        <div class="flex gap-2 overflow-x-auto custom-scroll pb-2">
+        <!-- Favorites Section -->
+        <div x-show="favoriteBiohacks.length > 0" class="mb-8">
+            <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span>⭐</span> Favorites</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <template x-for="id in favoriteBiohacks" :key="id">
+                    <template x-if="getToolById(id)">
+                        <div x-data="{ tool: getToolById(id) }" class="contents">
+                            <!-- Card Component (Inlined) -->
+                            <button @click="openBiohack(tool)"
+                                    class="glass-card p-6 rounded-[28px] text-left hover:bg-white/5 transition-all duration-300 group relative overflow-hidden border border-white/5 hover:border-yellow-500/30">
+
+                                <div class="absolute top-4 right-4 z-20">
+                                    <div @click.stop="toggleFavorite(tool.id)" class="text-yellow-400 hover:scale-110 transition cursor-pointer">⭐</div>
+                                </div>
+
+                                <div class="relative z-10 flex flex-col h-full">
+                                    <div class="flex justify-between items-start mb-5">
+                                        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                                            <span>⭐</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h3 class="font-bold text-lg mb-1 text-white group-hover:text-yellow-400 transition-colors" x-text="tool.name"></h3>
+                                        <p class="text-xs text-white/50 leading-relaxed line-clamp-2" x-text="tool.desc"></p>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    </template>
+                </template>
+            </div>
+        </div>
+
+        <!-- Recents Section -->
+        <div x-show="recentBiohacks.length > 0 && !biohackSearch" class="mb-8 border-b border-white/5 pb-8">
+             <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span>🕒</span> Recently Used</h3>
+             <div class="flex gap-4 overflow-x-auto custom-scroll pb-4">
+                <template x-for="id in recentBiohacks" :key="'recent-'+id">
+                    <template x-if="getToolById(id)">
+                         <div x-data="{ tool: getToolById(id) }">
+                            <button @click="openBiohack(tool)" class="glass-card p-4 rounded-2xl w-64 flex-shrink-0 hover:bg-white/5 transition border border-white/5 flex gap-4 items-center">
+                                <div class="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-lg">⚡</div>
+                                <div class="text-left overflow-hidden">
+                                    <div class="font-bold text-sm truncate" x-text="tool.name"></div>
+                                    <div class="text-[10px] text-white/40 truncate" x-text="tool.category"></div>
+                                </div>
+                            </button>
+                         </div>
+                    </template>
+                </template>
+             </div>
+        </div>
+
+        <!-- Categories Filter -->
+        <div class="flex gap-2 overflow-x-auto custom-scroll pb-2 mb-4">
             <template x-for="cat in ['All', 'Nutrition', 'Wellness', 'Performance', 'Other']">
                 <button @click="biohackCategory = cat"
                         class="px-5 py-2 rounded-full text-xs font-bold transition-all border whitespace-nowrap"
@@ -24,14 +77,25 @@
             </template>
         </div>
 
-        <!-- Grid -->
+        <!-- Main Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
              <template x-for="tool in getFilteredBiohacks()" :key="tool.id">
-                <button @click="selectedTool = tool; bioHacksOpen = true"
+                <button @click="openBiohack(tool)"
                         class="glass-card p-6 rounded-[28px] text-left hover:bg-white/5 transition-all duration-300 group relative overflow-hidden border border-white/5 hover:border-blue-500/30 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-900/10">
 
                     <!-- Background Gradient on Hover -->
                     <div class="absolute inset-0 bg-gradient-to-br from-transparent to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                    <!-- Favorite Button -->
+                    <div class="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div @click.stop="toggleFavorite(tool.id)" class="hover:scale-110 transition cursor-pointer text-white/20 hover:text-yellow-400">
+                             <span x-text="isFavorite(tool.id) ? '⭐' : '☆'"></span>
+                        </div>
+                    </div>
+                     <!-- Persistent Favorite Icon if Favorite -->
+                    <div x-show="isFavorite(tool.id)" class="absolute top-4 right-4 z-20">
+                         <div @click.stop="toggleFavorite(tool.id)" class="hover:scale-110 transition cursor-pointer text-yellow-400">⭐</div>
+                    </div>
 
                     <div class="relative z-10 flex flex-col h-full">
                         <div class="flex justify-between items-start mb-5">
