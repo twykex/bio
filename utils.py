@@ -4,6 +4,7 @@ import re
 import requests
 import logging
 import hashlib
+import base64
 from config import OLLAMA_MODEL, OLLAMA_URL
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ def get_session(token):
     if len(sessions) > 100 and token not in sessions:
         try:
             sessions.pop(next(iter(sessions)), None)
-        except:
+        except (RuntimeError, StopIteration):
             pass
 
     if token not in sessions:
@@ -118,6 +119,7 @@ def clean_json_output(text):
     """
     STACK-BASED CLEANER: Finds the first valid JSON object or array
     and stops exactly when it closes. Ignores trailing text.
+    Handles nested objects and strings correctly.
     """
     text = text.strip()
 
@@ -132,30 +134,64 @@ def clean_json_output(text):
 
     # Stack counting
     stack = []
+    in_string = False
+    escape = False
+
     for i in range(start_idx, len(text)):
         char = text[i]
 
-        if char in ['{', '[']:
-            stack.append(char)
-        elif char in ['}', ']']:
-            if not stack: break  # Error: unbalanced
+        if in_string:
+            if char == '"' and not escape:
+                in_string = False
 
-            # Check for matching pair
-            last = stack[-1]
-            if (last == '{' and char == '}') or (last == '[' and char == ']'):
-                stack.pop()
+            if char == '\\' and not escape:
+                escape = True
+            else:
+                escape = False
+        else:
+            if char == '"':
+                in_string = True
+            elif char in ['{', '[']:
+                stack.append(char)
+            elif char in ['}', ']']:
+                if not stack: break  # Error: unbalanced
 
-            # If stack is empty, we found the full object!
-            if not stack:
-                return text[start_idx: i + 1]
+                # Check for matching pair
+                last = stack[-1]
+                if (last == '{' and char == '}') or (last == '[' and char == ']'):
+                    stack.pop()
+
+                # If stack is empty, we found the full object!
+                if not stack:
+                    return text[start_idx: i + 1]
 
     return text[start_idx:]  # Fallback
 
 
-def query_ollama(prompt, system_instruction=None, tools_enabled=False, temperature=0.1, retries=1):
+def analyze_image(image_file, prompt):
+    """
+    Encodes image to base64 and sends to Ollama vision model.
+    """
+    try:
+        # Reset file pointer if needed
+        image_file.seek(0)
+        img_bytes = image_file.read()
+        b64_img = base64.b64encode(img_bytes).decode('utf-8')
+
+        return query_ollama(prompt, images=[b64_img], temperature=0.2)
+    except Exception as e:
+        logger.error(f"Image Analysis Error: {e}")
+        return None
+
+
+def query_ollama(prompt, system_instruction=None, tools_enabled=False, temperature=0.1, retries=1, images=None):
     messages = []
     if system_instruction: messages.append({"role": "system", "content": system_instruction})
-    messages.append({"role": "user", "content": prompt})
+
+    user_msg = {"role": "user", "content": prompt}
+    if images:
+        user_msg["images"] = images
+    messages.append(user_msg)
 
     payload = {
         "model": OLLAMA_MODEL,

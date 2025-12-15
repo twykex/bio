@@ -283,6 +283,20 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
 
+                        <!-- Daily Tip -->
+                        <div class="md:col-span-4 glass-card rounded-[24px] p-4 flex items-center justify-between bg-blue-500/5 border-blue-500/20">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 text-lg">💡</div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-blue-400 uppercase tracking-widest">Daily Insight</h4>
+                                    <p class="text-sm text-white/80 font-medium" x-text="currentTip"></p>
+                                </div>
+                            </div>
+                            <button @click="currentTip = dailyTips[Math.floor(Math.random() * dailyTips.length)]" class="text-white/20 hover:text-white transition">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            </button>
+                        </div>
+
                         <div class="glass-card rounded-[32px] p-6 flex flex-col items-center justify-center relative md:row-span-2">
                              <div class="absolute top-6 left-6 text-xs uppercase tracking-widest text-blue-400 font-bold">Bio-Score</div>
                              <div class="relative w-48 h-48 mt-4">
@@ -768,10 +782,54 @@
                         </template>
                     </div>
 
-                    <div x-show="currentTab === 'settings'" class="space-y-6">
+                    <div x-show="currentTab === 'settings'" class="space-y-6 pb-12">
                         <div class="glass-card p-8 rounded-[32px]">
-                            <h3 class="text-lg font-bold mb-4">Profile</h3>
-                            <button @click="resetSystem" class="px-6 py-2 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white font-bold text-sm transition border border-red-500/20">Reset Data</button>
+                            <div class="flex justify-between items-center mb-8">
+                                <h3 class="text-xl font-bold">Settings & Preferences</h3>
+                                <button @click="saveSettings" class="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition shadow-lg shadow-blue-900/20">Save Changes</button>
+                            </div>
+
+                            <div class="space-y-8">
+                                <!-- Personal Info -->
+                                <div>
+                                    <h4 class="text-xs font-bold text-white/40 uppercase tracking-widest mb-4 border-b border-white/5 pb-2">Personal Profile</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label class="block text-xs font-bold text-white/60 mb-2">Display Name</label>
+                                            <input type="text" x-model="userName" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Lifestyle Inputs Generated from Logic -->
+                                <div>
+                                    <h4 class="text-xs font-bold text-white/40 uppercase tracking-widest mb-4 border-b border-white/5 pb-2">Bio-Data & Lifestyle</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        <template x-for="q in lifestyleQuestions">
+                                            <div>
+                                                <label class="block text-xs font-bold text-white/60 mb-2" x-text="q.title"></label>
+                                                <div class="relative">
+                                                    <select x-model="userChoices[q.id]" class="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition appearance-none cursor-pointer">
+                                                        <option value="" disabled>Select Option</option>
+                                                        <template x-for="opt in q.options">
+                                                            <option :value="opt.text" x-text="opt.text"></option>
+                                                        </template>
+                                                    </select>
+                                                    <div class="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-white/30">▼</div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- Danger Zone -->
+                                <div class="pt-8 mt-8 border-t border-white/5">
+                                    <h4 class="text-xs font-bold text-red-400/60 uppercase tracking-widest mb-4">Danger Zone</h4>
+                                    <button @click="resetSystem" class="px-6 py-3 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white font-bold text-sm transition border border-red-500/20 flex items-center gap-2">
+                                        <span>⚠️</span> Reset All Data
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

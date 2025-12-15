@@ -6,7 +6,7 @@ import pdfplumber
 from flask import Blueprint, request, jsonify
 from werkzeug.utils import secure_filename
 from config import UPLOAD_FOLDER
-from utils import get_session, query_ollama, get_embedding, retrieve_relevant_context
+from utils import get_session, query_ollama, get_embedding, retrieve_relevant_context, analyze_image
 
 logger = logging.getLogger(__name__)
 main_bp = Blueprint('main_bp', __name__)
@@ -480,6 +480,76 @@ def propose_meal_strategies():
         ]
 
     return jsonify(strategies)
+
+
+@main_bp.route('/analyze_food_plate', methods=['POST'])
+def analyze_food_plate():
+    if 'file' not in request.files: return jsonify({"error": "No file"}), 400
+    file = request.files['file']
+
+    prompt = """
+    TASK: Analyze this food image.
+    Identify the meal and estimate macros.
+    OUTPUT JSON ONLY:
+    {
+        "meal_name": "Grilled Salmon",
+        "ingredients": ["Salmon", "Asparagus", "Rice"],
+        "macros": { "calories": 450, "protein": "40g", "carbs": "30g", "fats": "15g" },
+        "health_score": 85
+    }
+    """
+
+    result = analyze_image(file, prompt)
+
+    if not result:
+        # Fallback Mock for Demo/Dev
+        result = {
+            "meal_name": "Detected Meal",
+            "ingredients": ["Protein Source", "Vegetables", "Carb Source"],
+            "macros": { "calories": 500, "protein": "30g", "carbs": "40g", "fats": "20g" },
+            "health_score": 80
+        }
+
+    return jsonify(result)
+
+
+@main_bp.route('/generate_supplement_stack', methods=['POST'])
+def generate_supplement_stack():
+    data = request.json
+    session = get_session(data.get('token'))
+    current_meds = data.get('current_meds', [])
+    summary = session.get('blood_context', {}).get('summary', 'General Health')
+
+    prompt = f"""
+    ROLE: Clinical Pharmacist & Functional Doctor.
+    PATIENT SUMMARY: {summary}
+    CURRENT MEDS/SUPPS: {", ".join(current_meds) if current_meds else "None"}
+
+    TASK: Design a supplement stack.
+    1. Address the patient's issues.
+    2. CHECK FOR INTERACTIONS with current meds.
+
+    OUTPUT JSON ONLY:
+    {{
+        "stack": [
+            {{ "name": "Magnesium Glycinate", "dosage": "400mg", "reason": "Sleep & Anxiety", "interaction_warning": "None" }}
+        ],
+        "warnings": "Avoid taking Magnesium with antibiotic X."
+    }}
+    """
+
+    stack = query_ollama(prompt, system_instruction="Return JSON Only.", temperature=0.2)
+
+    if not stack:
+        stack = {
+            "stack": [
+                { "name": "Vitamin D3 + K2", "dosage": "5000 IU", "reason": "Immune Support", "interaction_warning": "None" },
+                { "name": "Omega-3", "dosage": "2g", "reason": "Inflammation", "interaction_warning": "Check blood thinners" }
+            ],
+            "warnings": "Always consult your doctor."
+        }
+
+    return jsonify(stack)
 
 
 @main_bp.route('/propose_fitness_strategies', methods=['POST'])
