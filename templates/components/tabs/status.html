@@ -1,112 +1,265 @@
-<div x-show="currentTab === 'status'" class="max-w-6xl mx-auto space-y-8 animate-scale-in" x-cloak>
-    <div class="flex items-center justify-between">
+<div x-show="currentTab === 'status'" class="max-w-7xl mx-auto space-y-6 animate-scale-in" x-cloak>
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-3xl font-bold">Current State</h2>
-            <p class="text-white/40">Comprehensive biological overview.</p>
+            <h2 class="text-3xl font-bold tracking-tight">Biological Status</h2>
+            <p class="text-white/40">Real-time analysis of your metabolic and physiological state.</p>
+        </div>
+        <div class="flex gap-3">
+             <button @click="loadDemoData()" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-semibold transition">
+                Load Demo
+            </button>
+            <label class="cursor-pointer px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold shadow-lg shadow-blue-500/20 transition flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                <span>Update Labs</span>
+                <input type="file" class="hidden" @change="uploadFile" accept=".pdf,.jpg,.png">
+            </label>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Profile Card -->
-        <div class="glass-card rounded-[32px] p-8 flex flex-col justify-between">
-            <div class="flex items-center gap-4 mb-6">
-                <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
+    <!-- Top Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- 1. Profile & Vitals (Col Span 4) -->
+        <div class="lg:col-span-4 glass-card rounded-[32px] p-8 flex flex-col justify-between relative overflow-hidden">
+            <!-- Background Decoration -->
+            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+
+            <div class="flex items-center gap-5 relative z-10">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-2xl font-bold text-white shadow-xl shadow-blue-500/20">
                     <span x-text="userName.charAt(0)"></span>
                 </div>
                 <div>
                     <h3 class="text-xl font-bold" x-text="userName"></h3>
-                    <p class="text-sm text-white/40">Bio-Hacker</p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-white/10 text-white/60">Bio-Hacker</span>
+                        <span class="text-xs text-white/40" x-text="userChoices?.age ? userChoices.age + ' yrs' : 'Age N/A'"></span>
+                    </div>
                 </div>
             </div>
-            <div class="space-y-4">
-                <div class="flex justify-between items-center p-3 rounded-xl bg-white/5">
-                    <span class="text-sm text-white/60">Age Group</span>
-                    <span class="font-bold" x-text="userChoices?.age || 'N/A'"></span>
+
+            <div class="grid grid-cols-2 gap-4 mt-8">
+                <div class="p-4 rounded-2xl bg-white/5 border border-white/5">
+                    <div class="text-xs text-white/40 uppercase tracking-widest mb-1">Weight</div>
+                    <div class="text-xl font-bold" x-text="userChoices?.weight ? userChoices.weight : '--'"></div>
                 </div>
-                <div class="flex justify-between items-center p-3 rounded-xl bg-white/5">
-                    <span class="text-sm text-white/60">Gender</span>
-                    <span class="font-bold" x-text="userChoices?.gender || 'N/A'"></span>
+                <div class="p-4 rounded-2xl bg-white/5 border border-white/5">
+                    <div class="text-xs text-white/40 uppercase tracking-widest mb-1">Height</div>
+                    <div class="text-xl font-bold" x-text="userChoices?.height ? userChoices.height : '--'"></div>
                 </div>
-                <div class="flex justify-between items-center p-3 rounded-xl bg-white/5">
-                    <span class="text-sm text-white/60">Weight</span>
-                    <span class="font-bold" x-text="userChoices?.weight || 'N/A'"></span>
+                <div class="p-4 rounded-2xl bg-white/5 border border-white/5">
+                    <div class="text-xs text-white/40 uppercase tracking-widest mb-1">BMI</div>
+                    <div class="text-xl font-bold text-blue-400">
+                        <span x-text="(userChoices?.weight && userChoices?.height && !isNaN(parseInt(userChoices.weight)) && !isNaN(parseInt(userChoices.height))) ? (parseInt(userChoices.weight) / ((parseInt(userChoices.height)/100) ** 2)).toFixed(1) : '--'"></span>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center p-3 rounded-xl bg-white/5">
-                    <span class="text-sm text-white/60">Height</span>
-                    <span class="font-bold" x-text="userChoices?.height || 'N/A'"></span>
+                <div class="p-4 rounded-2xl bg-white/5 border border-white/5">
+                     <div class="text-xs text-white/40 uppercase tracking-widest mb-1">Streak</div>
+                     <div class="text-xl font-bold text-orange-400 flex items-center gap-1">
+                        <span x-text="streak || 0"></span> <span class="text-sm">days</span>
+                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Health Score & Summary -->
-        <div class="md:col-span-2 glass-card rounded-[32px] p-8 flex flex-col md:flex-row gap-8 items-center">
-            <div class="relative w-48 h-48 flex-shrink-0">
-                <svg class="w-full h-full transform -rotate-90">
-                    <circle cx="96" cy="96" r="80" stroke="rgba(255,255,255,0.05)" stroke-width="16" fill="none"></circle>
-                    <circle cx="96" cy="96" r="80" stroke="#10b981" stroke-width="16" fill="none"
-                            :stroke-dasharray="502" :stroke-dashoffset="502 - (502 * healthScore / 100)"
+        <!-- 2. Health Score (Col Span 4) -->
+        <div class="lg:col-span-4 glass-card rounded-[32px] p-8 flex flex-col items-center justify-center relative">
+             <div class="absolute inset-0 bg-gradient-to-b from-transparent to-green-500/5 pointer-events-none rounded-[32px]"></div>
+
+             <div class="relative w-56 h-56">
+                <!-- Outer Glow -->
+                <div class="absolute inset-0 bg-green-500/20 blur-[60px] rounded-full animate-pulse"></div>
+
+                <svg class="w-full h-full transform -rotate-90 relative z-10">
+                    <!-- Track -->
+                    <circle cx="112" cy="112" r="90" stroke="rgba(255,255,255,0.05)" stroke-width="12" fill="none"></circle>
+                    <!-- Progress -->
+                    <circle cx="112" cy="112" r="90" stroke="#10b981" stroke-width="12" fill="none"
+                            :stroke-dasharray="565"
+                            :stroke-dashoffset="565 - (565 * (healthScore || 0) / 100)"
+                            stroke-linecap="round"
                             class="transition-all duration-1000 ease-out shadow-[0_0_30px_#10b981]"></circle>
                 </svg>
-                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-5xl font-bold tracking-tighter" x-text="healthScore"></span>
-                    <span class="text-[10px] uppercase tracking-widest text-white/40 mt-1">Health Score</span>
+                <div class="absolute inset-0 flex flex-col items-center justify-center z-20">
+                    <span class="text-6xl font-black tracking-tighter" x-text="healthScore || 0"></span>
+                    <span class="text-xs font-bold uppercase tracking-[0.2em] text-green-400 mt-2">Health Score</span>
                 </div>
             </div>
-            <div class="flex-1">
-                <h3 class="text-xl font-bold mb-4">Biological Summary</h3>
-                <p class="text-white/60 leading-relaxed" x-text="context?.summary || 'No data available. Please upload bloodwork.'"></p>
-                <div class="mt-6 flex gap-3">
-                    <div class="px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold uppercase tracking-wider">
-                        Issues: <span x-text="context?.issues?.length || 0"></span>
-                    </div>
-                    <div class="px-4 py-2 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold uppercase tracking-wider">
-                        Biomarkers: <span x-text="context?.biomarkers?.length || 0"></span>
-                    </div>
-                </div>
+
+            <div class="mt-6 text-center max-w-[200px]">
+                <p class="text-sm text-white/50 leading-relaxed" x-text="(healthScore || 0) > 80 ? 'Optimal metabolic function detected.' : 'Optimization opportunities identified.'"></p>
             </div>
+        </div>
+
+        <!-- 3. Summary & Issues (Col Span 4) -->
+        <div class="lg:col-span-4 glass-card rounded-[32px] p-8 flex flex-col relative overflow-hidden">
+             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+
+             <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                Analysis Summary
+             </h3>
+
+             <div class="flex-1 overflow-y-auto custom-scroll pr-2">
+                <p class="text-white/70 leading-relaxed text-sm mb-6" x-text="context?.summary || 'Upload bloodwork to generate a comprehensive biological summary.'"></p>
+
+                <div class="space-y-3">
+                    <template x-for="issue in context?.issues || []">
+                        <div class="p-3 rounded-xl bg-red-500/5 border border-red-500/10 flex items-start gap-3">
+                            <div class="mt-1 w-2 h-2 rounded-full bg-red-500 shrink-0 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
+                            <div>
+                                <div class="text-sm font-bold text-red-200" x-text="issue.title"></div>
+                                <div class="text-xs text-white/50 mt-1 line-clamp-2" x-text="issue.explanation"></div>
+                            </div>
+                        </div>
+                    </template>
+                     <template x-if="!context?.issues || context.issues.length === 0">
+                        <div class="text-center py-4">
+                            <span class="text-xs text-white/30 uppercase tracking-widest">No Critical Issues</span>
+                        </div>
+                    </template>
+                </div>
+             </div>
         </div>
     </div>
 
-    <!-- Biomarkers Table -->
-    <div class="glass-card rounded-[32px] p-8">
-        <h3 class="text-xl font-bold mb-6">Bloodwork Data</h3>
+    <!-- Main Content Split -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
 
-        <template x-if="!context?.biomarkers || context.biomarkers.length === 0">
-            <div class="text-center py-10 text-white/30">
-                <p>No specific biomarkers extracted. Upload a detailed PDF.</p>
+        <!-- Left: Strategies & Protocols (2/3) -->
+        <div class="lg:col-span-2 space-y-6">
+
+            <!-- Strategy Header -->
+            <div class="glass-panel rounded-[24px] p-6">
+                <h3 class="text-xl font-bold mb-6 flex items-center gap-3">
+                    <span class="p-2 rounded-lg bg-blue-500/20 text-blue-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </span>
+                    Recommended Protocols
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <template x-for="strat in context?.strategies || []">
+                        <div class="group p-5 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition cursor-default">
+                            <div class="flex justify-between items-start mb-3">
+                                <h4 class="font-bold text-white group-hover:text-blue-400 transition" x-text="strat.name"></h4>
+                                <svg class="w-4 h-4 text-white/20 group-hover:text-blue-400 transition transform group-hover:translate-x-1 group-hover:-translate-y-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                            </div>
+                            <p class="text-sm text-white/50 leading-relaxed" x-text="strat.desc"></p>
+                        </div>
+                     </template>
+                     <template x-if="!context?.strategies || context.strategies.length === 0">
+                        <div class="col-span-2 p-8 text-center text-white/30 border border-dashed border-white/10 rounded-2xl">
+                            No specific protocols generated yet.
+                        </div>
+                     </template>
+                </div>
             </div>
-        </template>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="text-xs uppercase tracking-widest text-white/40 border-b border-white/10">
-                        <th class="py-4 px-4 font-bold">Biomarker</th>
-                        <th class="py-4 px-4 font-bold">Value</th>
-                        <th class="py-4 px-4 font-bold">Unit</th>
-                        <th class="py-4 px-4 font-bold">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm">
-                    <template x-for="marker in context?.biomarkers">
-                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
-                            <td class="py-4 px-4 font-bold text-white cursor-help" x-text="marker.name" :data-term="marker.name"></td>
-                            <td class="py-4 px-4 font-medium text-white/80" x-text="marker.value"></td>
-                            <td class="py-4 px-4 text-white/40" x-text="marker.unit"></td>
-                            <td class="py-4 px-4">
-                                <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                                      :class="{
-                                          'bg-green-500/10 text-green-400': marker.status === 'Normal' || marker.status === 'Optimal',
-                                          'bg-red-500/10 text-red-400': marker.status === 'High' || marker.status === 'Low' || marker.status === 'Critical',
-                                          'bg-yellow-500/10 text-yellow-400': marker.status === 'Borderline'
-                                      }"
-                                      x-text="marker.status">
-                                </span>
-                            </td>
-                        </tr>
+            <!-- Detailed Action Plan (Issues Expanded) -->
+            <div class="glass-panel rounded-[24px] p-6">
+                <h3 class="text-xl font-bold mb-6 flex items-center gap-3">
+                    <span class="p-2 rounded-lg bg-purple-500/20 text-purple-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </span>
+                    Corrective Actions
+                </h3>
+
+                <div class="space-y-4">
+                    <template x-for="(issue, index) in context?.issues || []">
+                        <div x-data="{ open: false }" class="rounded-2xl bg-white/5 border border-white/5 overflow-hidden transition-all duration-300" :class="{ 'bg-white/10': open }">
+                            <div @click="open = !open" class="p-4 flex items-center justify-between cursor-pointer">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-lg"
+                                         :class="{
+                                            'bg-red-500/20 text-red-400': issue.severity === 'High',
+                                            'bg-yellow-500/20 text-yellow-400': issue.severity === 'Medium' || issue.severity === 'Low'
+                                         }"
+                                         x-text="index + 1">
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-white" x-text="issue.title"></h4>
+                                        <div class="text-xs text-white/40" x-show="!open">Click to view solutions</div>
+                                    </div>
+                                </div>
+                                <svg class="w-5 h-5 text-white/30 transition-transform duration-300" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+
+                            <div x-show="open" x-collapse class="px-4 pb-6 pt-0 border-t border-white/5 mt-2">
+                                <div class="mt-4 text-sm text-white/70 leading-relaxed mb-4" x-text="issue.explanation"></div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <template x-for="opt in issue.options">
+                                        <div class="p-3 rounded-xl bg-black/20 border border-white/5 flex items-start gap-3">
+                                            <span class="text-xs font-bold px-2 py-1 rounded bg-white/10 text-white/60 uppercase tracking-wider" x-text="opt.type"></span>
+                                            <span class="text-sm text-white/80" x-text="opt.text"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
                     </template>
-                </tbody>
-            </table>
+                     <template x-if="!context?.issues || context.issues.length === 0">
+                        <div class="p-8 text-center text-white/30 border border-dashed border-white/10 rounded-2xl">
+                            All systems nominal.
+                        </div>
+                     </template>
+                </div>
+            </div>
+
         </div>
+
+        <!-- Right: Biomarker Watchlist (1/3) -->
+        <div class="lg:col-span-1">
+             <div class="glass-card rounded-[24px] flex flex-col h-[600px] lg:h-full max-h-[800px]">
+                <div class="p-6 border-b border-white/5 sticky top-0 bg-[#0a0a0a]/50 backdrop-blur-xl z-10 flex justify-between items-center">
+                    <h3 class="text-lg font-bold">Biomarkers</h3>
+                    <span class="text-xs font-bold px-2 py-1 rounded bg-white/10 text-white/50" x-text="(context?.biomarkers?.length || 0) + ' Total'"></span>
+                </div>
+
+                <div class="p-4 overflow-y-auto custom-scroll flex-1 space-y-2">
+                    <template x-for="marker in context?.biomarkers || []">
+                        <div class="p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition group">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="font-bold text-sm text-white cursor-help" x-text="marker.name" :data-term="marker.name"></div>
+                                <div class="text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                                     :class="{
+                                        'bg-green-500/10 text-green-400': marker.status === 'Normal' || marker.status === 'Optimal',
+                                        'bg-red-500/10 text-red-400': marker.status === 'High' || marker.status === 'Low' || marker.status === 'Critical',
+                                        'bg-yellow-500/10 text-yellow-400': marker.status === 'Borderline'
+                                     }"
+                                     x-text="marker.status">
+                                </div>
+                            </div>
+
+                            <div class="flex items-end justify-between mb-2">
+                                <div class="text-2xl font-bold tracking-tight" x-text="marker.value"></div>
+                                <div class="text-xs text-white/40 mb-1" x-text="marker.unit"></div>
+                            </div>
+
+                            <!-- Visual Bar -->
+                            <div class="h-1.5 w-full bg-white/10 rounded-full overflow-hidden relative">
+                                <!-- Midpoint Marker -->
+                                <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-white/10 transform -translate-x-1/2 z-10"></div>
+
+                                <div class="h-full rounded-full transition-all duration-1000"
+                                     :style="'width: ' + (marker.status === 'Low' ? '25%' : (marker.status === 'High' ? '75%' : (marker.status === 'Borderline' ? '35%' : '50%'))) + '; background-color: ' + ((marker.status === 'Normal' || marker.status === 'Optimal') ? '#10b981' : (marker.status === 'Borderline' ? '#fbbf24' : '#ef4444'))">
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="!context?.biomarkers || context.biomarkers.length === 0">
+                        <div class="text-center py-10 px-6">
+                            <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3 text-white/20">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                            </div>
+                            <p class="text-white/40 text-sm">No biomarkers found.</p>
+                            <button class="mt-4 text-xs font-bold text-blue-400 hover:text-blue-300" @click="document.querySelector('input[type=file]').click()">Upload Results</button>
+                        </div>
+                    </template>
+                </div>
+             </div>
+        </div>
+
     </div>
 </div>
