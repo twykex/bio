@@ -29,10 +29,13 @@ document.addEventListener('alpine:init', () => {
         workoutModalOpen: false,
         prefModalOpen: false,
         bioHacksOpen: false,
+        customMealModalOpen: false,
         dragOver: false,
 
         // --- 7. DATA OBJECTS ---
         selectedMeal: null,
+        customMealDate: null,
+        customMealForm: { title: '', calories: '', protein: '', carbs: '', fats: '', type: 'Snack' },
         recipeDetails: null,
         shoppingList: null,
         quickPrompts: ['Does this meal plan have enough protein?', 'Can you swap Tuesday dinner?', 'I am feeling tired today.', 'Suggest a healthy snack.'],
@@ -76,6 +79,7 @@ document.addEventListener('alpine:init', () => {
         toolInputs: {},
         toolResult: null,
         toolLoading: false,
+        nutritionToolIds: ['quick_snack', 'check_food_interaction', 'recipe_variation', 'seasonal_swap', 'budget_swap', 'leftover_idea'],
         tools: [
             { id: 'suggest_supplement', name: 'Supplement Advisor', desc: 'Get supplement recommendations.', inputs: [{k:'focus', l:'Focus', p:'Joint Health', options: ['Joint Health', 'Energy', 'Sleep', 'Immunity', 'Stress', 'Digestion']}] },
             { id: 'check_food_interaction', name: 'Interaction Checker', desc: 'Check if foods clash.', inputs: [{k:'item1', l:'Item A', p:'Grapefruit'}, {k:'item2', l:'Item B', p:'Medication'}] },
@@ -403,6 +407,43 @@ document.addEventListener('alpine:init', () => {
             } finally {
                 this.stopLoading();
             }
+        },
+
+        // --- NUTRITION EXTRAS ---
+        getNutritionTools() {
+            return this.tools.filter(t => this.nutritionToolIds.includes(t.id));
+        },
+
+        openAddMealModal(day) {
+            this.customMealDate = day;
+            this.customMealForm = { title: '', calories: '', protein: '', carbs: '', fats: '', type: 'Snack' };
+            this.customMealModalOpen = true;
+        },
+
+        addCustomMeal() {
+             const dateStr = this.customMealDate.date || this.customMealDate.fullDate;
+             const dayIndex = this.calendarDays.findIndex(d => d.fullDate === dateStr);
+             if (dayIndex === -1 || !this.weekPlan[dayIndex]) return;
+
+             const meal = {
+                 ...this.customMealForm,
+                 completed: false,
+                 benefit: 'Custom Entry'
+             };
+
+             this.weekPlan[dayIndex].meals.push(meal);
+
+             // Update totals
+             const currentTotals = this.weekPlan[dayIndex].total_macros;
+             const parseVal = (str) => parseInt(String(str).replace(/\D/g, '')) || 0;
+
+             currentTotals.calories = parseVal(currentTotals.calories) + parseVal(meal.calories);
+             currentTotals.protein = (parseVal(currentTotals.protein) + parseVal(meal.protein)) + 'g';
+             currentTotals.carbs = (parseVal(currentTotals.carbs) + parseVal(meal.carbs)) + 'g';
+             currentTotals.fats = (parseVal(currentTotals.fats) + parseVal(meal.fats)) + 'g';
+
+             this.customMealModalOpen = false;
+             this.notify("Meal Added");
         },
 
         // --- CHAT ---
