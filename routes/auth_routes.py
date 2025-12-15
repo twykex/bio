@@ -19,7 +19,7 @@ def login():
             return redirect(url_for('dashboard'))
         else:
             flash('Invalid email or password', 'error')
-            return redirect(url_for('login'))
+            return redirect(url_for('auth_bp.login'))
     return render_template('login.html')
 
 @auth_bp.route('/signup', methods=['POST'])
@@ -30,7 +30,7 @@ def signup():
 
     if email in users:
         flash('Email already in use', 'error')
-        return redirect(url_for('login'))
+        return redirect(url_for('auth_bp.login'))
 
     users[email] = {
         'name': name,
@@ -49,7 +49,7 @@ def guest_login():
 @auth_bp.route('/logout')
 def logout():
     session.pop('user_id', None)
-    return redirect(url_for('login'))
+    return redirect(url_for('auth_bp.login'))
 
 @auth_bp.route('/forgot-password', methods=['POST'])
 def forgot_password():
@@ -57,9 +57,9 @@ def forgot_password():
     if email in users:
         token = str(uuid.uuid4())
         password_reset_tokens[token] = email
-        reset_link = url_for('reset_password', token=token, _external=True)
+        reset_link = url_for('auth_bp.reset_password', token=token, _external=True)
         logger.info(f"Password reset link for {email}: {reset_link}")
-    return redirect(url_for('forgot_password_confirm'))
+    return redirect(url_for('auth_bp.forgot_password_confirm'))
 
 @auth_bp.route('/forgot-password-confirm')
 def forgot_password_confirm():
@@ -70,7 +70,7 @@ def reset_password(token):
     email = password_reset_tokens.get(token)
     if not email:
         flash('Invalid or expired password reset link.', 'error')
-        return redirect(url_for('login'))
+        return redirect(url_for('auth_bp.login'))
 
     if request.method == 'POST':
         password = request.form.get('password')
@@ -83,6 +83,6 @@ def reset_password(token):
         users[email]['password'] = generate_password_hash(password)
         password_reset_tokens.pop(token, None)
         flash('Your password has been reset successfully.', 'success')
-        return redirect(url_for('login'))
+        return redirect(url_for('auth_bp.login'))
 
     return render_template('reset_password.html')
