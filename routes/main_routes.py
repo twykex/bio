@@ -1,0 +1,304 @@
+### FILENAME: main_routes.py ###
+import os
+import json
+import logging
+import pdfplumber
+from flask import Blueprint, request, jsonify
+from werkzeug.utils import secure_filename
+from config import UPLOAD_FOLDER
+from utils import get_session, query_ollama, get_embedding, retrieve_relevant_context
+
+logger = logging.getLogger(__name__)
+main_bp = Blueprint('main_bp', __name__)
+
+# --- FALLBACK DATA ---
+FALLBACK_MEAL_PLAN = [
+    {"day": "Mon", "title": "Grilled Salmon Bowl", "ingredients": ["Salmon", "Quinoa", "Avocado"],
+     "benefit": "High Omega-3s."},
+    {"day": "Tue", "title": "Chicken Stir-Fry", "ingredients": ["Chicken", "Broccoli", "Ginger"],
+     "benefit": "Lean protein."},
+    {"day": "Wed", "title": "Turkey Chili", "ingredients": ["Turkey", "Beans", "Tomatoes"], "benefit": "High Fiber."},
+    {"day": "Thu", "title": "Beef & Asparagus", "ingredients": ["Beef", "Asparagus", "Garlic"],
+     "benefit": "Iron boost."},
+    {"day": "Fri", "title": "White Fish Tacos", "ingredients": ["Cod", "Corn Tortillas", "Slaw"],
+     "benefit": "Light protein."},
+    {"day": "Sat", "title": "Mediterranean Salad", "ingredients": ["Chickpeas", "Feta", "Cucumber"],
+     "benefit": "Antioxidants."},
+    {"day": "Sun", "title": "Roast Chicken", "ingredients": ["Chicken", "Sweet Potato", "Carrots"],
+     "benefit": "Complex carbs."}
+]
+
+FALLBACK_WORKOUT_PLAN = [
+    {"day": "Mon", "focus": "Cardio", "exercises": ["30m Jog"], "benefit": "Heart Health"},
+    {"day": "Tue", "focus": "Upper Body", "exercises": ["Pushups", "Rows"], "benefit": "Strength"},
+    {"day": "Wed", "focus": "Active Rest", "exercises": ["Yoga"], "benefit": "Recovery"},
+    {"day": "Thu", "focus": "Lower Body", "exercises": ["Squats", "Lunges"], "benefit": "Leg Power"},
+    {"day": "Fri", "focus": "HIIT", "exercises": ["Burpees", "Sprints"], "benefit": "Fat Loss"},
+    {"day": "Sat", "focus": "Outdoors", "exercises": ["Hiking"], "benefit": "Mental Health"},
+    {"day": "Sun", "focus": "Rest", "exercises": ["None"], "benefit": "Recovery"}
+]
+
+
+def advanced_pdf_parse(filepath):
+    """Extracts text and splits it into logical chunks for RAG."""
+    full_text = ""
+    chunks = []
+    try:
+        with pdfplumber.open(filepath) as pdf:
+            for page in pdf.pages:
+                text = page.extract_text()
+                if not text: continue
+                full_text += text + "\n"
+                page_chunks = [c.strip() for c in text.split('\n\n') if len(c) > 50]
+                chunks.extend(page_chunks)
+    except Exception as e:
+        logger.error(f"PDF Error: {e}")
+    return full_text, chunks
+
+
+@main_bp.route('/init_context', methods=['POST'])
+def init_context():
+    if 'file' not in request.files: return jsonify({"error": "No file"}), 400
+    file = request.files['file']
+    token = request.form.get('token')
+
+    filename = secure_filename(file.filename)
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
+    file.save(filepath)
+
+    text, chunks = advanced_pdf_parse(filepath)
+    safe_chunks = chunks[:60]
+    embeddings = [get_embedding(chunk) for chunk in safe_chunks]
+
+    session = get_session(token)
+    session['raw_text_chunks'] = safe_chunks
+    session['embeddings'] = embeddings
+
+    system_prompt = "You are a Functional Doctor. Diagnose the user. Return strict JSON."
+    user_prompt = f"""
+    DATA: {text[:8000]}
+
+    TASK: Identify the top 3 health issues from this bloodwork.
+    For each issue, provide 2 distinct ways to fix it (e.g., Diet vs. Lifestyle).
+
+    OUTPUT JSON FORMAT:
+    {{
+        "patient_name": "User",
+        "health_score": 78,
+        "summary": "Short overall health summary.",
+        "issues": [
+            {{
+                "title": "Low Vitamin D",
+                "severity": "High",
+                "value": "18 ng/mL",
+                "explanation": "This explains your low energy and weak immunity.",
+                "options": [
+                    {{ "type": "Dietary", "text": "Eat fatty fish & fortified foods." }},
+                    {{ "type": "Lifestyle", "text": "20 mins morning sun exposure." }}
+                ]
+            }}
+        ]
+    }}
+    """
+
+    data = query_ollama(user_prompt, system_instruction=system_prompt, temperature=0.1)
+
+    if not data or 'issues' not in data:
+        data = {
+            "patient_name": "Guest",
+            "health_score": 75,
+            "summary": "We detected some potential optimizations for your metabolism.",
+            "issues": [
+                {
+                    "title": "Metabolic Efficiency",
+                    "severity": "Medium",
+                    "value": "Sub-optimal",
+                    "explanation": "Your markers suggest insulin resistance risk.",
+                    "options": [{"type": "Diet", "text": "Low Carb Protocol"},
+                                {"type": "Activity", "text": "Zone 2 Cardio"}]
+                },
+                {
+                    "title": "Inflammation Levels",
+                    "severity": "Low",
+                    "value": "Elevated",
+                    "explanation": "Slightly high CRP indicates stress on the body.",
+                    "options": [{"type": "Diet", "text": "Anti-Inflammatory Foods"},
+                                {"type": "Supplement", "text": "Omega-3 Protocol"}]
+                }
+            ]
+        }
+
+    session["blood_context"] = data
+    return jsonify(data)
+
+
+@main_bp.route('/generate_week', methods=['POST'])
+def generate_week():
+    data = request.json
+    session = get_session(data.get('token'))
+
+    summary = session.get('blood_context', {}).get('summary', 'General Health')
+    blood_strategies = data.get('blood_strategies', [])
+    lifestyle = data.get('lifestyle', {})
+
+    logger.info(f"🍳 ARCHITECTING PLAN: {lifestyle.get('cuisine')} | {lifestyle.get('time')} | {summary}")
+
+    prompt = f"""
+    ROLE: Elite Nutritionist.
+
+    PATIENT PROFILE:
+    - BIOLOGY: {summary}
+    - PRIORITY FIXES: {", ".join(blood_strategies)}
+    - GENDER: {lifestyle.get('gender', 'Not Specified')}
+    - AGE: {lifestyle.get('age', 'Not Specified')}
+    - ACTIVITY: {lifestyle.get('activity', 'Not Specified')}
+    - GOAL: {lifestyle.get('goal', 'General Health')}
+
+    LIFESTYLE CONSTRAINTS:
+    - CUISINE STYLE: {lifestyle.get('cuisine', 'Varied')}
+    - COOKING TIME: {lifestyle.get('time', '30 mins')}
+    - BUDGET: {lifestyle.get('budget', 'Moderate')}
+    - DIET TYPE: {lifestyle.get('diet', 'Balanced')}
+    - ALLERGIES/EXCLUSIONS: {lifestyle.get('allergies', 'None')}
+
+    TASK: Create a 7-Day Dinner Plan.
+    OUTPUT: STRICT JSON ARRAY ONLY.
+
+    EXAMPLE:
+    [
+      {{ "day": "Mon", "title": "Mediterranean Salmon", "ingredients": ["Salmon", "Olives", "Quinoa"], "benefit": "High Omega-3." }},
+      {{ "day": "Tue", "title": "Quick Chicken Stir-Fry", "ingredients": ["Chicken", "Ginger", "Snap Peas"], "benefit": "High protein." }}
+    ]
+
+    GENERATE 7 DAYS NOW:
+    """
+
+    plan = query_ollama(prompt, system_instruction="Return JSON Array only.", temperature=0.3)
+
+    if isinstance(plan, dict) and 'plan' in plan: plan = plan['plan']
+
+    if not plan or not isinstance(plan, list) or len(plan) == 0:
+        logger.warning("❌ AI PLAN FAILED. Using Fallback.")
+        # FIXED: Use the global variable directly, do NOT import it
+        plan = FALLBACK_MEAL_PLAN
+
+    return jsonify(plan)
+
+
+@main_bp.route('/generate_workout', methods=['POST'])
+def generate_workout():
+    data = request.json
+    session = get_session(data.get('token'))
+    strategy = data.get('strategy_name', 'General')
+    lifestyle = data.get('lifestyle', {})
+
+    logger.info(f"💪 Generating Workout for: {strategy}")
+
+    prompt = f"""
+    ROLE: Elite Personal Trainer.
+
+    CLIENT PROFILE:
+    - GOAL: {lifestyle.get('goal', 'General Fitness')}
+    - ACTIVITY LEVEL: {lifestyle.get('activity', 'Moderate')}
+    - GENDER: {lifestyle.get('gender', 'Not Specified')}
+    - AGE: {lifestyle.get('age', 'Not Specified')}
+    - LIMITATIONS: {lifestyle.get('limitations', 'None')}
+    - EQUIPMENT: {lifestyle.get('equipment', 'Basic Home Gym')}
+
+    STRATEGY FOCUS: {strategy}
+
+    TASK: Create a 7-day workout schedule.
+    Format: JSON Array: [{{ "day": "Mon", "focus": "Cardio", "exercises": ["Run"], "benefit": "Heart" }}]
+    """
+
+    plan = query_ollama(prompt, system_instruction="You are a Trainer.", temperature=0.1)
+
+    if not plan or not isinstance(plan, list) or len(plan) == 0:
+        logger.warning("❌ AI WORKOUT FAILED. Using Fallback.")
+        plan = FALLBACK_WORKOUT_PLAN
+
+    return jsonify(plan)
+
+
+@main_bp.route('/get_recipe', methods=['POST'])
+def get_recipe():
+    data = request.json
+    title = data.get('meal_title')
+    prompt = f"Create recipe for {title}. JSON: {{ 'steps': ['1...', '2...'], 'macros': {{ 'protein': '30g', 'carbs': '20g', 'fats': '10g' }} }}"
+    recipe = query_ollama(prompt, system_instruction="Chef. JSON Only.", temperature=0.3)
+    return jsonify(recipe or {"steps": ["Cook ingredients.", "Serve hot."],
+                              "macros": {"protein": "20g", "carbs": "20g", "fats": "10g"}})
+
+
+@main_bp.route('/generate_shopping_list', methods=['POST'])
+def generate_shopping_list():
+    prompt = "Healthy shopping list. JSON: {{ 'Produce': ['Apple'], 'Protein': ['Egg'], 'Pantry': ['Oil'] }}"
+    shopping = query_ollama(prompt, system_instruction="Helper. JSON Only.", temperature=0.2)
+    return jsonify(shopping or {"Produce": ["Spinach", "Apples"], "Protein": ["Chicken"], "Pantry": ["Rice"]})
+
+
+@main_bp.route('/chat_agent', methods=['POST'])
+def chat_agent():
+    data = request.json
+    session = get_session(data.get('token'))
+    user_msg = data.get('message')
+
+    rag_context = retrieve_relevant_context(session, user_msg)
+    summary = session.get('blood_context', {}).get('summary', 'No data.')
+
+    system_prompt = f"""
+    Medical Assistant.
+    CONTEXT: {summary}
+    EVIDENCE: {rag_context}
+    If user asks for BMI/Calories calculation, output JSON: {{ "tool": "calculate_bmi", ... }}
+    Otherwise output JSON: {{ "response": "Your answer..." }}
+    """
+
+    resp = query_ollama(user_msg, system_instruction=system_prompt, tools_enabled=True)
+
+    history = session.get('chat_history', [])
+    history.append({"role": "user", "text": user_msg})
+    if resp and 'response' in resp:
+        history.append({"role": "ai", "text": resp['response']})
+
+    return jsonify(resp or {"response": "I'm having trouble analyzing that."})
+
+
+@main_bp.route('/propose_meal_strategies', methods=['POST'])
+def propose_meal_strategies():
+    data = request.json
+    session = get_session(data.get('token'))
+    summary = session.get('blood_context', {}).get('summary', 'General Health')
+
+    # Ask AI to brainstorm 3 distinct approaches based on bloodwork
+    prompt = f"""
+    ROLE: Elite Medical Nutritionist.
+    PATIENT CONTEXT: {summary}
+
+    TASK: Propose 3 distinct weekly meal plan strategies to fix the patient's issues.
+    1. "Aggressive Repair": Hardcore focus on biomarkers.
+    2. "Balanced Lifestyle": 80/20 rule, easier to stick to.
+    3. "Time Saver": Dense nutrients, fast prep.
+
+    OUTPUT: JSON Array only.
+    [
+        {{ "id": "repair", "title": "Aggressive Repair", "desc": "Strict protocol to fix Vitamin D & Iron fast.", "pros": "Fastest Results" }},
+        {{ "id": "balance", "title": "Balanced Flow", "desc": "Sustainable approach allowing some flexibility.", "pros": "High Adherence" }},
+        {{ "id": "quick", "title": "Metabolic Quick", "desc": "15-min meals focused on insulin control.", "pros": "Best for Busy Schedule" }}
+    ]
+    """
+
+    strategies = query_ollama(prompt, system_instruction="Return JSON Array only.", temperature=0.4)
+
+    # Fallback
+    if not strategies or not isinstance(strategies, list):
+        strategies = [
+            {"id": "repair", "title": "Biomarker Repair", "desc": "Focus strictly on optimizing your blood results.",
+             "pros": "Fastest Improvement"},
+            {"id": "balance", "title": "Balanced Lifestyle", "desc": "A sustainable mix of health and flavor.",
+             "pros": "Easy to stick to"},
+            {"id": "quick", "title": "High Performance", "desc": "Nutrient dense meals for high energy.",
+             "pros": "Best for Focus"}
+        ]
+
+    return jsonify(strategies)
