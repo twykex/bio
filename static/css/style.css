@@ -89,3 +89,13 @@ body {
     background: linear-gradient(to right, transparent, #3b82f6, transparent);
     box-shadow: 0 0 15px #3b82f6;
 }
+
+/* Slide Up Animation */
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-up {
+    animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
