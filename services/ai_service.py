@@ -5,67 +5,18 @@ import logging
 import base64
 from config import OLLAMA_MODEL, OLLAMA_URL
 from services.tools import execute_tool_call
+from services.json_cleaner import (
+    clean_json_output,
+    repair_lazy_json,
+    fix_truncated_json,
+    remove_json_comments,
+    clean_and_parse_json
+)
 
 logger = logging.getLogger(__name__)
 
 base_url = OLLAMA_URL.replace("/api/generate", "").replace("/api/chat", "").rstrip("/")
 CHAT_ENDPOINT = f"{base_url}/api/chat"
-
-
-def clean_json_output(text):
-    """
-    STACK-BASED CLEANER: Finds the first valid JSON object or array
-    and stops exactly when it closes. Ignores trailing text.
-    Handles nested objects and strings correctly.
-    """
-    text = text.strip()
-
-    # Locate the first possible start of JSON
-    start_idx = -1
-    for i, char in enumerate(text):
-        if char in ['{', '[']:
-            start_idx = i
-            break
-
-    if start_idx == -1:
-        return text  # No JSON found
-
-    # Stack counting
-    stack = []
-    in_string = False
-    escape = False
-
-    for i in range(start_idx, len(text)):
-        char = text[i]
-
-        if in_string:
-            if char == '"' and not escape:
-                in_string = False
-
-            if char == '\\' and not escape:
-                escape = True
-            else:
-                escape = False
-        else:
-            if char == '"':
-                in_string = True
-            elif char in ['{', '[']:
-                stack.append(char)
-            elif char in ['}', ']']:
-                if not stack:
-                    break  # Error: unbalanced
-
-                # Check for matching pair
-                last = stack[-1]
-                if (last == '{' and char == '}') or (last == '[' and char == ']'):
-                    stack.pop()
-
-                # If stack is empty, we found the full object!
-                if not stack:
-                    return text[start_idx: i + 1]
-
-    return text[start_idx:]  # Fallback
-
 
 def analyze_image(image_file, prompt):
     """
@@ -81,100 +32,6 @@ def analyze_image(image_file, prompt):
     except Exception as e:
         logger.error(f"Image Analysis Error: {e}")
         return None
-
-
-def repair_lazy_json(text):
-    text = re.sub(r'("day":\s*"[^"]+",\s*)("[^"]+")(\s*,)', r'\1"title": \2\3', text)
-    text = re.sub(r'(,\s*)("[^"]+")(\s*\})', r'\1"desc": \2\3', text)
-    return text
-
-
-def fix_truncated_json(json_str):
-    json_str = json_str.strip()
-    json_str = re.sub(r',\s*$', '', json_str)
-    stack = []
-    is_inside_string = False
-    escaped = False
-
-    for char in json_str:
-        if is_inside_string:
-            if char == '"' and not escaped:
-                is_inside_string = False
-            elif char == '\\':
-                escaped = not escaped
-            else:
-                escaped = False
-        else:
-            if char == '"':
-                is_inside_string = True
-            elif char == '{':
-                stack.append('}')
-            elif char == '[':
-                stack.append(']')
-            elif char == '}' or char == ']':
-                if stack and stack[-1] == char:
-                    stack.pop()
-
-    if is_inside_string:
-        json_str += '"'
-    while stack:
-        json_str += stack.pop()
-    return json_str
-
-
-def remove_json_comments(text):
-    output = []
-    in_string = False
-    escape = False
-    i = 0
-    while i < len(text):
-        char = text[i]
-        if in_string:
-            if char == '"' and not escape:
-                in_string = False
-            if char == '\\' and not escape:
-                escape = True
-            else:
-                escape = False
-            output.append(char)
-            i += 1
-        else:
-            if char == '"':
-                in_string = True
-                output.append(char)
-                i += 1
-            elif char == '/' and i + 1 < len(text) and text[i+1] == '/':
-                i += 2
-                while i < len(text) and text[i] != '\n':
-                    i += 1
-            else:
-                output.append(char)
-                i += 1
-    return "".join(output)
-
-
-def clean_and_parse_json(text):
-    # 1. Use stack-based extractor to isolate JSON block
-    cleaned = clean_json_output(text)
-
-    # 2. Fix specific lazy patterns
-    cleaned = repair_lazy_json(cleaned)
-    cleaned = remove_json_comments(cleaned)
-
-    # 3. Fix common syntax errors
-    cleaned = re.sub(r'\]\s*"\s*\}', '] }', cleaned)
-    cleaned = re.sub(r',\s*\}', '}', cleaned)
-    cleaned = re.sub(r',\s*\]', ']', cleaned)
-
-    try:
-        return json.loads(cleaned)
-    except json.JSONDecodeError:
-        logger.warning("JSON Invalid. Attempting auto-balance...")
-        balanced = fix_truncated_json(cleaned)
-        try:
-            return json.loads(balanced)
-        except json.JSONDecodeError:
-            return None
 
 
 def query_ollama(prompt, system_instruction=None, tools_enabled=False, temperature=0.1, retries=1, images=None):

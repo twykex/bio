@@ -1,0 +1,88 @@
+import uuid
+import logging
+from flask import Blueprint, request, session, redirect, url_for, flash, render_template
+from werkzeug.security import generate_password_hash, check_password_hash
+from services.user_store import users, password_reset_tokens
+
+logger = logging.getLogger(__name__)
+auth_bp = Blueprint('auth_bp', __name__)
+
+@auth_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        user = users.get(email)
+
+        if user and check_password_hash(user['password'], password):
+            session['user_id'] = email
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Invalid email or password', 'error')
+            return redirect(url_for('login'))
+    return render_template('login.html')
+
+@auth_bp.route('/signup', methods=['POST'])
+def signup():
+    name = request.form.get('name')
+    email = request.form.get('email')
+    password = request.form.get('password')
+
+    if email in users:
+        flash('Email already in use', 'error')
+        return redirect(url_for('login'))
+
+    users[email] = {
+        'name': name,
+        'password': generate_password_hash(password)
+    }
+    session['user_id'] = email
+    return redirect(url_for('dashboard'))
+
+@auth_bp.route('/guest-login')
+def guest_login():
+    guest_id = f"guest_{uuid.uuid4()}"
+    session['user_id'] = guest_id
+    logger.info(f"Guest login: {guest_id}")
+    return redirect(url_for('dashboard'))
+
+@auth_bp.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    return redirect(url_for('login'))
+
+@auth_bp.route('/forgot-password', methods=['POST'])
+def forgot_password():
+    email = request.form.get('email')
+    if email in users:
+        token = str(uuid.uuid4())
+        password_reset_tokens[token] = email
+        reset_link = url_for('reset_password', token=token, _external=True)
+        logger.info(f"Password reset link for {email}: {reset_link}")
+    return redirect(url_for('forgot_password_confirm'))
+
+@auth_bp.route('/forgot-password-confirm')
+def forgot_password_confirm():
+    return render_template('forgot_password_confirm.html')
+
+@auth_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    email = password_reset_tokens.get(token)
+    if not email:
+        flash('Invalid or expired password reset link.', 'error')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+
+        if password != confirm_password:
+            flash('Passwords do not match.', 'error')
+            return render_template('reset_password.html')
+
+        users[email]['password'] = generate_password_hash(password)
+        password_reset_tokens.pop(token, None)
+        flash('Your password has been reset successfully.', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('reset_password.html')
