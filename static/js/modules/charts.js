@@ -28,7 +28,7 @@ export function chartsSlice() {
                      d.setDate(new Date().getDate() - i);
                      const dateStr = d.toISOString().split('T')[0];
                      labels.push(d.toLocaleDateString(undefined, {weekday:'short'}));
-                     const mood = this.moodHistory[dateStr];
+                     const mood = this.moodHistory ? this.moodHistory[dateStr] : null;
                      let val = 0; // 0 = no data
                      if(mood === '😁') val = 4;
                      else if(mood === '🙂') val = 3;
@@ -74,7 +74,7 @@ export function chartsSlice() {
                      d.setDate(new Date().getDate() - i);
                      const dateStr = d.toISOString().split('T')[0];
                      labels.push(d.toLocaleDateString(undefined, {weekday:'short'}));
-                     data.push(this.waterHistory[dateStr] || 0);
+                     data.push((this.waterHistory && this.waterHistory[dateStr]) || 0);
                 }
 
                 this.waterChart = new Chart(ctxWater, {
@@ -105,7 +105,10 @@ export function chartsSlice() {
             if (typeof Chart === 'undefined') return;
             await this.$nextTick();
 
-            const daily = this.getMealsForSelectedDate()[0];
+            // Ensure getMealsForSelectedDate exists or handle gracefully
+            const meals = typeof this.getMealsForSelectedDate === 'function' ? this.getMealsForSelectedDate() : [];
+            const daily = meals[0];
+
             const ctxDoughnut = document.getElementById('dailyMacrosChart');
             const ctxTrend = document.getElementById('weeklyCalorieChart');
 
@@ -114,9 +117,12 @@ export function chartsSlice() {
 
             // 1. Daily Macros Doughnut
             if (daily && ctxDoughnut) {
-                const p = this.getMacroValue(daily.total_macros.protein);
-                const c = this.getMacroValue(daily.total_macros.carbs);
-                const f = this.getMacroValue(daily.total_macros.fats);
+                // Ensure getMacroValue exists
+                const getVal = (val) => (typeof this.getMacroValue === 'function') ? this.getMacroValue(val) : parseFloat(val || 0);
+
+                const p = getVal(daily.total_macros.protein);
+                const c = getVal(daily.total_macros.carbs);
+                const f = getVal(daily.total_macros.fats);
 
                 this.nutritionDoughnut = new Chart(ctxDoughnut, {
                     type: 'doughnut',
@@ -139,9 +145,11 @@ export function chartsSlice() {
             }
 
             // 2. Weekly Trend
-            if (this.weekPlan.length > 0 && ctxTrend) {
+            if (this.weekPlan && this.weekPlan.length > 0 && ctxTrend) {
+                const getVal = (val) => (typeof this.getMacroValue === 'function') ? this.getMacroValue(val) : parseFloat(val || 0);
+
                 const labels = this.weekPlan.map(d => new Date(d.date).toLocaleDateString(undefined, {weekday:'short'}));
-                const data = this.weekPlan.map(d => this.getMacroValue(d.total_macros.calories));
+                const data = this.weekPlan.map(d => getVal(d.total_macros.calories));
 
                 this.nutritionTrend = new Chart(ctxTrend, {
                     type: 'line',
@@ -206,36 +214,38 @@ export function chartsSlice() {
             // Ensure we don't crash if Chart is not loaded
             if (typeof Chart === 'undefined') return;
 
-            this.radarChart = new Chart(ctxRadar, {
-                type: 'radar',
-                data: {
-                    labels: Object.keys(systems),
-                    datasets: [{
-                        label: 'System Health',
-                        data: Object.values(systems),
-                        fill: true,
-                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                        borderColor: 'rgb(59, 130, 246)',
-                        pointBackgroundColor: 'rgb(59, 130, 246)',
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: 'rgb(59, 130, 246)'
-                    }]
-                },
-                options: {
-                    scales: {
-                        r: {
-                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                            pointLabels: { color: 'rgba(255, 255, 255, 0.7)', font: { size: 10 } },
-                            ticks: { display: false, backdropColor: 'transparent' },
-                            suggestedMin: 0,
-                            suggestedMax: 100
-                        }
+            if (ctxRadar) {
+                this.radarChart = new Chart(ctxRadar, {
+                    type: 'radar',
+                    data: {
+                        labels: Object.keys(systems),
+                        datasets: [{
+                            label: 'System Health',
+                            data: Object.values(systems),
+                            fill: true,
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            borderColor: 'rgb(59, 130, 246)',
+                            pointBackgroundColor: 'rgb(59, 130, 246)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgb(59, 130, 246)'
+                        }]
                     },
-                    plugins: { legend: { display: false } }
-                }
-            });
+                    options: {
+                        scales: {
+                            r: {
+                                angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                pointLabels: { color: 'rgba(255, 255, 255, 0.7)', font: { size: 10 } },
+                                ticks: { display: false, backdropColor: 'transparent' },
+                                suggestedMin: 0,
+                                suggestedMax: 100
+                            }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
 
             // -- Prepare Bar Data --
             const labels = this.context.biomarkers.map(m => m.name);
@@ -252,3 +262,33 @@ export function chartsSlice() {
                  if(s === 'high' || s === 'low') return 'rgba(239, 68, 68, 0.6)'; // Red
                  return 'rgba(16, 185, 129, 0.6)'; // Green
             });
+
+            if (ctxBar) {
+                this.barChart = new Chart(ctxBar, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Status',
+                            data: statusValues, // 1=Low, 2=Normal, 3=High
+                            backgroundColor: backgroundColors,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { display: false, min: 0, max: 4 },
+                            x: {
+                                ticks: { color: 'rgba(255, 255, 255, 0.5)', font: { size: 10 } },
+                                grid: { display: false }
+                            }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        }
+    };
+}
