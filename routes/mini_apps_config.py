@@ -157,6 +157,26 @@ APP_CONFIGS = {
         "prompt": "Guide for {technique} breathing. Output format: {{ 'instructions': ['Step 1...', 'Step 2...'], 'benefits': '...' }}",
         "temp": 0.3
     },
+    "cold_plunge_timer": {
+        "system": "You are a Wim Hof Method Instructor.",
+        "prompt": "Guide for a {duration} minute cold plunge at {temp}. Output format: {{ 'safety_tip': '...', 'breathing': '...', 'post_plunge': '...' }}",
+        "temp": 0.2
+    },
+    "sauna_session": {
+        "system": "You are a Wellness Expert.",
+        "prompt": "Protocol for sauna use with goal: {goal}. Output format: {{ 'duration': '...', 'temperature': '...', 'hydration_strategy': '...' }}",
+        "temp": 0.2
+    },
+    "hiit_generator": {
+        "system": "You are a HIIT Trainer.",
+        "prompt": "Create a {duration} HIIT workout focusing on {focus}. Output format: {{ 'warmup': '...', 'circuit': ['...', '...', '...'], 'cooldown': '...' }}",
+        "temp": 0.4
+    },
+    "gut_health_check": {
+        "system": "You are a Functional Medicine Practitioner.",
+        "prompt": "Analyze gut symptoms: '{symptoms}'. List potential triggers and one dietary change. Output format: {{ 'triggers': ['...'], 'diet_change': '...' }}",
+        "temp": 0.2
+    },
     # --- New Fitness Tools ---
     "calculate_1rm": {
         "system": "You are a Strength Coach. Use the Epley Formula: w * (1 + r/30).",
@@ -220,5 +240,9 @@ FALLBACKS = {
     "fasting_timer": {"start_eating_at": "12:00 PM", "fasting_hours": "16"},
     "circadian_sync": {"sunlight_viewing": "8:00 AM", "caffeine_cutoff": "2:00 PM", "blue_light_block": "8:00 PM"},
     "macro_cheat_sheet": {"sources": ["Chicken", "Tofu", "Lentils"]},
-    "breathwork_guide": {"instructions": ["Inhale 4s", "Hold 4s", "Exhale 4s", "Hold 4s"], "benefits": "Stress reduction"}
+    "breathwork_guide": {"instructions": ["Inhale 4s", "Hold 4s", "Exhale 4s", "Hold 4s"], "benefits": "Stress reduction"},
+    "cold_plunge_timer": {"safety_tip": "Enter slowly", "breathing": "Long exhales", "post_plunge": "Horse stance"},
+    "sauna_session": {"duration": "15-20 mins", "temperature": "80-90°C", "hydration_strategy": "Drink 500ml water"},
+    "hiit_generator": {"warmup": "Jumping jacks", "circuit": ["Burpees", "Squat Jumps", "Mountain Climbers"], "cooldown": "Walking"},
+    "gut_health_check": {"triggers": ["Sugar", "Stress"], "diet_change": "Eat fermented foods"}
 }

@@ -97,9 +97,9 @@ class TestRoutes(unittest.TestCase):
         # Check first meal of first day
         self.assertEqual(data[0]['meals'][0]['benefit'], "Sustained Energy")
 
-    @patch('routes.health_routes.query_ollama')
-    def test_chat_agent(self, mock_query):
-        mock_query.return_value = {"response": "Hello"}
+    @patch('routes.health_routes.stream_ollama')
+    def test_chat_agent(self, mock_stream):
+        mock_stream.return_value = iter(["Hello"])
         sessions['testtoken'] = {'weekly_plan': [], 'chat_history': []}
 
         response = self.app.post('/chat_agent', json={
@@ -108,7 +108,7 @@ class TestRoutes(unittest.TestCase):
         })
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json()['response'], "Hello")
+        self.assertEqual(response.data.decode('utf-8'), "Hello")
 
         # Verify history updated
         history = sessions['testtoken']['chat_history']

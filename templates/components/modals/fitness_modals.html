@@ -26,6 +26,35 @@
     </div>
 </div>
 
+<!-- Tool Modal -->
+<div x-show="fitnessToolOpen" class="fixed inset-0 z-50 bg-black/80 backdrop-blur flex items-center justify-center p-4" x-cloak>
+    <div @click.outside="fitnessToolOpen = false" class="glass-card w-full max-w-md p-6 rounded-3xl animate-scale-in border border-white/10">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold" x-text="activeFitnessTool?.name"></h3>
+            <button @click="fitnessToolOpen = false" class="text-white/40 hover:text-white">✕</button>
+        </div>
+
+        <div class="space-y-4 mb-6">
+            <template x-for="input in activeFitnessTool?.inputs">
+                <div>
+                    <label class="block text-xs font-bold text-white/40 mb-1 uppercase" x-text="input.l"></label>
+                    <input type="number" x-model="toolInputs[input.k]" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-orange-500 focus:outline-none transition">
+                </div>
+            </template>
+        </div>
+
+        <button @click="runFitnessTool" class="w-full py-3 bg-orange-600 hover:bg-orange-500 rounded-xl font-bold text-white transition shadow-lg shadow-orange-900/20">
+            Calculate
+        </button>
+
+        <!-- Result Area -->
+        <div x-show="toolResult" class="mt-6 p-4 rounded-xl bg-white/5 border border-white/10 text-center animate-fade-in">
+            <div class="text-xs text-white/40 mb-1">Result</div>
+            <div class="text-2xl font-bold text-orange-400" x-html="toolResult"></div>
+        </div>
+    </div>
+</div>
+
 <div x-show="restActive" class="fixed bottom-6 right-6 z-[200] animate-scale-in" x-cloak>
     <div class="glass-card p-4 rounded-2xl flex items-center gap-4 bg-black/80 backdrop-blur-md border border-orange-500/50 shadow-2xl shadow-orange-900/20">
         <div class="relative w-12 h-12 flex items-center justify-center">
