@@ -37,6 +37,8 @@ document.addEventListener('alpine:init', () => {
         journalInput: '',
 
         // --- 6. MODALS ---
+        radarChart: null,
+        barChart: null,
         recipeModalOpen: false,
         shoppingListOpen: false,
         workoutModalOpen: false,
@@ -210,6 +212,140 @@ document.addEventListener('alpine:init', () => {
 
             // Global Listeners
             document.addEventListener('mouseover', (e) => this.handleTooltipHover(e));
+
+            this.$watch('currentTab', (val) => {
+                if(val === 'health') this.initCharts();
+            });
+        },
+
+        async initCharts() {
+            if (!this.context || !this.context.biomarkers) return;
+
+            // Wait for DOM update
+            await this.$nextTick();
+
+            const ctxRadar = document.getElementById('healthRadarChart');
+            const ctxBar = document.getElementById('biomarkerBarChart');
+
+            if (this.radarChart) { this.radarChart.destroy(); this.radarChart = null; }
+            if (this.barChart) { this.barChart.destroy(); this.barChart = null; }
+
+            // -- Prepare Radar Data --
+            const systems = {
+                'Metabolism': 85,
+                'Inflammation': 90,
+                'Liver': 88,
+                'Kidneys': 92,
+                'Hormones': 75,
+                'Lipids': 80
+            };
+
+            if(this.context.issues) {
+                this.context.issues.forEach(issue => {
+                     const t = issue.title || '';
+                     if(t.includes('Lipid') || t.includes('Cholesterol')) systems['Lipids'] -= 20;
+                     if(t.includes('Sugar') || t.includes('Glucose')) systems['Metabolism'] -= 20;
+                     if(t.includes('Inflammation') || t.includes('CRP')) systems['Inflammation'] -= 20;
+                });
+            }
+
+            // Ensure we don't crash if Chart is not loaded
+            if (typeof Chart === 'undefined') return;
+
+            this.radarChart = new Chart(ctxRadar, {
+                type: 'radar',
+                data: {
+                    labels: Object.keys(systems),
+                    datasets: [{
+                        label: 'System Health',
+                        data: Object.values(systems),
+                        fill: true,
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        pointBackgroundColor: 'rgb(59, 130, 246)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(59, 130, 246)'
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: { color: 'rgba(255, 255, 255, 0.7)', font: { size: 10 } },
+                            ticks: { display: false, backdropColor: 'transparent' },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // -- Prepare Bar Data --
+            const labels = this.context.biomarkers.map(m => m.name);
+            const statusValues = this.context.biomarkers.map(m => {
+                const s = (m.status || '').toLowerCase();
+                if(s === 'high') return 3;
+                if(s === 'optimal' || s === 'normal') return 2;
+                if(s === 'low') return 1;
+                return 2;
+            });
+
+            const backgroundColors = this.context.biomarkers.map(m => {
+                 const s = (m.status || '').toLowerCase();
+                 if(s === 'high' || s === 'low') return 'rgba(239, 68, 68, 0.6)'; // Red
+                 return 'rgba(16, 185, 129, 0.6)'; // Green
+            });
+
+             const borderColors = this.context.biomarkers.map(m => {
+                 const s = (m.status || '').toLowerCase();
+                 if(s === 'high' || s === 'low') return 'rgb(239, 68, 68)';
+                 return 'rgb(16, 185, 129)';
+            });
+
+            this.barChart = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Status',
+                        data: statusValues,
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 4,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.5)',
+                                stepSize: 1,
+                                callback: function(value) {
+                                    if(value === 1) return 'Low';
+                                    if(value === 2) return 'Normal';
+                                    if(value === 3) return 'High';
+                                    return '';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'rgba(255, 255, 255, 0.5)', autoSkip: false, maxRotation: 90, minRotation: 45 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
         },
 
         // --- CALENDAR LOGIC ---
