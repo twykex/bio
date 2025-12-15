@@ -12,6 +12,8 @@ auth_bp = Blueprint('auth_bp', __name__)
 def login():
     if request.method == 'POST':
         email = request.form.get('email')
+        if email:
+            email = email.lower()
         password = request.form.get('password')
         user = users.get(email)
 
@@ -27,7 +29,13 @@ def login():
 def signup():
     name = request.form.get('name')
     email = request.form.get('email')
+    if email:
+        email = email.lower()
     password = request.form.get('password')
+
+    if not email:
+        flash('Email is required', 'error')
+        return redirect(url_for('auth_bp.login'))
 
     if email in users:
         flash('Email already in use', 'error')
@@ -55,6 +63,9 @@ def logout():
 @auth_bp.route('/forgot-password', methods=['POST'])
 def forgot_password():
     email = request.form.get('email')
+    if email:
+        email = email.lower()
+
     if email in users:
         token = str(uuid.uuid4())
         # Store email and expiration (1 hour)
