@@ -142,7 +142,7 @@ const app = (userId) => ({
         const keys = [
             'context', 'weekPlan', 'workoutPlan', 'waterIntake',
             'userName', 'userChoices', 'journalEntries', 'journalAnalysis',
-            'moodHistory', 'activityLog', 'waterHistory', 'achievements', 'workoutHistory'
+            'moodHistory', 'activityLog', 'waterHistory', 'achievements', 'workoutHistory', 'gratitudeEntries'
         ];
 
         keys.forEach(key => {
@@ -186,6 +186,17 @@ const app = (userId) => ({
         this.calendarDays.forEach(d => d.active = (d.fullDate === dayObj.fullDate));
         if(this.journalEntries) this.journalInput = this.journalEntries[this.selectedDate] || '';
         if(this.moodHistory) this.currentMood = this.moodHistory[this.selectedDate] || null;
+
+        if(this.gratitudeEntries) {
+            // Ensure we have a fresh array to edit, not a reference to the stored one
+            const stored = this.gratitudeEntries[this.selectedDate];
+            this.gratitudeInputs = stored ? [...stored] : ['', '', ''];
+            // Pad to 3
+            while(this.gratitudeInputs.length < 3) this.gratitudeInputs.push('');
+        } else {
+            this.gratitudeInputs = ['', '', ''];
+        }
+
         if(this.currentTab === 'nutrition') this.initNutritionCharts();
     },
 

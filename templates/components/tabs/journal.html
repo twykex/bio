@@ -2,10 +2,21 @@
     <div class="flex justify-between items-end">
         <div>
             <h2 class="text-3xl font-bold">Daily Journal</h2>
-            <p class="text-white/40 text-sm mt-1">Reflect on your journey.</p>
+            <p class="text-white/40 text-sm mt-1">Reflect, record, and grow.</p>
+        </div>
+        <!-- Mood Selector -->
+        <div class="flex gap-2 bg-white/5 p-2 rounded-full border border-white/10">
+            <template x-for="mood in ['😢', '😐', '🙂', '😀', '🤩']">
+                <button @click="setMood(mood)"
+                        class="w-10 h-10 rounded-full flex items-center justify-center text-xl transition hover:scale-110"
+                        :class="currentMood === mood ? 'bg-purple-600 shadow-lg scale-110' : 'hover:bg-white/10 opacity-50 hover:opacity-100'"
+                        x-text="mood">
+                </button>
+            </template>
         </div>
     </div>
 
+     <!-- Calendar -->
      <div class="glass-panel p-4 rounded-[24px] flex gap-3 overflow-x-auto custom-scroll snap-x">
         <template x-for="day in calendarDays">
             <button @click="selectDate(day)"
@@ -18,15 +29,54 @@
         </template>
     </div>
 
+    <!-- Daily Prompt Banner -->
+    <div x-show="promptVisible" class="bg-gradient-to-r from-purple-900/40 to-blue-900/40 border border-purple-500/30 p-4 rounded-2xl flex justify-between items-center animate-fade-in-up">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">💡</span>
+            <div>
+                <p class="text-xs text-purple-300 font-bold uppercase tracking-wider">Thought Starter</p>
+                <p class="text-white font-medium italic" x-text="currentPrompt"></p>
+            </div>
+        </div>
+        <button @click="dismissPrompt" class="p-2 hover:bg-white/10 rounded-full text-white/50 hover:text-white">✕</button>
+    </div>
+
     <div class="glass-card p-8 rounded-[32px]">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-bold" x-text="new Date(selectedDate).toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'})"></h3>
             <div class="flex gap-3">
-                <button @click="analyzeJournal" class="px-6 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-sm transition border border-white/10 flex items-center gap-2"><span>✨</span> Analyze</button>
-                <button @click="saveJournal" class="px-6 py-2 rounded-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition shadow-lg shadow-purple-900/20">Save Entry</button>
+                <button @click="getNewPrompt" class="px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-xs font-bold transition border border-white/5">💡 Prompt</button>
+                <button @click="toggleSpeech"
+                        class="px-4 py-2 rounded-full font-bold text-xs transition border border-white/5 flex items-center gap-2"
+                        :class="isListening ? 'bg-red-500/20 text-red-400 border-red-500/50 animate-pulse' : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'">
+                   <span x-text="isListening ? '🎙️ Listening...' : '🎙️ Dictate'"></span>
+                </button>
             </div>
         </div>
-        <textarea x-model="journalInput" class="w-full h-64 bg-black/20 border border-white/10 rounded-2xl p-6 text-white text-lg leading-relaxed focus:outline-none focus:border-purple-500 transition-all resize-none" placeholder="How are you feeling today? What did you eat? Any symptoms?"></textarea>
+
+        <textarea x-model="journalInput"
+                  class="w-full h-64 bg-black/20 border border-white/10 rounded-2xl p-6 text-white text-lg leading-relaxed focus:outline-none focus:border-purple-500 transition-all resize-none placeholder-white/20"
+                  placeholder="How are you feeling today? What's on your mind?"></textarea>
+
+        <!-- Gratitude Section -->
+        <div class="mt-8">
+            <h4 class="text-sm font-bold text-white/60 uppercase tracking-widest mb-4">I am grateful for...</h4>
+            <div class="space-y-3">
+                <template x-for="(g, index) in gratitudeInputs">
+                    <div class="flex items-center gap-3">
+                        <span class="text-white/30 font-bold text-sm" x-text="index + 1 + '.'"></span>
+                        <input type="text" x-model="gratitudeInputs[index]"
+                               class="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2 text-white placeholder-white/20 focus:outline-none focus:border-purple-500/50 transition"
+                               placeholder="Enter something you are grateful for...">
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-white/5">
+            <button @click="analyzeJournal" class="px-6 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-sm transition border border-white/10 flex items-center gap-2"><span>✨</span> Analyze</button>
+            <button @click="saveJournal" class="px-6 py-2 rounded-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition shadow-lg shadow-purple-900/20">Save Entry</button>
+        </div>
 
         <div x-show="journalAnalysis && journalAnalysis[selectedDate]" class="mt-8 p-6 rounded-2xl bg-white/5 border border-white/5 animate-scale-in">
             <h4 class="text-xs font-bold text-purple-400 uppercase tracking-widest mb-4 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span> AI Analysis</h4>
