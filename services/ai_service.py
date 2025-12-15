@@ -53,7 +53,7 @@ def query_ollama(prompt, system_instruction=None, tools_enabled=False, temperatu
     }
 
     try:
-        r = requests.post(CHAT_ENDPOINT, json=payload)
+        r = requests.post(CHAT_ENDPOINT, json=payload, timeout=60)
 
         if r.status_code != 200:
             logger.error(f"AI Error: API returned status code {r.status_code}: {r.text[:200]}")
