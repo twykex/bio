@@ -149,12 +149,17 @@ def generate_week():
     PATIENT PROFILE:
     - BIOLOGY: {summary}
     - PRIORITY FIXES: {", ".join(blood_strategies)}
+    - GENDER: {lifestyle.get('gender', 'Not Specified')}
+    - AGE: {lifestyle.get('age', 'Not Specified')}
+    - ACTIVITY: {lifestyle.get('activity', 'Not Specified')}
+    - GOAL: {lifestyle.get('goal', 'General Health')}
 
     LIFESTYLE CONSTRAINTS:
     - CUISINE STYLE: {lifestyle.get('cuisine', 'Varied')}
     - COOKING TIME: {lifestyle.get('time', '30 mins')}
     - BUDGET: {lifestyle.get('budget', 'Moderate')}
     - DIET TYPE: {lifestyle.get('diet', 'Balanced')}
+    - ALLERGIES/EXCLUSIONS: {lifestyle.get('allergies', 'None')}
 
     TASK: Create a 7-Day Dinner Plan.
     OUTPUT: STRICT JSON ARRAY ONLY.
@@ -185,11 +190,24 @@ def generate_workout():
     data = request.json
     session = get_session(data.get('token'))
     strategy = data.get('strategy_name', 'General')
+    lifestyle = data.get('lifestyle', {})
 
     logger.info(f"💪 Generating Workout for: {strategy}")
 
     prompt = f"""
-    Create a 7-day workout schedule for strategy: {strategy}.
+    ROLE: Elite Personal Trainer.
+
+    CLIENT PROFILE:
+    - GOAL: {lifestyle.get('goal', 'General Fitness')}
+    - ACTIVITY LEVEL: {lifestyle.get('activity', 'Moderate')}
+    - GENDER: {lifestyle.get('gender', 'Not Specified')}
+    - AGE: {lifestyle.get('age', 'Not Specified')}
+    - LIMITATIONS: {lifestyle.get('limitations', 'None')}
+    - EQUIPMENT: {lifestyle.get('equipment', 'Basic Home Gym')}
+
+    STRATEGY FOCUS: {strategy}
+
+    TASK: Create a 7-day workout schedule.
     Format: JSON Array: [{{ "day": "Mon", "focus": "Cardio", "exercises": ["Run"], "benefit": "Heart" }}]
     """
 
