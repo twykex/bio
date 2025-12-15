@@ -42,10 +42,13 @@ document.addEventListener('alpine:init', () => {
         workoutModalOpen: false,
         prefModalOpen: false,
         bioHacksOpen: false,
+        customMealModalOpen: false,
         dragOver: false,
 
         // --- 7. DATA OBJECTS ---
         selectedMeal: null,
+        customMealDate: null,
+        customMealForm: { title: '', calories: '', protein: '', carbs: '', fats: '', type: 'Snack' },
         recipeDetails: null,
         shoppingList: null,
         quickPrompts: ['Does this meal plan have enough protein?', 'Can you swap Tuesday dinner?', 'I am feeling tired today.', 'Suggest a healthy snack.'],
@@ -58,6 +61,11 @@ document.addEventListener('alpine:init', () => {
         mealWizardOpen: false,
         mealStrategies: [],
         selectedStrategy: null,
+
+        // --- FITNESS STATE ---
+        fitnessWizardOpen: false,
+        fitnessStrategies: [],
+        selectedFitnessStrategy: null,
 
         // --- 9. CONSULTATION STATE ---
         consultationActive: false,
@@ -90,30 +98,37 @@ document.addEventListener('alpine:init', () => {
         toolInputs: {},
         toolResult: null,
         toolLoading: false,
+        nutritionToolIds: ['quick_snack', 'check_food_interaction', 'recipe_variation', 'seasonal_swap', 'budget_swap', 'leftover_idea'],
         tools: [
-            { id: 'suggest_supplement', name: 'Supplement Advisor', desc: 'Get supplement recommendations.', inputs: [{k:'focus', l:'Focus', p:'Joint Health', options: ['Joint Health', 'Energy', 'Sleep', 'Immunity', 'Stress', 'Digestion']}] },
-            { id: 'check_food_interaction', name: 'Interaction Checker', desc: 'Check if foods clash.', inputs: [{k:'item1', l:'Item A', p:'Grapefruit'}, {k:'item2', l:'Item B', p:'Medication'}] },
-            { id: 'recipe_variation', name: 'Recipe Variator', desc: 'Modify a recipe.', inputs: [{k:'recipe', l:'Original Recipe', p:'Lasagna'}, {k:'type', l:'Variation Type', p:'Keto', options: ['Keto', 'Vegan', 'Paleo', 'Low-Carb', 'Gluten-Free']}] },
-            { id: 'flavor_pairing', name: 'Flavor Pairer', desc: 'Find matching flavors.', inputs: [{k:'ingredient', l:'Ingredient', p:'Salmon'}] },
-            { id: 'quick_snack', name: 'Snack Generator', desc: 'Get a quick snack idea.', inputs: [{k:'preference', l:'Preference', p:'Savory', options: ['Savory', 'Sweet', 'Crunchy', 'High Protein', 'Low Calorie']}] },
-            { id: 'hydration_tip', name: 'Hydration Coach', desc: 'Tips for hydration.', inputs: [{k:'activity', l:'Activity Level', p:'High Intensity', options: ['Sedentary', 'Light Activity', 'Moderate Activity', 'High Intensity', 'Athlete']}] },
-            { id: 'mood_food', name: 'Mood Food', desc: 'Food for your mood.', inputs: [{k:'mood', l:'Current Mood', p:'Stressed', options: ['Stressed', 'Happy', 'Sad', 'Anxious', 'Tired', 'Energetic']}] },
-            { id: 'energy_booster', name: 'Energy Booster', desc: 'Natural energy sources.', inputs: [{k:'context', l:'Context', p:'Afternoon Slump', options: ['Morning', 'Afternoon Slump', 'Pre-Workout', 'Late Night']}] },
-            { id: 'recovery_meal', name: 'Recovery Meal', desc: 'Post-workout fuel.', inputs: [{k:'workout', l:'Workout Type', p:'Heavy Lifting', options: ['Heavy Lifting', 'Cardio', 'HIIT', 'Yoga', 'Sports']}] },
-            { id: 'sleep_aid', name: 'Sleep Aid', desc: 'Foods to help sleep.', inputs: [{k:'issue', l:'Sleep Issue', p:'Trouble Falling Asleep', options: ['Trouble Falling Asleep', 'Waking Up Frequently', 'Light Sleeper', 'Insomnia']}] },
-            { id: 'digestive_aid', name: 'Digestive Helper', desc: 'Foods for digestion.', inputs: [{k:'symptom', l:'Symptom', p:'Bloating', options: ['Bloating', 'Indigestion', 'Nausea', 'Heartburn', 'Constipation']}] },
-            { id: 'immunity_booster', name: 'Immunity Boost', desc: 'Boost your immune system.', inputs: [{k:'season', l:'Season/Context', p:'Flu Season', options: ['Flu Season', 'Winter', 'Spring', 'Traveling', 'Stressful Period']}] },
-            { id: 'anti_inflammatory', name: 'Inflammation Fighter', desc: 'Reduce inflammation.', inputs: [{k:'condition', l:'Concern', p:'General', options: ['General', 'Joint Pain', 'Gut Health', 'Skin Issues', 'Headaches']}] },
-            { id: 'antioxidant_rich', name: 'Antioxidant Finder', desc: 'Find rich foods.', inputs: [{k:'preference', l:'Preference', p:'Berries', options: ['Berries', 'Vegetables', 'Nuts', 'Teas', 'Spices']}] },
-            { id: 'low_gi_option', name: 'Low GI Swap', desc: 'Stable blood sugar.', inputs: [{k:'food', l:'High GI Food', p:'White Rice'}] },
-            { id: 'high_protein_option', name: 'Protein Swap', desc: 'More protein.', inputs: [{k:'food', l:'Original Food', p:'Oatmeal'}] },
-            { id: 'fiber_rich_option', name: 'Fiber Boost', desc: 'Add more fiber.', inputs: [{k:'food', l:'Original Food', p:'White Bread'}] },
-            { id: 'seasonal_swap', name: 'Seasonal Swap', desc: 'Eat seasonally.', inputs: [{k:'ingredient', l:'Ingredient', p:'Strawberries'}, {k:'season', l:'Current Season', p:'Winter', options: ['Spring', 'Summer', 'Autumn', 'Winter']}] },
-            { id: 'budget_swap', name: 'Budget Saver', desc: 'Save money.', inputs: [{k:'ingredient', l:'Expensive Ingredient', p:'Pine Nuts'}] },
-            { id: 'leftover_idea', name: 'Leftover Alchemist', desc: 'Use up leftovers.', inputs: [{k:'food', l:'Leftover Item', p:'Rotisserie Chicken'}] },
-            { id: 'stress_relief', name: 'Stress Relief', desc: 'Techniques to calm down.', inputs: [{k:'context', l:'Context', p:'Work Stress', options: ['Work Stress', 'Anxiety', 'Overwhelmed', 'Panic', 'Insomnia']}] },
-            { id: 'focus_technique', name: 'Focus Mode', desc: 'Boost your concentration.', inputs: [{k:'task', l:'Task Type', p:'Deep Work', options: ['Deep Work', 'Studying', 'Creative Work', 'Admin Tasks', 'Reading']}] },
-            { id: 'exercise_alternative', name: 'Exercise Swap', desc: 'Find an alternative exercise.', inputs: [{k:'exercise', l:'Exercise', p:'Running'}, {k:'reason', l:'Reason', p:'Knee Pain', options: ['Knee Pain', 'Back Pain', 'No Equipment', 'Boredom', 'Time Constraint']}] },
+            { id: 'suggest_supplement', category: 'Wellness', name: 'Supplement Advisor', desc: 'Get supplement recommendations.', inputs: [{k:'focus', l:'Focus', p:'Joint Health', options: ['Joint Health', 'Energy', 'Sleep', 'Immunity', 'Stress', 'Digestion']}] },
+            { id: 'check_food_interaction', category: 'Nutrition', name: 'Interaction Checker', desc: 'Check if foods clash.', inputs: [{k:'item1', l:'Item A', p:'Grapefruit'}, {k:'item2', l:'Item B', p:'Medication'}] },
+            { id: 'recipe_variation', category: 'Nutrition', name: 'Recipe Variator', desc: 'Modify a recipe.', inputs: [{k:'recipe', l:'Original Recipe', p:'Lasagna'}, {k:'type', l:'Variation Type', p:'Keto', options: ['Keto', 'Vegan', 'Paleo', 'Low-Carb', 'Gluten-Free']}] },
+            { id: 'flavor_pairing', category: 'Nutrition', name: 'Flavor Pairer', desc: 'Find matching flavors.', inputs: [{k:'ingredient', l:'Ingredient', p:'Salmon'}] },
+            { id: 'quick_snack', category: 'Nutrition', name: 'Snack Generator', desc: 'Get a quick snack idea.', inputs: [{k:'preference', l:'Preference', p:'Savory', options: ['Savory', 'Sweet', 'Crunchy', 'High Protein', 'Low Calorie']}] },
+            { id: 'hydration_tip', category: 'Wellness', name: 'Hydration Coach', desc: 'Tips for hydration.', inputs: [{k:'activity', l:'Activity Level', p:'High Intensity', options: ['Sedentary', 'Light Activity', 'Moderate Activity', 'High Intensity', 'Athlete']}] },
+            { id: 'mood_food', category: 'Nutrition', name: 'Mood Food', desc: 'Food for your mood.', inputs: [{k:'mood', l:'Current Mood', p:'Stressed', options: ['Stressed', 'Happy', 'Sad', 'Anxious', 'Tired', 'Energetic']}] },
+            { id: 'energy_booster', category: 'Wellness', name: 'Energy Booster', desc: 'Natural energy sources.', inputs: [{k:'context', l:'Context', p:'Afternoon Slump', options: ['Morning', 'Afternoon Slump', 'Pre-Workout', 'Late Night']}] },
+            { id: 'recovery_meal', category: 'Performance', name: 'Recovery Meal', desc: 'Post-workout fuel.', inputs: [{k:'workout', l:'Workout Type', p:'Heavy Lifting', options: ['Heavy Lifting', 'Cardio', 'HIIT', 'Yoga', 'Sports']}] },
+            { id: 'sleep_aid', category: 'Wellness', name: 'Sleep Aid', desc: 'Foods to help sleep.', inputs: [{k:'issue', l:'Sleep Issue', p:'Trouble Falling Asleep', options: ['Trouble Falling Asleep', 'Waking Up Frequently', 'Light Sleeper', 'Insomnia']}] },
+            { id: 'digestive_aid', category: 'Wellness', name: 'Digestive Helper', desc: 'Foods for digestion.', inputs: [{k:'symptom', l:'Symptom', p:'Bloating', options: ['Bloating', 'Indigestion', 'Nausea', 'Heartburn', 'Constipation']}] },
+            { id: 'immunity_booster', category: 'Wellness', name: 'Immunity Boost', desc: 'Boost your immune system.', inputs: [{k:'season', l:'Season/Context', p:'Flu Season', options: ['Flu Season', 'Winter', 'Spring', 'Traveling', 'Stressful Period']}] },
+            { id: 'anti_inflammatory', category: 'Wellness', name: 'Inflammation Fighter', desc: 'Reduce inflammation.', inputs: [{k:'condition', l:'Concern', p:'General', options: ['General', 'Joint Pain', 'Gut Health', 'Skin Issues', 'Headaches']}] },
+            { id: 'antioxidant_rich', category: 'Wellness', name: 'Antioxidant Finder', desc: 'Find rich foods.', inputs: [{k:'preference', l:'Preference', p:'Berries', options: ['Berries', 'Vegetables', 'Nuts', 'Teas', 'Spices']}] },
+            { id: 'low_gi_option', category: 'Nutrition', name: 'Low GI Swap', desc: 'Stable blood sugar.', inputs: [{k:'food', l:'High GI Food', p:'White Rice'}] },
+            { id: 'high_protein_option', category: 'Nutrition', name: 'Protein Swap', desc: 'More protein.', inputs: [{k:'food', l:'Original Food', p:'Oatmeal'}] },
+            { id: 'fiber_rich_option', category: 'Nutrition', name: 'Fiber Boost', desc: 'Add more fiber.', inputs: [{k:'food', l:'Original Food', p:'White Bread'}] },
+            { id: 'seasonal_swap', category: 'Nutrition', name: 'Seasonal Swap', desc: 'Eat seasonally.', inputs: [{k:'ingredient', l:'Ingredient', p:'Strawberries'}, {k:'season', l:'Current Season', p:'Winter', options: ['Spring', 'Summer', 'Autumn', 'Winter']}] },
+            { id: 'budget_swap', category: 'Nutrition', name: 'Budget Saver', desc: 'Save money.', inputs: [{k:'ingredient', l:'Expensive Ingredient', p:'Pine Nuts'}] },
+            { id: 'leftover_idea', category: 'Nutrition', name: 'Leftover Alchemist', desc: 'Use up leftovers.', inputs: [{k:'food', l:'Leftover Item', p:'Rotisserie Chicken'}] },
+            { id: 'stress_relief', category: 'Wellness', name: 'Stress Relief', desc: 'Techniques to calm down.', inputs: [{k:'context', l:'Context', p:'Work Stress', options: ['Work Stress', 'Anxiety', 'Overwhelmed', 'Panic', 'Insomnia']}] },
+            { id: 'focus_technique', category: 'Performance', name: 'Focus Mode', desc: 'Boost your concentration.', inputs: [{k:'task', l:'Task Type', p:'Deep Work', options: ['Deep Work', 'Studying', 'Creative Work', 'Admin Tasks', 'Reading']}] },
+            { id: 'exercise_alternative', category: 'Performance', name: 'Exercise Swap', desc: 'Find an alternative exercise.', inputs: [{k:'exercise', l:'Exercise', p:'Running'}, {k:'reason', l:'Reason', p:'Knee Pain', options: ['Knee Pain', 'Back Pain', 'No Equipment', 'Boredom', 'Time Constraint']}] },
+        ],
+
+        fitnessTools: [
+             { id: 'calculate_1rm', name: '1 Rep Max Calc', desc: 'Estimate your max strength.', inputs: [{k:'weight', l:'Weight (kg/lbs)', p:'100'}, {k:'reps', l:'Reps', p:'5'}] },
+             { id: 'heart_rate_zones', name: 'HR Zone Calc', desc: 'Find your training zones.', inputs: [{k:'age', l:'Age', p:'30'}, {k:'resting_hr', l:'Resting HR', p:'60'}] },
+             { id: 'exercise_form_check', name: 'Form Check', desc: 'Key cues for safety.', inputs: [{k:'exercise', l:'Exercise', p:'Deadlift'}] },
         ],
 
         // --- 13. LIFESTYLE QUESTIONS ---
@@ -121,6 +136,8 @@ document.addEventListener('alpine:init', () => {
             // Basics
             { id: 'gender', title: 'Biological Sex', desc: 'For metabolic calculation accuracy.', options: [{text:'Male', icon:'👨'}, {text:'Female', icon:'👩'}] },
             { id: 'age', title: 'Age Group', desc: 'Helps tailor nutritional needs.', options: [{text:'18-29', icon:'🎓'}, {text:'30-39', icon:'💼'}, {text:'40-49', icon:'🏡'}, {text:'50-59', icon:'👓'}, {text:'60+', icon:'👴'}] },
+            { id: 'weight', title: 'Weight (approx)', desc: 'For BMI and Caloric needs.', options: [{text:'< 60kg', icon:'🪶'}, {text:'60-75kg', icon:'⚖️'}, {text:'75-90kg', icon:'🏋️'}, {text:'90-105kg', icon:'💪'}, {text:'105kg+', icon:'🦍'}] },
+            { id: 'height', title: 'Height (approx)', desc: 'For BMI calculation.', options: [{text:'< 160cm', icon:'📏'}, {text:'160-170cm', icon:'📐'}, {text:'170-180cm', icon:'🧍'}, {text:'180-190cm', icon:'🏀'}, {text:'190cm+', icon:'🦒'}] },
 
             // Fitness & Health
             { id: 'activity', title: 'Activity Level', desc: 'Your daily energy expenditure?', options: [{text:'Sedentary (Desk Job)', icon:'🪑'}, {text:'Light (Walks)', icon:'🚶'}, {text:'Moderate (3-4x Gym)', icon:'🏃'}, {text:'Active (Daily Train)', icon:'🏋️'}, {text:'Athlete (2x Day)', icon:'🏅'}] },
@@ -145,6 +162,16 @@ document.addEventListener('alpine:init', () => {
             { id: 'cooking_skill', title: 'Cooking Skill', desc: 'Kitchen confidence?', options: [{text:'Beginner', icon:'👶'}, {text:'Intermediate', icon:'🍳'}, {text:'Advanced / Pro', icon:'👨‍🍳'}, {text:'Microwave Only', icon:'📠'}] },
             { id: 'motivation', title: 'Primary Motivation', desc: 'What drives you?', options: [{text:'Look Good', icon:'💅'}, {text:'Feel Good / Energy', icon:'⚡'}, {text:'Longevity', icon:'🐢'}, {text:'Mental Clarity', icon:'🧠'}, {text:'Athletic Performance', icon:'🏅'}] }
         ],
+
+        getGroupedTools() {
+            const groups = {};
+            this.tools.forEach(tool => {
+                const cat = tool.category || 'Other';
+                if(!groups[cat]) groups[cat] = [];
+                groups[cat].push(tool);
+            });
+            return groups;
+        },
 
         // --- LIFECYCLE ---
         init() {
@@ -377,6 +404,7 @@ document.addEventListener('alpine:init', () => {
                         body: JSON.stringify({
                             token: this.token,
                             strategy_name: strategyName,
+                            fitness_strategy: this.selectedFitnessStrategy?.title || strategyName,
                             lifestyle: this.userChoices
                         })
                     })
@@ -415,6 +443,30 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        async openFitnessWizard() {
+            this.fitnessWizardOpen = true;
+            this.fitnessStrategies = [];
+            this.startLoading(['Analyzing Physique...', 'Designing Splits...']);
+            try {
+                const res = await fetch('/propose_fitness_strategies', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ token: this.token, lifestyle: this.userChoices })
+                });
+                this.fitnessStrategies = await res.json();
+            } catch(e) {
+                this.notify("AI Trainer Offline", "error");
+                this.fitnessWizardOpen = false;
+            } finally {
+                this.stopLoading();
+            }
+        },
+
+        async selectFitnessStrategy(strat) {
+            this.fitnessWizardOpen = false;
+            this.selectedFitnessStrategy = strat;
+            await this.generateWorkoutOnly();
+        },
+
         async generateWorkoutOnly() {
             this.startLoading(['Analyzing Physique...', 'Designing Hypertrophy...', 'Scheduling Rest...']);
             try {
@@ -423,6 +475,7 @@ document.addEventListener('alpine:init', () => {
                     body: JSON.stringify({
                         token: this.token,
                         strategy_name: 'Reshuffle',
+                        fitness_strategy: this.selectedFitnessStrategy?.title || 'Personalized Split',
                         lifestyle: this.userChoices
                     })
                 });
@@ -439,6 +492,43 @@ document.addEventListener('alpine:init', () => {
             } finally {
                 this.stopLoading();
             }
+        },
+
+        // --- NUTRITION EXTRAS ---
+        getNutritionTools() {
+            return this.tools.filter(t => this.nutritionToolIds.includes(t.id));
+        },
+
+        openAddMealModal(day) {
+            this.customMealDate = day;
+            this.customMealForm = { title: '', calories: '', protein: '', carbs: '', fats: '', type: 'Snack' };
+            this.customMealModalOpen = true;
+        },
+
+        addCustomMeal() {
+             const dateStr = this.customMealDate.date || this.customMealDate.fullDate;
+             const dayIndex = this.calendarDays.findIndex(d => d.fullDate === dateStr);
+             if (dayIndex === -1 || !this.weekPlan[dayIndex]) return;
+
+             const meal = {
+                 ...this.customMealForm,
+                 completed: false,
+                 benefit: 'Custom Entry'
+             };
+
+             this.weekPlan[dayIndex].meals.push(meal);
+
+             // Update totals
+             const currentTotals = this.weekPlan[dayIndex].total_macros;
+             const parseVal = (str) => parseInt(String(str).replace(/\D/g, '')) || 0;
+
+             currentTotals.calories = parseVal(currentTotals.calories) + parseVal(meal.calories);
+             currentTotals.protein = (parseVal(currentTotals.protein) + parseVal(meal.protein)) + 'g';
+             currentTotals.carbs = (parseVal(currentTotals.carbs) + parseVal(meal.carbs)) + 'g';
+             currentTotals.fats = (parseVal(currentTotals.fats) + parseVal(meal.fats)) + 'g';
+
+             this.customMealModalOpen = false;
+             this.notify("Meal Added");
         },
 
         // --- CHAT ---

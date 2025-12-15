@@ -89,67 +89,81 @@ FALLBACK_WORKOUT_PLAN = [
     {
         "day": "Mon",
         "focus": "Full Body Strength",
+        "warmup": ["5 min Jog", "Shoulder Circles", "Bodyweight Squats"],
         "exercises": [
-            {"name": "Squats", "sets": "3", "reps": "12", "rest": "60s", "tip": "Keep weight in heels"},
-            {"name": "Pushups", "sets": "3", "reps": "15", "rest": "45s", "tip": "Core tight"},
-            {"name": "Dumbbell Rows", "sets": "3", "reps": "12", "rest": "60s", "tip": "Squeeze back"}
+            {"name": "Squats", "sets": "3", "reps": "12", "rpe": "8", "rest": "60s", "tip": "Keep weight in heels"},
+            {"name": "Pushups", "sets": "3", "reps": "15", "rpe": "8", "rest": "45s", "tip": "Core tight"},
+            {"name": "Dumbbell Rows", "sets": "3", "reps": "12", "rpe": "8", "rest": "60s", "tip": "Squeeze back"}
         ],
+        "cooldown": ["Static Stretching", "Foam Roll"],
         "benefit": "Metabolic Boost"
     },
     {
         "day": "Tue",
         "focus": "Active Recovery",
+        "warmup": ["5 min Walk"],
         "exercises": [
-            {"name": "Light Jog", "sets": "1", "reps": "30m", "rest": "-", "tip": "Zone 2 Heart Rate"},
-            {"name": "Stretching", "sets": "1", "reps": "15m", "rest": "-", "tip": "Focus on hips"}
+            {"name": "Light Jog", "sets": "1", "reps": "30m", "rpe": "4", "rest": "-", "tip": "Zone 2 Heart Rate"},
+            {"name": "Stretching", "sets": "1", "reps": "15m", "rpe": "2", "rest": "-", "tip": "Focus on hips"}
         ],
+        "cooldown": ["Deep Breathing"],
         "benefit": "Blood Flow"
     },
     {
         "day": "Wed",
         "focus": "Lower Body Power",
+        "warmup": ["High Knees", "Glute Bridges"],
         "exercises": [
-            {"name": "Lunges", "sets": "3", "reps": "12/leg", "rest": "60s", "tip": "Knee tracking over toe"},
-            {"name": "Glute Bridge", "sets": "3", "reps": "15", "rest": "45s", "tip": "Squeeze at top"},
-            {"name": "Calf Raises", "sets": "3", "reps": "20", "rest": "30s", "tip": "Full range"}
+            {"name": "Lunges", "sets": "3", "reps": "12/leg", "rpe": "8", "rest": "60s", "tip": "Knee tracking over toe"},
+            {"name": "Glute Bridge", "sets": "3", "reps": "15", "rpe": "9", "rest": "45s", "tip": "Squeeze at top"},
+            {"name": "Calf Raises", "sets": "3", "reps": "20", "rpe": "9", "rest": "30s", "tip": "Full range"}
         ],
+        "cooldown": ["Hamstring Stretch", "Quad Stretch"],
         "benefit": "Leg Strength"
     },
     {
         "day": "Thu",
         "focus": "Core & Stability",
+        "warmup": ["Cat-Cow", "Bird-Dog"],
         "exercises": [
-            {"name": "Plank", "sets": "3", "reps": "45s", "rest": "30s", "tip": "Don't sag hips"},
-            {"name": "Bird-Dog", "sets": "3", "reps": "12/side", "rest": "30s", "tip": "Slow control"},
-            {"name": "Side Plank", "sets": "2", "reps": "30s/side", "rest": "30s", "tip": "Lift hips high"}
+            {"name": "Plank", "sets": "3", "reps": "45s", "rpe": "9", "rest": "30s", "tip": "Don't sag hips"},
+            {"name": "Dead Bug", "sets": "3", "reps": "12/side", "rpe": "7", "rest": "30s", "tip": "Keep lower back flat"},
+            {"name": "Side Plank", "sets": "2", "reps": "30s/side", "rpe": "8", "rest": "30s", "tip": "Lift hips high"}
         ],
+        "cooldown": ["Child's Pose"],
         "benefit": "Core Stability"
     },
     {
         "day": "Fri",
         "focus": "HIIT",
+        "warmup": ["Jumping Jacks", "Arm Swings"],
         "exercises": [
-            {"name": "Burpees", "sets": "4", "reps": "30s", "rest": "30s", "tip": "Explosive movement"},
-            {"name": "Mountain Climbers", "sets": "4", "reps": "30s", "rest": "30s", "tip": "Fast pace"},
-            {"name": "Jump Squats", "sets": "4", "reps": "30s", "rest": "30s", "tip": "Soft landing"}
+            {"name": "Burpees", "sets": "4", "reps": "30s", "rpe": "10", "rest": "30s", "tip": "Explosive movement"},
+            {"name": "Mountain Climbers", "sets": "4", "reps": "30s", "rpe": "9", "rest": "30s", "tip": "Fast pace"},
+            {"name": "Jump Squats", "sets": "4", "reps": "30s", "rpe": "10", "rest": "30s", "tip": "Soft landing"}
         ],
+        "cooldown": ["Slow Walk", "Full Body Stretch"],
         "benefit": "Fat Burning"
     },
     {
         "day": "Sat",
         "focus": "Outdoor Activity",
+        "warmup": ["Dynamic Warmup"],
         "exercises": [
-            {"name": "Hiking / Cycling", "sets": "1", "reps": "60m", "rest": "-", "tip": "Enjoy nature"}
+            {"name": "Hiking / Cycling", "sets": "1", "reps": "60m", "rpe": "6", "rest": "-", "tip": "Enjoy nature"}
         ],
+        "cooldown": ["Hydrate"],
         "benefit": "Mental Health"
     },
     {
         "day": "Sun",
         "focus": "Rest & Restore",
+        "warmup": ["None"],
         "exercises": [
-            {"name": "Meditation", "sets": "1", "reps": "10m", "rest": "-", "tip": "Focus on breath"},
-            {"name": "Foam Rolling", "sets": "1", "reps": "15m", "rest": "-", "tip": "Target sore spots"}
+            {"name": "Meditation", "sets": "1", "reps": "10m", "rpe": "1", "rest": "-", "tip": "Focus on breath"},
+            {"name": "Foam Rolling", "sets": "1", "reps": "15m", "rpe": "3", "rest": "-", "tip": "Target sore spots"}
         ],
+        "cooldown": ["Nap"],
         "benefit": "Recovery"
     }
 ]
@@ -202,6 +216,10 @@ def init_context():
         "patient_name": "User",
         "health_score": 78,
         "summary": "Short overall health summary.",
+        "biomarkers": [
+            {{ "name": "Vitamin D", "value": "18", "unit": "ng/mL", "status": "Low" }},
+            {{ "name": "Hemoglobin", "value": "14.5", "unit": "g/dL", "status": "Normal" }}
+        ],
         "issues": [
             {{
                 "title": "Low Vitamin D",
@@ -224,6 +242,12 @@ def init_context():
             "patient_name": "Guest",
             "health_score": 75,
             "summary": "We detected some potential optimizations for your metabolism.",
+            "biomarkers": [
+                {"name": "Glucose", "value": "95", "unit": "mg/dL", "status": "Normal"},
+                {"name": "HbA1c", "value": "5.7", "unit": "%", "status": "Borderline"},
+                {"name": "Cholesterol", "value": "190", "unit": "mg/dL", "status": "Normal"},
+                {"name": "Vitamin D", "value": "30", "unit": "ng/mL", "status": "Normal"}
+            ],
             "strategies": [
                 {"name": "Metabolic Reset", "desc": "Focus on insulin sensitivity and inflammation reduction."},
                 {"name": "Energy Optimization", "desc": "Targeting mitochondrial health and fatigue."},
@@ -327,8 +351,9 @@ def generate_workout():
     session = get_session(data.get('token'))
     strategy = data.get('strategy_name', 'General')
     lifestyle = data.get('lifestyle', {})
+    fitness_strategy = data.get('fitness_strategy', strategy) # Use specific fitness strategy if available
 
-    logger.info(f"💪 Generating Workout for: {strategy}")
+    logger.info(f"💪 Generating Workout for: {fitness_strategy}")
 
     prompt = f"""
     ROLE: Elite Personal Trainer.
@@ -344,13 +369,27 @@ def generate_workout():
     - LIMITATIONS: {lifestyle.get('limitations', 'None')}
     - EQUIPMENT: {lifestyle.get('equipment', 'Basic Home Gym')}
 
-    STRATEGY FOCUS: {strategy}
+    STRATEGY FOCUS: {fitness_strategy}
 
     TASK: Create a 7-day workout schedule.
-    Format: JSON Array: [{{ "day": "Mon", "focus": "Cardio", "exercises": [{{ "name": "Run", "sets": "1", "reps": "30m", "rest": "-", "tip": "Zone 2" }}], "benefit": "Heart" }}]
+    Include Warmup, Main Workout, and Cooldown.
+
+    Format: JSON Array:
+    [
+        {{
+            "day": "Mon",
+            "focus": "Upper Body",
+            "warmup": ["Arm Circles", "Band Pull Aparts"],
+            "exercises": [
+                {{ "name": "Bench Press", "sets": "3", "reps": "8", "rpe": "8", "rest": "90s", "tip": "Retract scapula" }}
+            ],
+            "cooldown": ["Chest Stretch"],
+            "benefit": "Strength"
+        }}
+    ]
     """
 
-    plan = query_ollama(prompt, system_instruction="You are a Trainer.", temperature=0.1)
+    plan = query_ollama(prompt, system_instruction="You are a Trainer. Return JSON Array only.", temperature=0.1)
 
     if not plan or not isinstance(plan, list) or len(plan) == 0:
         logger.warning("❌ AI WORKOUT FAILED. Using Fallback.")
@@ -438,6 +477,43 @@ def propose_meal_strategies():
              "pros": "Easy to stick to"},
             {"id": "quick", "title": "High Performance", "desc": "Nutrient dense meals for high energy.",
              "pros": "Best for Focus"}
+        ]
+
+    return jsonify(strategies)
+
+
+@main_bp.route('/propose_fitness_strategies', methods=['POST'])
+def propose_fitness_strategies():
+    data = request.json
+    session = get_session(data.get('token'))
+    summary = session.get('blood_context', {}).get('summary', 'General Health')
+    lifestyle = data.get('lifestyle', {})
+
+    prompt = f"""
+    ROLE: Elite Strength & Conditioning Coach.
+    CLIENT GOAL: {lifestyle.get('goal', 'General Fitness')}
+    SUMMARY: {summary}
+
+    TASK: Propose 3 distinct training strategies.
+    1. "Hypertrophy": Muscle building focus.
+    2. "Metabolic Conditioning": Fat loss/endurance.
+    3. "Functional Strength": Mobility and real-world strength.
+
+    OUTPUT: JSON Array only.
+    [
+        {{ "id": "build", "title": "Hypertrophy Focus", "desc": "High volume for max muscle growth.", "pros": "Aesthetics" }},
+        {{ "id": "burn", "title": "Metabolic Burn", "desc": "High intensity intervals.", "pros": "Fat Loss" }},
+        {{ "id": "move", "title": "Functional Flow", "desc": "Movement quality and joint health.", "pros": "Longevity" }}
+    ]
+    """
+
+    strategies = query_ollama(prompt, system_instruction="Return JSON Array only.", temperature=0.4)
+
+    if not strategies or not isinstance(strategies, list):
+        strategies = [
+            {"id": "build", "title": "Hypertrophy Protocol", "desc": "Optimized for muscle growth and definition.", "pros": "Max Strength"},
+            {"id": "burn", "title": "Metabolic Burn", "desc": "High intensity circuit training for fat loss.", "pros": "Fat Loss"},
+            {"id": "move", "title": "Functional Athlete", "desc": "Focus on mobility, stability, and real-world power.", "pros": "Pain Free"}
         ]
 
     return jsonify(strategies)

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioFlow AI - Decode Your Biology</title>
+
+    <!-- Tailwind & Alpine -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link href="/static/css/style.css" rel="stylesheet">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            blue: '#3b82f6',
+                            purple: '#8b5cf6',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#050505] text-white selection:bg-blue-500/30 overflow-x-hidden">
+
+    <!-- Ambient Background -->
+    <div class="fixed inset-0 pointer-events-none z-0">
+        <div class="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] animate-breathe"></div>
+        <div class="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[100px]"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 backdrop-blur-md border-b border-white/5 bg-black/50">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center font-bold">B</div>
+                <span class="font-bold text-xl tracking-tight">BioFlow AI</span>
+            </div>
+
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-white/60">
+                <a href="#how-it-works" class="hover:text-white transition">How it Works</a>
+                <a href="#features" class="hover:text-white transition">Features</a>
+                <a href="#privacy" class="hover:text-white transition">Privacy</a>
+            </div>
+
+            <div>
+                {% if logged_in %}
+                    <a href="/dashboard" class="px-6 py-2.5 rounded-full bg-white text-black font-bold text-sm hover:bg-gray-200 transition shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                        Dashboard →
+                    </a>
+                {% else %}
+                    <a href="/login" class="px-6 py-2.5 rounded-full bg-white/10 text-white font-bold text-sm hover:bg-white/20 transition border border-white/10">
+                        Login
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative z-10 min-h-screen flex flex-col items-center justify-center pt-20 px-6 text-center">
+        <div class="scroll-reveal delay-100">
+            <div class="inline-block px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-widest mb-8">
+                Local AI Health Intelligence
+            </div>
+            <h1 class="text-6xl md:text-8xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/40 max-w-5xl mx-auto leading-[1.1]">
+                Decode Your <br> Biology.
+            </h1>
+            <p class="text-xl md:text-2xl text-white/50 max-w-2xl mx-auto mb-10 leading-relaxed">
+                Transform raw bloodwork data into hyper-personalized nutrition and fitness protocols using private, local AI agents.
+            </p>
+
+            <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+                {% if logged_in %}
+                    <a href="/dashboard" class="px-8 py-4 rounded-full bg-blue-600 text-white font-bold text-lg hover:bg-blue-500 transition shadow-[0_0_40px_rgba(59,130,246,0.4)] hover:scale-105 transform duration-200">
+                        Go to Dashboard
+                    </a>
+                {% else %}
+                    <a href="/login" class="px-8 py-4 rounded-full bg-white text-black font-bold text-lg hover:bg-gray-200 transition shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:scale-105 transform duration-200">
+                        Get Started
+                    </a>
+                    <a href="#how-it-works" class="px-8 py-4 rounded-full bg-white/5 text-white font-bold text-lg hover:bg-white/10 transition border border-white/10">
+                        Learn More
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Hero Visual / Mockup -->
+        <div class="mt-20 scroll-reveal delay-300 w-full max-w-5xl relative">
+            <div class="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-[40px] blur opacity-20"></div>
+            <div class="glass-panel rounded-[40px] p-2 border border-white/10 relative overflow-hidden aspect-[16/9] md:aspect-[21/9] flex items-center justify-center bg-[#0A0A0A]">
+                <!-- Abstract UI Representation -->
+                <div class="absolute inset-0 flex">
+                     <div class="w-1/3 border-r border-white/5 p-8 flex flex-col gap-4">
+                         <div class="w-12 h-12 rounded-full bg-white/10 mb-4"></div>
+                         <div class="h-4 w-3/4 bg-white/10 rounded"></div>
+                         <div class="h-4 w-1/2 bg-white/10 rounded"></div>
+                         <div class="h-32 w-full bg-white/5 rounded-xl mt-4 border border-white/5"></div>
+                     </div>
+                     <div class="w-2/3 p-8 flex flex-col gap-6">
+                         <div class="flex justify-between">
+                             <div class="h-8 w-1/3 bg-white/10 rounded"></div>
+                             <div class="h-8 w-8 rounded-full bg-blue-500"></div>
+                         </div>
+                         <div class="grid grid-cols-3 gap-4">
+                             <div class="h-24 bg-blue-500/10 rounded-xl border border-blue-500/20"></div>
+                             <div class="h-24 bg-white/5 rounded-xl border border-white/5"></div>
+                             <div class="h-24 bg-white/5 rounded-xl border border-white/5"></div>
+                         </div>
+                         <div class="flex-1 bg-white/5 rounded-xl border border-white/5 p-6 flex items-center justify-center">
+                             <div class="text-white/20 font-mono text-sm">Initializing Bio-Scan Protocol...</div>
+                         </div>
+                     </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- The Problem Section -->
+    <section class="py-32 px-6 relative z-10">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                <div class="scroll-reveal">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-6">The Gap in Your Health Data</h2>
+                    <p class="text-white/60 text-lg leading-relaxed mb-8">
+                        Traditional medicine gives you a PDF with numbers. Generic fitness apps give you cookie-cutter plans.
+                        <br><br>
+                        There is a massive disconnect between your <strong>biological reality</strong> and your <strong>daily choices</strong>. You have the data, but no way to decode it.
+                    </p>
+                    <ul class="space-y-4">
+                        <li class="flex items-center gap-4 text-white/80">
+                            <span class="w-6 h-6 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center text-xs">✕</span>
+                            Confusing medical jargon
+                        </li>
+                        <li class="flex items-center gap-4 text-white/80">
+                            <span class="w-6 h-6 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center text-xs">✕</span>
+                            Generic "eat healthy" advice
+                        </li>
+                        <li class="flex items-center gap-4 text-white/80">
+                            <span class="w-6 h-6 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center text-xs">✕</span>
+                            Privacy concerns with cloud AI
+                        </li>
+                    </ul>
+                </div>
+                <div class="scroll-reveal delay-200">
+                    <div class="glass-card p-10 rounded-[32px] relative">
+                        <div class="absolute top-10 right-10 w-20 h-20 bg-red-500/20 blur-[40px] rounded-full"></div>
+                        <div class="font-mono text-sm text-white/40 mb-2">INPUT: BLOOD_PANEL.PDF</div>
+                        <div class="h-px w-full bg-white/10 mb-6"></div>
+                        <div class="space-y-3 font-mono text-sm">
+                            <div class="flex justify-between text-red-400">
+                                <span>Vitamin D</span>
+                                <span>18 ng/mL (LOW)</span>
+                            </div>
+                            <div class="flex justify-between text-white/60">
+                                <span>Cholesterol</span>
+                                <span>190 mg/dL</span>
+                            </div>
+                            <div class="flex justify-between text-yellow-400">
+                                <span>Ferritin</span>
+                                <span>30 ng/mL (Borderline)</span>
+                            </div>
+                        </div>
+                        <div class="mt-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-300 text-sm">
+                            ⚠ Analysis Required: What should I eat to fix this?
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="py-32 px-6 bg-white/5 relative z-10 border-y border-white/5">
+        <div class="max-w-7xl mx-auto text-center">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4 scroll-reveal">The BioFlow Protocol</h2>
+            <p class="text-white/50 mb-20 scroll-reveal">Three steps to optimize your biology.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Step 1 -->
+                <div class="scroll-reveal delay-100 group">
+                    <div class="glass-card p-8 rounded-[32px] h-full hover:bg-white/10 transition duration-500">
+                        <div class="w-16 h-16 rounded-2xl bg-blue-600/20 text-blue-400 flex items-center justify-center text-2xl font-bold mb-6 group-hover:scale-110 transition">1</div>
+                        <h3 class="text-2xl font-bold mb-4">Ingest Data</h3>
+                        <p class="text-white/60 leading-relaxed">
+                            Upload your raw bloodwork PDF. Our local AI parses complex medical data securely on your machine.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="scroll-reveal delay-200 group">
+                    <div class="glass-card p-8 rounded-[32px] h-full hover:bg-white/10 transition duration-500">
+                        <div class="w-16 h-16 rounded-2xl bg-purple-600/20 text-purple-400 flex items-center justify-center text-2xl font-bold mb-6 group-hover:scale-110 transition">2</div>
+                        <h3 class="text-2xl font-bold mb-4">RAG Analysis</h3>
+                        <p class="text-white/60 leading-relaxed">
+                            Retrieval-Augmented Generation (RAG) compares your biomarkers against thousands of clinical protocols to find the root cause.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="scroll-reveal delay-300 group">
+                    <div class="glass-card p-8 rounded-[32px] h-full hover:bg-white/10 transition duration-500">
+                        <div class="w-16 h-16 rounded-2xl bg-green-600/20 text-green-400 flex items-center justify-center text-2xl font-bold mb-6 group-hover:scale-110 transition">3</div>
+                        <h3 class="text-2xl font-bold mb-4">Execute Plan</h3>
+                        <p class="text-white/60 leading-relaxed">
+                            Receive a hyper-personalized meal plan and fitness strategy designed specifically to fix your deficiencies.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="py-32 px-6 relative z-10">
+        <div class="max-w-7xl mx-auto">
+            <div class="mb-20">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 scroll-reveal">Engineered for Health</h2>
+                <div class="h-1 w-20 bg-blue-600 rounded-full scroll-reveal"></div>
+            </div>
+
+            <div class="space-y-24">
+                <!-- Feature 1 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                    <div class="order-2 md:order-1 scroll-reveal">
+                         <div class="glass-panel p-2 rounded-[32px] bg-gradient-to-tr from-white/5 to-transparent">
+                             <div class="bg-[#0A0A0A] rounded-[28px] p-8 h-[300px] flex flex-col justify-center items-center text-center">
+                                 <div class="text-6xl mb-4">🔒</div>
+                                 <h3 class="text-2xl font-bold mb-2">100% Local Inference</h3>
+                                 <p class="text-white/40 text-sm">No Cloud. No API Keys. Your data never leaves.</p>
+                             </div>
+                         </div>
+                    </div>
+                    <div class="order-1 md:order-2 scroll-reveal">
+                        <h3 class="text-3xl font-bold mb-4">Privacy by Design</h3>
+                        <p class="text-white/60 text-lg leading-relaxed mb-6">
+                            Medical data is sensitive. BioFlow runs entirely on your local hardware using <strong>Ollama</strong>.
+                            We don't send your bloodwork to OpenAI, Anthropic, or Google. It stays on your device, encrypted and secure.
+                        </p>
+                        <div class="flex gap-3">
+                            <span class="px-3 py-1 rounded-lg bg-white/10 text-xs font-bold">Ollama</span>
+                            <span class="px-3 py-1 rounded-lg bg-white/10 text-xs font-bold">Local Llama 3</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                    <div class="scroll-reveal">
+                        <h3 class="text-3xl font-bold mb-4">The Nutrition Architect</h3>
+                        <p class="text-white/60 text-lg leading-relaxed mb-6">
+                            Stop counting calories blindly. Our AI builds meal plans that target your specific deficiencies.
+                            Low Iron? Expect spinach and red meat. High Cortisol? Expect magnesium-rich foods.
+                        </p>
+                        <ul class="space-y-2 text-white/80">
+                            <li>✓ Auto-generated Shopping Lists</li>
+                            <li>✓ Macro & Micro Nutrient breakdown</li>
+                            <li>✓ Cuisine & Budget preferences</li>
+                        </ul>
+                    </div>
+                    <div class="scroll-reveal">
+                         <div class="glass-panel p-2 rounded-[32px] bg-gradient-to-tl from-green-500/20 to-transparent">
+                             <div class="bg-[#0A0A0A] rounded-[28px] p-8 h-[300px] flex flex-col relative overflow-hidden">
+                                 <div class="absolute top-0 right-0 p-4">
+                                     <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-black font-bold">✓</div>
+                                 </div>
+                                 <div class="space-y-4 mt-8">
+                                     <div class="flex justify-between items-center p-4 rounded-xl bg-white/5">
+                                         <span class="font-bold">Salmon & Quinoa</span>
+                                         <span class="text-xs text-green-400">Omega-3 Boost</span>
+                                     </div>
+                                     <div class="flex justify-between items-center p-4 rounded-xl bg-white/5">
+                                         <span class="font-bold">Spinach Salad</span>
+                                         <span class="text-xs text-blue-400">Iron Loading</span>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="py-32 px-6 text-center relative z-10">
+        <div class="max-w-4xl mx-auto glass-card p-12 md:p-20 rounded-[48px] relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-blue-600/10 to-transparent pointer-events-none"></div>
+
+            <h2 class="text-4xl md:text-6xl font-bold mb-8 scroll-reveal">Ready to optimize?</h2>
+            <p class="text-xl text-white/50 mb-10 max-w-2xl mx-auto scroll-reveal delay-100">
+                Join the future of personalized health. Your biology is waiting to be decoded.
+            </p>
+
+            <div class="scroll-reveal delay-200">
+                {% if logged_in %}
+                    <a href="/dashboard" class="px-10 py-5 rounded-full bg-white text-black font-bold text-xl hover:bg-gray-200 transition shadow-xl hover:scale-105 transform duration-200 inline-block">
+                        Access Dashboard
+                    </a>
+                {% else %}
+                    <a href="/login" class="px-10 py-5 rounded-full bg-white text-black font-bold text-xl hover:bg-gray-200 transition shadow-xl hover:scale-105 transform duration-200 inline-block">
+                        Start Your Scan
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-10 border-t border-white/5 text-center text-white/30 text-sm relative z-10 bg-[#050505]">
+        <p>&copy; 2024 BioFlow AI. All rights reserved.</p>
+        <p class="mt-2">Powered by Local LLMs & Python</p>
+    </footer>
+
+    <!-- Scroll Reveal Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('opacity-100', 'translate-y-0');
+                        entry.target.classList.remove('opacity-0', 'translate-y-10');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.scroll-reveal').forEach((el) => {
+                el.classList.add('transition-all', 'duration-1000', 'ease-out', 'opacity-0', 'translate-y-10');
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>
