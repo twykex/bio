@@ -7,6 +7,7 @@
 
     <!-- Tailwind & Alpine -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <!-- Custom CSS -->
@@ -291,6 +292,138 @@
                                  </div>
                              </div>
                          </div>
+                    </div>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                    <div class="order-2 md:order-1 scroll-reveal">
+                         <div class="glass-panel p-2 rounded-[32px] bg-gradient-to-tr from-purple-500/20 to-transparent">
+                             <div class="bg-[#0A0A0A] rounded-[28px] p-8 h-[300px] flex flex-col relative overflow-hidden">
+                                 <div class="absolute inset-0 bg-purple-500/5"></div>
+                                 <div class="relative z-10 flex flex-col gap-3">
+                                     <div class="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5">
+                                         <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400">🏋️</div>
+                                         <div class="text-sm">
+                                             <div class="font-bold">Hypertrophy Block A</div>
+                                             <div class="text-xs text-white/50">Based on High Testosterone</div>
+                                         </div>
+                                     </div>
+                                     <div class="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5">
+                                         <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">🧘</div>
+                                         <div class="text-sm">
+                                             <div class="font-bold">Cortisol Management</div>
+                                             <div class="text-xs text-white/50">Evening Breathwork</div>
+                                         </div>
+                                     </div>
+                                     <div class="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5">
+                                         <div class="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center text-red-400">🏃</div>
+                                         <div class="text-sm">
+                                             <div class="font-bold">Zone 2 Cardio</div>
+                                             <div class="text-xs text-white/50">Improve Mitochondrial Function</div>
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+                    </div>
+                    <div class="order-1 md:order-2 scroll-reveal">
+                        <h3 class="text-3xl font-bold mb-4">Smart Fitness Coach</h3>
+                        <p class="text-white/60 text-lg leading-relaxed mb-6">
+                            Your workout shouldn't be a guess. BioFlow designs fitness protocols based on your hormonal profile and recovery capacity.
+                            <br><br>
+                            Whether you need to lower inflammation or maximize hypertrophy, your plan adapts to your biology.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                    <div class="scroll-reveal">
+                        <h3 class="text-3xl font-bold mb-4">Interactive Bio-Assistant</h3>
+                        <p class="text-white/60 text-lg leading-relaxed mb-6">
+                            Have a question about your results? Just ask.
+                            <br><br>
+                            "Why is my Ferritin low?" or "What snacks help with sleep?" — get instant, science-backed answers from your local AI agent that knows your specific data context.
+                        </p>
+                    </div>
+                    <div class="scroll-reveal">
+                         <div class="glass-panel p-2 rounded-[32px] bg-gradient-to-bl from-blue-500/20 to-transparent">
+                             <div class="bg-[#0A0A0A] rounded-[28px] p-8 h-[300px] flex flex-col relative">
+                                 <div class="flex-1 space-y-4 overflow-hidden relative">
+                                     <!-- Chat bubbles -->
+                                     <div class="self-end ml-auto bg-blue-600/20 border border-blue-600/30 text-white px-4 py-2 rounded-2xl rounded-tr-none text-sm w-3/4">
+                                         Why am I feeling tired?
+                                     </div>
+                                     <div class="self-start mr-auto bg-white/10 border border-white/10 text-white/80 px-4 py-2 rounded-2xl rounded-tl-none text-sm w-5/6">
+                                         Your bloodwork shows <strong>Low Vitamin B12</strong> (200 pg/mL). This directly impacts energy levels. I've added B12-rich foods to your meal plan.
+                                     </div>
+                                 </div>
+                                 <div class="mt-4 h-10 bg-white/5 rounded-full border border-white/10 flex items-center px-4 text-white/30 text-sm">
+                                     Ask a question...
+                                 </div>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-32 px-6 relative z-10 border-t border-white/5 bg-white/5">
+        <div class="max-w-3xl mx-auto">
+            <h2 class="text-4xl font-bold mb-12 text-center scroll-reveal">Frequently Asked Questions</h2>
+            <div class="space-y-4 scroll-reveal" x-data="{ active: null }">
+                <!-- QA 1 -->
+                <div class="glass-card rounded-2xl overflow-hidden">
+                    <button @click="active === 1 ? active = null : active = 1" class="w-full text-left p-6 flex items-center justify-between font-bold text-lg hover:bg-white/5 transition">
+                        <span>Is my data really private?</span>
+                        <span x-text="active === 1 ? '−' : '+'" class="text-2xl text-blue-500"></span>
+                    </button>
+                    <div x-show="active === 1" x-collapse>
+                        <div class="p-6 pt-0 text-white/60 leading-relaxed">
+                            Yes. BioFlow is designed as a "Local First" application. We use Ollama to run the AI models directly on your computer. Your PDF files and chat history never leave your machine.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QA 2 -->
+                <div class="glass-card rounded-2xl overflow-hidden">
+                    <button @click="active === 2 ? active = null : active = 2" class="w-full text-left p-6 flex items-center justify-between font-bold text-lg hover:bg-white/5 transition">
+                        <span>What file formats do you support?</span>
+                        <span x-text="active === 2 ? '−' : '+'" class="text-2xl text-blue-500"></span>
+                    </button>
+                    <div x-show="active === 2" x-collapse>
+                        <div class="p-6 pt-0 text-white/60 leading-relaxed">
+                            Currently, we support PDF files from major labs (Quest, LabCorp, etc.). Our parser extracts text and identifies biomarkers automatically.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QA 3 -->
+                <div class="glass-card rounded-2xl overflow-hidden">
+                    <button @click="active === 3 ? active = null : active = 3" class="w-full text-left p-6 flex items-center justify-between font-bold text-lg hover:bg-white/5 transition">
+                        <span>Do I need a powerful computer?</span>
+                        <span x-text="active === 3 ? '−' : '+'" class="text-2xl text-blue-500"></span>
+                    </button>
+                    <div x-show="active === 3" x-collapse>
+                        <div class="p-6 pt-0 text-white/60 leading-relaxed">
+                            You need a machine capable of running Ollama (e.g., Apple Silicon M1/M2/M3 or a PC with an NVIDIA GPU). If you can run a local LLM, you can run BioFlow.
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- QA 4 -->
+                <div class="glass-card rounded-2xl overflow-hidden">
+                    <button @click="active === 4 ? active = null : active = 4" class="w-full text-left p-6 flex items-center justify-between font-bold text-lg hover:bg-white/5 transition">
+                        <span>Is this medical advice?</span>
+                        <span x-text="active === 4 ? '−' : '+'" class="text-2xl text-blue-500"></span>
+                    </button>
+                    <div x-show="active === 4" x-collapse>
+                        <div class="p-6 pt-0 text-white/60 leading-relaxed">
+                            No. BioFlow is a wellness tool for information purposes only. Always consult with a qualified healthcare provider before making significant changes to your diet or health protocol.
+                        </div>
                     </div>
                 </div>
             </div>
