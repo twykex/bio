@@ -13,6 +13,13 @@ export function fitnessSlice() {
         activeWorkoutMode: false,
         currentWorkoutVolume: 0,
 
+        // NEW STATE
+        fitnessToolOpen: false,
+        activeFitnessTool: null,
+        toolInputs: {},
+        toolResult: null,
+        fitnessChart: null,
+
         // --- INIT ---
         initFitness() {
             // Migration: Ensure all exercises have setLogs
@@ -38,6 +45,155 @@ export function fitnessSlice() {
                     localStorage.setItem('workoutPlan', JSON.stringify(this.workoutPlan));
                 }
             }
+
+            // Watch Tab for Chart
+            this.$watch('currentTab', (val) => {
+                if (val === 'fitness') {
+                    setTimeout(() => this.initFitnessChart(), 200);
+                }
+            });
+            // Initial load if already on fitness
+            if (this.currentTab === 'fitness') setTimeout(() => this.initFitnessChart(), 200);
+        },
+
+        // --- NEW HELPERS ---
+        isMuscleActive(part) {
+            const workout = this.getNextWorkout();
+            if (!workout || !workout.focus) return false;
+            const focus = workout.focus.toLowerCase();
+            const map = {
+                'shoulders': ['push', 'upper', 'shoulders', 'full', 'arms', 'delts'],
+                'chest': ['push', 'upper', 'chest', 'full', 'pecs'],
+                'back': ['pull', 'upper', 'back', 'full', 'rows', 'lats'],
+                'arms': ['push', 'pull', 'upper', 'arms', 'full', 'bicep', 'tricep'],
+                'core': ['core', 'abs', 'full', 'stability'],
+                'legs': ['legs', 'lower', 'full', 'squat', 'glute', 'hamstring', 'quad']
+            };
+            const p = part.toLowerCase();
+            return map[p] ? map[p].some(k => focus.includes(k)) : false;
+        },
+
+        openFitnessTool(tool) {
+            this.activeFitnessTool = tool;
+            this.toolInputs = {};
+            if (tool.inputs) {
+                tool.inputs.forEach(i => this.toolInputs[i.k] = i.p);
+            }
+            this.toolResult = null;
+            this.fitnessToolOpen = true;
+        },
+
+        runFitnessTool() {
+            if (!this.activeFitnessTool) return;
+            const id = this.activeFitnessTool.id;
+            const inputs = this.toolInputs;
+
+            if (id === 'calculate_1rm') {
+                const w = parseFloat(inputs.weight);
+                const r = parseFloat(inputs.reps);
+                if (!w || !r) return;
+                // Epley Formula
+                const oneRM = w * (1 + r / 30);
+                this.toolResult = `${Math.round(oneRM)} kg`;
+            } else if (id === 'plate_calculator') {
+                const target = parseFloat(inputs.weight);
+                if (!target) return;
+                const plates = this.calculatePlates(target);
+                this.toolResult = plates.length ? plates.join(', ') : "Bar only (20kg)";
+            } else if (id === 'heart_rate_zones') {
+                 const age = parseFloat(inputs.age);
+                 const max = 220 - age;
+                 this.toolResult = `Max: ${max} bpm <br> <span class="text-sm text-white/50">Zone 2: ${Math.round(max * 0.6)}-${Math.round(max * 0.7)}</span>`;
+            } else {
+                this.toolResult = "Calculation complete.";
+            }
+        },
+
+        calculatePlates(targetWeight) {
+            // Assume 20kg bar
+            let remaining = targetWeight - 20;
+            if (remaining <= 0) return [];
+
+            const plates = [20, 15, 10, 5, 2.5, 1.25];
+            const toLoad = []; // per side
+
+            remaining = remaining / 2; // per side
+
+            plates.forEach(p => {
+                while (remaining >= p) {
+                    toLoad.push(`${p}kg`);
+                    remaining -= p;
+                }
+            });
+
+            return toLoad.length ? toLoad.map(p => `[${p}]`) : [];
+        },
+
+        initFitnessChart() {
+             const ctx = document.getElementById('fitnessVolumeChart');
+             if (!ctx) return;
+             if (this.fitnessChart) {
+                 this.fitnessChart.destroy();
+                 this.fitnessChart = null;
+             }
+
+             // Calculate Weekly Volume from workoutHistory
+             const volumeByDate = {};
+             if (this.workoutHistory) {
+                 Object.values(this.workoutHistory).flat().forEach(log => {
+                     if (log.date) {
+                         volumeByDate[log.date] = (volumeByDate[log.date] || 0) + (log.totalVolume || 0);
+                     }
+                 });
+             }
+
+             const labels = [];
+             const data = [];
+             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+             // Show last 7 days relative to today
+             for (let i = 6; i >= 0; i--) {
+                 const d = new Date();
+                 d.setDate(d.getDate() - i);
+                 const dateStr = d.toISOString().split('T')[0];
+                 const dayName = days[d.getDay()];
+                 labels.push(dayName);
+                 data.push(volumeByDate[dateStr] || 0);
+             }
+
+             this.fitnessChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Volume (kg)',
+                        data: data,
+                        backgroundColor: '#f97316',
+                        borderRadius: 4,
+                        barThickness: 12
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            display: true,
+                            ticks: {
+                                color: 'rgba(255,255,255,0.3)',
+                                font: { size: 9 },
+                                callback: function(value) { return value >= 1000 ? (value/1000).toFixed(1) + 'k' : value; }
+                            },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 } }
+                        }
+                    }
+                }
+             });
         },
 
         // --- COMPUTED / HELPERS ---
@@ -83,6 +239,12 @@ export function fitnessSlice() {
             }
             // Trigger reactivity for volume calculation (if we bind it)
             this.currentWorkoutVolume = this.calculateSessionVolume(this.getNextWorkout());
+
+            // Re-calc today's volume in chart if needed (optional optimization: only update current day bar)
+            if(this.currentTab === 'fitness') {
+                // We could just update the chart data directly instead of full re-init
+                // For now, simpler to re-init or leave it for finishWorkout
+            }
         },
 
         finishWorkout(workout) {
@@ -133,7 +295,8 @@ export function fitnessSlice() {
             if (logCount > 0) {
                 this.notify(`Workout Saved! Volume: ${totalVol}kg`, "success");
                 this.updateAchievement('workout_warrior', 1);
-                // Maybe update a "volume streak"
+                // Refresh chart to show new volume
+                this.initFitnessChart();
             } else {
                 this.notify("Workout Completed (No Data Logged)");
             }
