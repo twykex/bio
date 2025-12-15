@@ -20,69 +20,9 @@ export function consultationSlice() {
         handleDrop(e) {
             this.dragOver = false;
             const file = e.dataTransfer.files[0];
-            if (file) this.uploadData(file);
-        },
-
-        async loadDemoData() {
-            this.startLoading(['Loading Sample Profile...', 'Simulating Analysis...', 'Synthesizing Health Data...']);
-
-            try {
-                const res = await fetch('/load_demo_data', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ token: this.token })
-                });
-                if(!res.ok) throw new Error();
-                this.context = await res.json();
-                localStorage.setItem('context', JSON.stringify(this.context));
-
-                this.healthScore = this.context.health_score || 72;
-                this.userName = this.context.patient_name || 'Demo User';
-                this.updateBioMetrics();
-
-                // Simulate delay for effect
-                await new Promise(r => setTimeout(r, 1500));
-
-                if (this.context.issues && this.context.issues.length > 0) {
-                    this.startConsultation();
-                } else {
-                    this.finalizeConsultation();
-                }
-                this.notify("Demo Loaded Successfully");
-            } catch(e) {
-                this.notify("Demo Failed", "error");
-            } finally {
-                this.stopLoading();
-            }
-        },
-
-        async uploadData(file) {
-            if (!file) return;
-            this.startLoading('upload');
-            const fd = new FormData();
-            fd.append('file', file);
-            fd.append('token', this.token);
-
-            try {
-                const res = await fetch('/init_context', { method: 'POST', body: fd });
-                if(!res.ok) throw new Error();
-                this.context = await res.json();
-                localStorage.setItem('context', JSON.stringify(this.context));
-
-                this.healthScore = this.context.health_score || 78;
-                this.userName = this.context.patient_name || 'Guest';
-                this.updateBioMetrics();
-
-                if (this.context.issues && this.context.issues.length > 0) {
-                    this.startConsultation();
-                } else {
-                    this.finalizeConsultation();
-                }
-                this.notify("Analysis Complete");
-            } catch(e) {
-                this.notify("Upload Failed", "error");
-            } finally {
-                this.stopLoading();
+            if (file) {
+                // Mock event for api.js uploadFile
+                this.uploadFile({ target: { files: [file] } });
             }
         },
 

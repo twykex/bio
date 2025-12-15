@@ -21,6 +21,8 @@ const app = (userId) => ({
     tempStrategy: null,
     prefModalOpen: false,
     weekPlan: [],
+    showOnboarding: false,
+    onboardingStep: 0,
 
     // --- 2. CONFIG DATA ---
     dailyTips,
