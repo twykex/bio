@@ -8,6 +8,7 @@
     <!-- Tailwind & Alpine -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Custom CSS -->
     <link href="/static/css/style.css" rel="stylesheet">
@@ -131,7 +132,7 @@
             <div class="flex flex-col items-center lg:items-start px-0 lg:px-6">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold mb-10 shadow-lg shadow-blue-500/20 cursor-pointer" @click="resetSystem">B</div>
                 <nav class="space-y-2 w-full">
-                    <template x-for="tab in ['dashboard', 'nutrition', 'fitness', 'biohacks', 'settings']">
+                    <template x-for="tab in ['dashboard', 'health', 'nutrition', 'fitness', 'biohacks', 'settings']">
                         <button @click="currentTab = tab"
                                 class="w-full flex items-center justify-center lg:justify-start gap-4 px-3 py-3 rounded-xl transition-all duration-200"
                                 :class="currentTab === tab ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white hover:bg-white/5'">
@@ -209,6 +210,54 @@
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- HEALTH TAB -->
+                <div x-show="currentTab === 'health'" class="max-w-5xl mx-auto space-y-10 animate-scale-in">
+                    <div class="flex items-center justify-between">
+                         <div>
+                            <h2 class="text-3xl font-bold">Health Intelligence</h2>
+                            <p class="text-white/40">Deep dive into your biomarkers.</p>
+                        </div>
+                        <div class="glass-card px-6 py-3 rounded-2xl flex items-center gap-4">
+                             <div class="text-right">
+                                <div class="text-[10px] uppercase tracking-widest text-white/40">Overall Score</div>
+                                <div class="text-2xl font-bold" x-text="healthScore"></div>
+                             </div>
+                             <div class="w-12 h-12 relative">
+                                <svg class="w-full h-full transform -rotate-90">
+                                    <circle cx="24" cy="24" r="20" stroke="rgba(255,255,255,0.1)" stroke-width="4" fill="none"></circle>
+                                    <circle cx="24" cy="24" r="20" stroke="#3b82f6" stroke-width="4" fill="none"
+                                            :stroke-dasharray="125" :stroke-dashoffset="125 - (125 * healthScore / 100)"></circle>
+                                </svg>
+                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <template x-for="(marker, index) in bloodMarkers" :key="index">
+                             <div class="glass-card p-6 rounded-[24px]">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 class="font-bold text-lg" x-text="marker.name"></h3>
+                                        <p class="text-xs text-white/40" x-text="marker.status"></p>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-bold text-xl" x-text="marker.value"></div>
+                                        <div class="text-[10px] text-white/40" x-text="marker.unit"></div>
+                                    </div>
+                                </div>
+                                <div class="relative h-40">
+                                    <canvas :id="'chart-' + index"></canvas>
+                                </div>
+                                <div class="mt-4 flex justify-between text-[10px] text-white/30 uppercase tracking-wider">
+                                    <span>Min: <span x-text="marker.ref_min"></span></span>
+                                    <span>Max: <span x-text="marker.ref_max"></span></span>
+                                </div>
+                             </div>
+                        </template>
                     </div>
                 </div>
 

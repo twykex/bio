@@ -32,6 +32,7 @@ document.addEventListener('alpine:init', () => {
         dragOver: false,
 
         // --- 7. DATA OBJECTS ---
+        bloodMarkers: [],
         selectedMeal: null,
         recipeDetails: null,
         shoppingList: null,
@@ -150,6 +151,13 @@ document.addEventListener('alpine:init', () => {
 
             // Global Listeners
             document.addEventListener('mouseover', (e) => this.handleTooltipHover(e));
+
+            // Watch Tab for Charts
+            this.$watch('currentTab', (val) => {
+                if (val === 'health') {
+                    this.$nextTick(() => { this.renderCharts(); });
+                }
+            });
         },
 
         // --- CALENDAR LOGIC ---
@@ -223,6 +231,7 @@ document.addEventListener('alpine:init', () => {
                 this.context = await res.json();
 
                 this.healthScore = this.context.health_score || 78;
+                this.bloodMarkers = this.context.blood_markers || [];
                 this.userName = this.context.patient_name || 'Guest';
 
                 if (this.context.issues && this.context.issues.length > 0) {
@@ -430,6 +439,56 @@ document.addEventListener('alpine:init', () => {
         },
 
         // --- UTILS ---
+        renderCharts() {
+            if (this.bloodMarkers.length === 0) return;
+            // Access global charts storage
+            if (!window.bioCharts) window.bioCharts = {};
+
+            this.bloodMarkers.forEach((marker, index) => {
+                const ctx = document.getElementById('chart-' + index);
+                if (!ctx) return;
+
+                if (window.bioCharts[index]) {
+                    window.bioCharts[index].destroy();
+                }
+
+                window.bioCharts[index] = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['My Value', 'Min', 'Max'],
+                        datasets: [{
+                            label: marker.name,
+                            data: [marker.value, marker.ref_min, marker.ref_max],
+                            backgroundColor: [
+                                '#3b82f6',
+                                'rgba(255, 255, 255, 0.1)',
+                                'rgba(255, 255, 255, 0.1)'
+                            ],
+                            borderWidth: 0,
+                            borderRadius: 6,
+                            barPercentage: 0.6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: 'rgba(255, 255, 255, 0.4)', font: { size: 10 } }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: 'rgba(255, 255, 255, 0.4)', font: { size: 10 } }
+                            }
+                        }
+                    }
+                });
+            });
+        },
+
         saveSettings() { localStorage.setItem('userName', this.userName); this.notify("Settings Saved"); },
         notify(msg, type='success') { const id = Date.now(); this.toasts.push({ id, message: msg, type }); setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 3000); },
 

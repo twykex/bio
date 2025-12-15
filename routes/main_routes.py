@@ -143,6 +143,9 @@ def init_context():
         "patient_name": "User",
         "health_score": 78,
         "summary": "Short overall health summary.",
+        "blood_markers": [
+            {{ "name": "Vitamin D", "value": 18, "unit": "ng/mL", "ref_min": 30, "ref_max": 100, "status": "Low" }}
+        ],
         "issues": [
             {{
                 "title": "Low Vitamin D",
@@ -165,6 +168,12 @@ def init_context():
             "patient_name": "Guest",
             "health_score": 75,
             "summary": "We detected some potential optimizations for your metabolism.",
+            "blood_markers": [
+                {"name": "Vitamin D", "value": 25, "unit": "ng/mL", "ref_min": 30, "ref_max": 100, "status": "Low"},
+                {"name": "Cholesterol", "value": 180, "unit": "mg/dL", "ref_min": 125, "ref_max": 200, "status": "Optimal"},
+                {"name": "Iron", "value": 85, "unit": "ug/dL", "ref_min": 60, "ref_max": 170, "status": "Optimal"},
+                {"name": "Cortisol", "value": 18, "unit": "ug/dL", "ref_min": 6, "ref_max": 23, "status": "High-Normal"}
+            ],
             "strategies": [
                 {"name": "Metabolic Reset", "desc": "Focus on insulin sensitivity and inflammation reduction."},
                 {"name": "Energy Optimization", "desc": "Targeting mitochondrial health and fatigue."},
