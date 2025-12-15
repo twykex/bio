@@ -9,7 +9,11 @@ meal_bp = Blueprint('meal_bp', __name__)
 @meal_bp.route('/generate_week', methods=['POST'])
 def generate_week():
     data = request.json
-    user_session = get_session(data.get('token'))
+    token = data.get('token')
+    if not token:
+        return jsonify({"error": "Token is required"}), 400
+
+    user_session = get_session(token)
 
     summary = user_session.get('blood_context', {}).get('summary', 'General Health')
     blood_strategies = data.get('blood_strategies', [])
@@ -88,7 +92,11 @@ def get_recipe():
 @meal_bp.route('/generate_shopping_list', methods=['POST'])
 def generate_shopping_list():
     data = request.json
-    user_session = get_session(data.get('token'))
+    token = data.get('token')
+    if not token:
+        return jsonify({"error": "Token is required"}), 400
+
+    user_session = get_session(token)
     weekly_plan = user_session.get('weekly_plan', [])
 
     if not weekly_plan:
@@ -113,7 +121,11 @@ def generate_shopping_list():
 @meal_bp.route('/propose_meal_strategies', methods=['POST'])
 def propose_meal_strategies():
     data = request.json
-    user_session = get_session(data.get('token'))
+    token = data.get('token')
+    if not token:
+        return jsonify({"error": "Token is required"}), 400
+
+    user_session = get_session(token)
     summary = user_session.get('blood_context', {}).get('summary', 'General Health')
 
     # Ask AI to brainstorm 3 distinct approaches based on bloodwork

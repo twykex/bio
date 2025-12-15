@@ -10,7 +10,11 @@ workout_bp = Blueprint('workout_bp', __name__)
 @workout_bp.route('/generate_workout', methods=['POST'])
 def generate_workout():
     data = request.json
-    get_session(data.get('token'))
+    token = data.get('token')
+    if not token:
+        return jsonify({"error": "Token is required"}), 400
+
+    get_session(token)
     strategy = data.get('strategy_name', 'General')
     lifestyle = data.get('lifestyle', {})
     fitness_strategy = data.get('fitness_strategy', strategy)  # Use specific fitness strategy if available
@@ -63,7 +67,11 @@ def generate_workout():
 @workout_bp.route('/propose_fitness_strategies', methods=['POST'])
 def propose_fitness_strategies():
     data = request.json
-    user_session = get_session(data.get('token'))
+    token = data.get('token')
+    if not token:
+        return jsonify({"error": "Token is required"}), 400
+
+    user_session = get_session(token)
     summary = user_session.get('blood_context', {}).get('summary', 'General Health')
     lifestyle = data.get('lifestyle', {})
 

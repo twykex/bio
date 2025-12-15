@@ -54,7 +54,18 @@ def query_ollama(prompt, system_instruction=None, tools_enabled=False, temperatu
 
     try:
         r = requests.post(CHAT_ENDPOINT, json=payload)
-        response_text = r.json().get('message', {}).get('content', '')
+
+        if r.status_code != 200:
+            logger.error(f"AI Error: API returned status code {r.status_code}: {r.text[:200]}")
+            return None
+
+        try:
+            response_json = r.json()
+        except ValueError:
+             logger.error(f"AI Error: Invalid JSON response. Status: {r.status_code}, Body: {r.text[:200]}")
+             return None
+
+        response_text = response_json.get('message', {}).get('content', '')
 
         # Use the robust cleaner
         data = clean_and_parse_json(response_text)
