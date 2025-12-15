@@ -18,7 +18,7 @@ document.addEventListener('alpine:init', () => {
         // --- 4. CHAT STATE ---
         chatInput: '',
         chatLoading: false,
-        chatOpen: false,  // <--- This was missing/unreachable causing the error
+        chatOpen: false,
 
         // --- 5. NAVIGATION ---
         currentTab: 'dashboard',
@@ -144,6 +144,9 @@ document.addEventListener('alpine:init', () => {
             const savedName = localStorage.getItem('userName');
             if(savedName) this.userName = savedName;
 
+            const savedChoices = localStorage.getItem('userChoices');
+            if(savedChoices) this.userChoices = JSON.parse(savedChoices);
+
             // Init Calendar
             this.generateCalendar();
             this.selectedDate = this.calendarDays[0].fullDate;
@@ -182,14 +185,12 @@ document.addEventListener('alpine:init', () => {
             return [];
         },
 
-        getWorkoutForSelectedDate() {
-            if(!this.workoutPlan.length) return [];
-            const selectedIndex = this.calendarDays.findIndex(d => d.fullDate === this.selectedDate);
-            if(selectedIndex >= 0 && selectedIndex < this.workoutPlan.length) {
-                return [this.workoutPlan[selectedIndex]];
-            }
-            return [];
+        // FIXED CONFLICT SECTION
+        getNextWorkout() {
+             const activeDay = this.calendarDays.find(d => d.active)?.day;
+             return this.workoutPlan.find(w => w.day === activeDay) || this.workoutPlan[0];
         },
+        // END FIXED SECTION
 
         toggleMealCompletion(meal) {
             meal.completed = !meal.completed;
@@ -279,6 +280,7 @@ document.addEventListener('alpine:init', () => {
                 this.bloodStrategies.push(option.text);
             } else {
                 this.userChoices[this.currentQuestion.id] = option.text;
+                localStorage.setItem('userChoices', JSON.stringify(this.userChoices));
             }
 
             this.consultationStep++;
@@ -476,7 +478,11 @@ document.addEventListener('alpine:init', () => {
         },
 
         // --- UTILS ---
-        saveSettings() { localStorage.setItem('userName', this.userName); this.notify("Settings Saved"); },
+        saveSettings() {
+            localStorage.setItem('userName', this.userName);
+            localStorage.setItem('userChoices', JSON.stringify(this.userChoices));
+            this.notify("Settings Saved");
+        },
         notify(msg, type='success') { const id = Date.now(); this.toasts.push({ id, message: msg, type }); setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 3000); },
 
         openPrefModal(strategy) { this.tempStrategy = strategy; this.prefModalOpen = true; },
