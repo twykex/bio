@@ -471,13 +471,40 @@
                 </div>
 
                 <div x-show="currentTab === 'biohacks' || currentTab === 'settings'" class="max-w-5xl mx-auto animate-scale-in">
-                    <div x-show="currentTab === 'biohacks'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <template x-for="tool in tools" :key="tool.id">
-                            <button @click="selectedTool = tool; bioHacksOpen = true" class="glass-card p-6 rounded-[24px] text-left hover:bg-white/5 transition-all">
-                                <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-3 text-blue-400">⚡</div>
-                                <h3 class="font-bold text-sm mb-1" x-text="tool.name"></h3>
-                                <p class="text-xs text-white/40" x-text="tool.desc"></p>
-                            </button>
+                    <div x-show="currentTab === 'biohacks'" class="space-y-12 pb-12">
+                        <template x-for="(groupTools, category) in getGroupedTools()" :key="category">
+                            <div class="animate-scale-in">
+                                 <h3 class="text-2xl font-bold mb-6 pl-2 border-l-4 border-blue-500 flex items-center gap-3">
+                                    <span x-text="category"></span>
+                                    <span class="text-sm font-normal text-white/30" x-text="groupTools.length + ' Tools'"></span>
+                                 </h3>
+                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <template x-for="tool in groupTools" :key="tool.id">
+                                        <button @click="selectedTool = tool; bioHacksOpen = true"
+                                                class="glass-card p-6 rounded-[24px] text-left hover:bg-white/5 transition-all group relative overflow-hidden border border-white/5 hover:border-blue-500/30">
+
+                                            <div class="absolute top-0 right-0 p-16 bg-gradient-to-br from-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/10 rounded-full blur-[40px] transition-all duration-500"></div>
+
+                                            <div class="relative z-10">
+                                                <div class="flex justify-between items-start mb-4">
+                                                    <div class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-300 border border-white/5 shadow-inner">
+                                                        <span x-show="category === 'Nutrition'">🍎</span>
+                                                        <span x-show="category === 'Wellness'">🌿</span>
+                                                        <span x-show="category === 'Performance'">⚡</span>
+                                                        <span x-show="!['Nutrition', 'Wellness', 'Performance'].includes(category)">🛠️</span>
+                                                    </div>
+                                                    <div class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/20 group-hover:text-white group-hover:border-white/40 transition-all">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                                                    </div>
+                                                </div>
+
+                                                <h3 class="font-bold text-lg mb-2 text-white group-hover:text-blue-400 transition-colors" x-text="tool.name"></h3>
+                                                <p class="text-sm text-white/50 leading-relaxed" x-text="tool.desc"></p>
+                                            </div>
+                                        </button>
+                                    </template>
+                                 </div>
+                            </div>
                         </template>
                     </div>
 
