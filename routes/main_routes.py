@@ -45,7 +45,7 @@ def init_context():
 
     # CRITICAL FIX: Limit chunks to prevent timeout on large PDFs
     # Only embed the first 20 chunks for the prototype
-    safe_chunks = chunks[:20]
+    safe_chunks = chunks[:50]
 
     # 2. Vector Embeddings (RAG Setup)
     embeddings = [get_embedding(chunk) for chunk in safe_chunks]

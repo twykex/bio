@@ -99,6 +99,7 @@ body {
 
 /* Typewriter Effect */
 .typing-cursor::after {
+    /* FIXED: Replaced garbage "â–‹" with a solid block ▋ */
     content: '▋';
     display: inline-block;
     color: #0A84FF;

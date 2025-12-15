@@ -427,8 +427,9 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        formatResult(data) {
+formatResult(data) {
             if(!data) return "No data returned.";
+            // FIXED: Replaced corrupted "â€¢" with real bullets "•"
             if(data.supplements) return data.supplements.map(s => `• ${s.name}: ${s.reason}`).join('\n');
             if(data.foods) return data.foods.map(f => `• ${f}`).join('\n');
             if(data.interaction) return `Status: ${data.interaction}\n${data.details}`;
