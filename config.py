@@ -11,6 +11,7 @@ logging.basicConfig(
 # --- CONFIGURATION ---
 # CHANGED: Set to the specific model you want
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma3:4b")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
 
 # CRITICAL: Point to the base URL (127.0.0.1 is safer than localhost on Windows)
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")

@@ -15,6 +15,9 @@ def init_context():
     file = request.files['file']
     token = request.form.get('token')
 
+    if not token:
+        return jsonify({"error": "Token is required"}), 400
+
     filename = secure_filename(file.filename)
     filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
@@ -103,7 +106,11 @@ def init_context():
 @health_bp.route('/chat_agent', methods=['POST'])
 def chat_agent():
     data = request.json
-    user_session = get_session(data.get('token'))
+    token = data.get('token')
+    if not token:
+        return jsonify({"error": "Token is required"}), 400
+
+    user_session = get_session(token)
     user_msg = data.get('message')
 
     rag_context = retrieve_relevant_context(user_session, user_msg)
@@ -130,6 +137,8 @@ def chat_agent():
 @health_bp.route('/load_demo_data', methods=['POST'])
 def load_demo_data():
     token = request.json.get('token')
+    if not token:
+        return jsonify({"error": "Token is required"}), 400
 
     sample_context = {
         "patient_name": "Demo User",
@@ -200,7 +209,11 @@ def analyze_food_plate():
 @health_bp.route('/generate_supplement_stack', methods=['POST'])
 def generate_supplement_stack():
     data = request.json
-    user_session = get_session(data.get('token'))
+    token = data.get('token')
+    if not token:
+        return jsonify({"error": "Token is required"}), 400
+
+    user_session = get_session(token)
     current_meds = data.get('current_meds', [])
     summary = user_session.get('blood_context', {}).get('summary', 'General Health')
 

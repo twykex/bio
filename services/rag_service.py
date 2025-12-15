@@ -1,7 +1,7 @@
 import hashlib
 import requests
 import logging
-from config import OLLAMA_URL
+from config import OLLAMA_URL, EMBEDDING_MODEL
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +20,13 @@ def get_embedding(text):
 
     try:
         r = requests.post(EMBED_ENDPOINT, json={
-            "model": "nomic-embed-text",
+            "model": EMBEDDING_MODEL,
             "prompt": text
         })
+        if r.status_code != 200:
+             logger.error(f"Embedding Error: Status {r.status_code}")
+             return []
+
         vector = r.json().get('embedding')
         if vector:
             embedding_cache[text_hash] = vector
