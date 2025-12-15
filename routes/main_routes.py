@@ -5,10 +5,25 @@ import pdfplumber
 from flask import Blueprint, request, jsonify
 from werkzeug.utils import secure_filename
 from config import UPLOAD_FOLDER
-from utils import get_session, query_ollama
+from utils import get_session, query_ollama, get_embedding, retrieve_relevant_context
 
 logger = logging.getLogger(__name__)
 main_bp = Blueprint('main_bp', __name__)
+
+
+def advanced_pdf_parse(filepath):
+    """Extracts text and splits it into logical chunks for RAG."""
+    full_text = ""
+    chunks = []
+    with pdfplumber.open(filepath) as pdf:
+        for page in pdf.pages:
+            text = page.extract_text()
+            if not text: continue
+            full_text += text + "\n"
+            # Chunking by paragraphs (approximate)
+            page_chunks = [c.strip() for c in text.split('\n\n') if len(c) > 50]
+            chunks.extend(page_chunks)
+    return full_text, chunks
 
 
 @main_bp.route('/init_context', methods=['POST'])
@@ -21,49 +36,37 @@ def init_context():
     filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
 
-    # 1. Extract Text
-    text = ""
-    try:
-        with pdfplumber.open(filepath) as pdf:
-            for page in pdf.pages: text += (page.extract_text() or "") + "\n"
-    except Exception as e:
-        logger.error(f"Failed to parse PDF: {e}")
-        return jsonify({"error": "PDF Parsing Error"}), 500
+    # 1. Parse & Chunk
+    text, chunks = advanced_pdf_parse(filepath)
 
-    # 2. Advanced Analysis Prompt
-    logger.info(f"📄 ANALYZING PDF: {len(text)} chars.")
+    # 2. Vector Embeddings (RAG Setup)
+    embeddings = [get_embedding(chunk) for chunk in chunks]
 
-    system_prompt = """
-    You are a Functional Medicine AI. 
-    Analyze the bloodwork data provided. 
-    Identify markers that are out of optimal range.
-    Return STRICT JSON.
+    session = get_session(token)
+    session['raw_text_chunks'] = chunks
+    session['embeddings'] = embeddings
+
+    # 3. FEW-SHOT PROMPTING (Teaching by Example)
+    few_shot = """
+    EXAMPLE: "HbA1c 6.0% (4.0-5.6)" -> { "name": "HbA1c", "value": "6.0", "status": "High", "implication": "Pre-diabetes risk" }
+    """
+
+    system_prompt = f"""
+    You are a Functional Medicine AI. Analyze the bloodwork.
+    Refer to these extraction examples: {few_shot}
     """
 
     user_prompt = f"""
-    DATA: {text[:6000]}
-
-    TASK: Create a health summary and strategy list.
-    FORMAT:
-    {{
-        "patient_summary": "2-3 sentences summarizing overall health.",
-        "flagged_biomarkers": [
-            {{ "name": "Vitamin D", "status": "Low", "implication": "Immune & Mood issues" }}
-        ],
-        "strategies": [
-            {{ "name": "Metabolic Reset", "desc": "Focus on insulin sensitivity via low-GI foods." }},
-            {{ "name": "Anti-Inflammatory", "desc": "Reduce CRP levels with Omega-3s." }}
-        ]
-    }}
+    DATA: {text[:8000]}
+    TASK: Output JSON.
+    STRUCTURE: {{ "patient_summary": "...", "flagged_biomarkers": [ ... ], "strategies": [ ... ] }}
     """
 
-    data = query_ollama(user_prompt, system_instruction=system_prompt)
+    data = query_ollama(user_prompt, system_instruction=system_prompt, temperature=0.1)
 
     if not data:
-        data = {"patient_summary": "Analysis failed.", "strategies": []}
+        data = {"patient_summary": "Analysis failed.", "flagged_biomarkers": [], "strategies": []}
 
-    # Save to session
-    session = get_session(token)
     session["blood_context"] = data
     return jsonify(data)
 
@@ -72,31 +75,13 @@ def init_context():
 def generate_week():
     data = request.json
     session = get_session(data.get('token'))
-    strategy = data.get('strategy_name')
-    context = session.get('blood_context', {})
+    summary = session.get('blood_context', {}).get('patient_summary', '')
+    strategy = data.get('strategy_name', 'General')
 
-    system_prompt = f"""
-    You are a Nutritionist. 
-    Patient Context: {context.get('patient_summary', 'None')}
-    Selected Strategy: {strategy}
-    """
+    prompt = f"Plan 7 dinners for: {summary}. Focus: {strategy}. Format: JSON Array [{{'day':'Mon', 'title':'...', 'ingredients':['...'], 'benefit':'...'}}]"
 
-    user_prompt = """
-    Create a 7-Day Dinner Plan formatted as JSON.
-    FORMAT:
-    [
-        { "day": "Mon", "title": "Meal Name", "ingredients": ["A", "B"], "benefit": "Why this matches the strategy" }
-    ]
-    """
-
-    plan = query_ollama(user_prompt, system_instruction=system_prompt)
-
-    # Fallback if AI fails completely
-    if not plan:
-        plan = [{"day": "Error", "title": "Could not generate", "ingredients": [], "benefit": "Try again"}]
-
-    session["weekly_plan"] = plan
-    return jsonify(plan)
+    plan = query_ollama(prompt, system_instruction="You are a Nutritionist.", temperature=0.5)
+    return jsonify(plan or [])
 
 
 @main_bp.route('/chat_agent', methods=['POST'])
@@ -105,36 +90,30 @@ def chat_agent():
     session = get_session(data.get('token'))
     user_msg = data.get('message')
 
-    # RAG-Lite: Inject Summary into System Prompt
-    blood_data = session.get('blood_context', {})
-    summary = blood_data.get('patient_summary', "No medical data.")
+    # 1. RAG SEARCH: Find specific lines in the PDF
+    rag_context = retrieve_relevant_context(session, user_msg)
+
+    # 2. GLOBAL CONTEXT
+    summary = session.get('blood_context', {}).get('patient_summary', 'No data.')
 
     system_prompt = f"""
-    You are a Health Assistant.
-    USER MEDICAL DATA: {summary}
-    Keep answers short, encouraging, and based on the data.
-    Return JSON: {{ "response": "Your answer here" }}
+    You are a Medical Assistant.
+    PATIENT SUMMARY: {summary}
+    DOCUMENT EVIDENCE: {rag_context}
+
+    INSTRUCTIONS:
+    - Use the EVIDENCE to answer.
+    - If calculating BMI/Calories, ask to use the tool.
+    - Return JSON: {{ "response": "..." }} or {{ "tool": "..." }}
     """
 
-    # Add History Context
-    history = session.get('chat_history', [])[-5:]  # Last 5 messages
-    chat_context = "\n".join([f"{h['role']}: {h['text']}" for h in history])
+    # 3. Call with Tools Enabled
+    resp = query_ollama(user_msg, system_instruction=system_prompt, tools_enabled=True)
 
-    user_prompt = f"""
-    HISTORY:
-    {chat_context}
-
-    USER: "{user_msg}"
-    """
-
-    resp = query_ollama(user_prompt, system_instruction=system_prompt)
-
+    # Update History
+    history = session.get('chat_history', [])
+    history.append({"role": "user", "text": user_msg})
     if resp and 'response' in resp:
-        # Update Session History
-        history = session.get('chat_history', [])
-        history.append({"role": "user", "text": user_msg})
         history.append({"role": "ai", "text": resp['response']})
-        session['chat_history'] = history
-        return jsonify(resp)
 
-    return jsonify({"response": "I'm having trouble connecting. Please try again."})
+    return jsonify(resp or {"response": "I'm having trouble analyzing that."})
