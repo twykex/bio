@@ -5,6 +5,11 @@ document.addEventListener('alpine:init', () => {
 
         // --- 2. GLOBAL STATE ---
         context: null,
+        workoutHistory: {},
+        restActive: false,
+        restTimeLeft: 0,
+        restTotalTime: 0,
+        restInterval: null,
         streak: 0,
         currentTip: '',
         weekPlan: [],
@@ -238,6 +243,9 @@ document.addEventListener('alpine:init', () => {
 
             const savedAchievements = localStorage.getItem('achievements');
             if(savedAchievements) this.achievements = JSON.parse(savedAchievements);
+
+            const savedWorkoutHistory = localStorage.getItem('workoutHistory');
+            if(savedWorkoutHistory) this.workoutHistory = JSON.parse(savedWorkoutHistory);
 
             // Random Tip
             this.currentTip = this.dailyTips[Math.floor(Math.random() * this.dailyTips.length)];
@@ -505,6 +513,61 @@ document.addEventListener('alpine:init', () => {
             if(ex.completed) this.notify("Exercise Complete! 💪");
         },
 
+        finishWorkout(workout) {
+            let logCount = 0;
+            if (workout.exercises) {
+                workout.exercises.forEach(ex => {
+                    if (ex.weight || ex.performedReps) {
+                        const name = ex.name || "Unknown Exercise";
+                        this.workoutHistory[name] = {
+                            weight: ex.weight,
+                            reps: ex.performedReps,
+                            date: new Date().toISOString().split('T')[0],
+                            notes: ex.notes
+                        };
+                        logCount++;
+                    }
+                });
+            }
+            localStorage.setItem('workoutHistory', JSON.stringify(this.workoutHistory));
+            this.notify(logCount > 0 ? `Workout Saved! ${logCount} Logs Updated.` : "Workout Completed!");
+            this.updateAchievement('workout_warrior', 1);
+        },
+
+        startRest(seconds) {
+            if (this.restActive) {
+                this.stopRest();
+            }
+            this.restTimeLeft = seconds;
+            this.restTotalTime = seconds;
+            this.restActive = true;
+            if (this.restInterval) clearInterval(this.restInterval);
+            this.restInterval = setInterval(() => {
+                this.restTimeLeft--;
+                if (this.restTimeLeft <= 0) {
+                    this.stopRest();
+                    this.notify("Rest Complete! Go!", "success");
+                }
+            }, 1000);
+        },
+
+        stopRest() {
+            this.restActive = false;
+            clearInterval(this.restInterval);
+        },
+
+        get formattedRestTime() {
+            const m = Math.floor(this.restTimeLeft / 60);
+            const s = this.restTimeLeft % 60;
+            return `${m}:${s < 10 ? '0' + s : s}`;
+        },
+
+        getExerciseHistory(exName) {
+            if (!this.workoutHistory || !this.workoutHistory[exName]) return null;
+            const h = this.workoutHistory[exName];
+            return `Last: ${h.weight || '-'}kg x ${h.reps || '-'} (${h.date.substring(5)})`;
+        },
+
         // --- LOADING LOGIC ---
         startLoading(phaseType) {
             this.loading = true;
@@ -702,7 +765,16 @@ document.addEventListener('alpine:init', () => {
                 // Initialize workout plan state
                 this.workoutPlan = workoutData.map(daily => ({
                     ...daily,
-                    exercises: daily.exercises ? daily.exercises.map(ex => ({...ex, completed: false})) : []
+                    exercises: daily.exercises ? daily.exercises.map(ex => {
+                        const exObj = (typeof ex === 'string') ? { name: ex } : ex;
+                        return {
+                            ...exObj,
+                            completed: false,
+                            weight: '',
+                            performedReps: '',
+                            notes: ''
+                        };
+                    }) : []
                 }));
 
                 this.currentTab = 'dashboard';
@@ -754,7 +826,16 @@ document.addEventListener('alpine:init', () => {
 
                 this.workoutPlan = workoutData.map(daily => ({
                     ...daily,
-                    exercises: daily.exercises ? daily.exercises.map(ex => ({...ex, completed: false})) : []
+                    exercises: daily.exercises ? daily.exercises.map(ex => {
+                        const exObj = (typeof ex === 'string') ? { name: ex } : ex;
+                        return {
+                            ...exObj,
+                            completed: false,
+                            weight: '',
+                            performedReps: '',
+                            notes: ''
+                        };
+                    }) : []
                 }));
 
                 this.notify("New Training Plan Ready");

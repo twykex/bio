@@ -680,16 +680,29 @@
 
                                                     <div class="grid grid-cols-2 gap-3 mb-3">
                                                          <div class="relative">
-                                                             <input type="number" placeholder="kg" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-orange-500 focus:outline-none placeholder-white/20">
+                                                             <input type="number" x-model="ex.weight" placeholder="kg" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-orange-500 focus:outline-none placeholder-white/20">
                                                              <span class="absolute right-3 top-2 text-[10px] text-white/20">KG</span>
                                                          </div>
                                                          <div class="relative">
-                                                             <input type="number" placeholder="reps" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-orange-500 focus:outline-none placeholder-white/20">
+                                                             <input type="number" x-model="ex.performedReps" placeholder="reps" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-orange-500 focus:outline-none placeholder-white/20">
                                                              <span class="absolute right-3 top-2 text-[10px] text-white/20">REPS</span>
                                                          </div>
                                                     </div>
 
-                                                    <div class="text-xs text-white/40 italic pl-12" x-text="'Tip: ' + (ex.tip || 'Maintain good form')"></div>
+                                                    <div class="mb-3">
+                                                        <input type="text" x-model="ex.notes" placeholder="Notes (e.g. felt heavy)" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-orange-500 focus:outline-none placeholder-white/20">
+                                                    </div>
+
+                                                    <div class="flex justify-between items-center pl-12">
+                                                        <div class="text-xs text-white/40 italic" x-text="'Tip: ' + (ex.tip || 'Maintain good form')"></div>
+                                                        <div x-show="getExerciseHistory(ex.name)" class="text-[10px] text-blue-400 font-bold" x-text="getExerciseHistory(ex.name)"></div>
+                                                    </div>
+
+                                                    <div class="mt-3 flex justify-end">
+                                                         <button @click="startRest(90)" class="px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] text-white/60 hover:text-white transition flex items-center gap-1">
+                                                             <span>⏱️</span> Rest 90s
+                                                         </button>
+                                                    </div>
                                                 </div>
                                             </template>
                                         </div>
@@ -707,7 +720,7 @@
 
                                         <div class="mt-8 pt-8 border-t border-white/10 flex justify-between items-center relative z-10">
                                             <div class="text-xs text-white/40">Estimated Burn: <span class="text-white font-bold">450 kcal</span></div>
-                                            <button class="px-6 py-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold shadow-lg shadow-orange-900/20 transition-all">Start Workout</button>
+                                            <button @click="finishWorkout(workout)" class="px-6 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold shadow-lg shadow-green-900/20 transition-all">Finish & Save</button>
                                         </div>
                                     </div>
                                 </div>
@@ -1116,6 +1129,25 @@
              <button @click="startMeditation" x-show="!meditationActive" class="px-8 py-4 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-lg transition shadow-lg shadow-indigo-900/30">Start Session</button>
              <button @click="stopMeditation" x-show="meditationActive" class="px-8 py-4 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-lg transition">Pause</button>
          </div>
+    </div>
+
+    <div x-show="restActive" class="fixed bottom-6 right-6 z-[200] animate-scale-in" x-cloak>
+        <div class="glass-card p-4 rounded-2xl flex items-center gap-4 bg-black/80 backdrop-blur-md border border-orange-500/50 shadow-2xl shadow-orange-900/20">
+            <div class="relative w-12 h-12 flex items-center justify-center">
+                 <svg class="w-full h-full transform -rotate-90">
+                    <circle cx="24" cy="24" r="20" stroke="rgba(255,255,255,0.1)" stroke-width="4" fill="none"></circle>
+                    <circle cx="24" cy="24" r="20" stroke="#f97316" stroke-width="4" fill="none"
+                            :stroke-dasharray="125" :stroke-dashoffset="125 - (125 * restTimeLeft / (restTotalTime || 90))"
+                            class="transition-all duration-1000 ease-linear"></circle>
+                </svg>
+                <span class="absolute text-xs font-bold font-mono" x-text="formattedRestTime"></span>
+            </div>
+            <div>
+                <div class="text-[10px] text-white/40 uppercase tracking-wider font-bold">Resting</div>
+                <div class="text-sm font-bold text-white">Breathe</div>
+            </div>
+            <button @click="stopRest" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/50 hover:text-white transition">✕</button>
+        </div>
     </div>
 
     <script src="/static/js/app.js"></script>
