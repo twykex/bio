@@ -107,6 +107,8 @@ document.addEventListener('alpine:init', () => {
             // Basics
             { id: 'gender', title: 'Biological Sex', desc: 'For metabolic calculation accuracy.', options: [{text:'Male', icon:'👨'}, {text:'Female', icon:'👩'}] },
             { id: 'age', title: 'Age Group', desc: 'Helps tailor nutritional needs.', options: [{text:'18-29', icon:'🎓'}, {text:'30-39', icon:'💼'}, {text:'40-49', icon:'🏡'}, {text:'50-59', icon:'👓'}, {text:'60+', icon:'👴'}] },
+            { id: 'weight', title: 'Weight (approx)', desc: 'For BMI and Caloric needs.', options: [{text:'< 60kg', icon:'🪶'}, {text:'60-75kg', icon:'⚖️'}, {text:'75-90kg', icon:'🏋️'}, {text:'90-105kg', icon:'💪'}, {text:'105kg+', icon:'🦍'}] },
+            { id: 'height', title: 'Height (approx)', desc: 'For BMI calculation.', options: [{text:'< 160cm', icon:'📏'}, {text:'160-170cm', icon:'📐'}, {text:'170-180cm', icon:'🧍'}, {text:'180-190cm', icon:'🏀'}, {text:'190cm+', icon:'🦒'}] },
 
             // Fitness & Health
             { id: 'activity', title: 'Activity Level', desc: 'Your daily energy expenditure?', options: [{text:'Sedentary (Desk Job)', icon:'🪑'}, {text:'Light (Walks)', icon:'🚶'}, {text:'Moderate (3-4x Gym)', icon:'🏃'}, {text:'Active (Daily Train)', icon:'🏋️'}, {text:'Athlete (2x Day)', icon:'🏅'}] },

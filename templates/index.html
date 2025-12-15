@@ -121,7 +121,7 @@
             <div class="flex flex-col items-center lg:items-start px-0 lg:px-6">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold mb-10 shadow-lg shadow-blue-500/20 cursor-pointer" @click="resetSystem">B</div>
                 <nav class="space-y-2 w-full">
-                    <template x-for="tab in ['dashboard', 'nutrition', 'fitness', 'biohacks', 'settings']">
+                    <template x-for="tab in ['dashboard', 'status', 'nutrition', 'fitness', 'biohacks', 'settings']">
                         <button @click="currentTab = tab"
                                 class="w-full flex items-center justify-center lg:justify-start gap-4 px-3 py-3 rounded-xl transition-all duration-200"
                                 :class="currentTab === tab ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white hover:bg-white/5'">
@@ -150,6 +150,119 @@
             </header>
 
             <div class="flex-1 overflow-y-auto custom-scroll p-6 lg:p-10">
+
+                <div x-show="currentTab === 'status'" class="max-w-6xl mx-auto space-y-8 animate-scale-in" x-cloak>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-3xl font-bold">Current State</h2>
+                            <p class="text-white/40">Comprehensive biological overview.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Profile Card -->
+                        <div class="glass-card rounded-[32px] p-8 flex flex-col justify-between">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
+                                    <span x-text="userName.charAt(0)"></span>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-bold" x-text="userName"></h3>
+                                    <p class="text-sm text-white/40">Bio-Hacker</p>
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center p-3 rounded-xl bg-white/5">
+                                    <span class="text-sm text-white/60">Age Group</span>
+                                    <span class="font-bold" x-text="userChoices?.age || 'N/A'"></span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 rounded-xl bg-white/5">
+                                    <span class="text-sm text-white/60">Gender</span>
+                                    <span class="font-bold" x-text="userChoices?.gender || 'N/A'"></span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 rounded-xl bg-white/5">
+                                    <span class="text-sm text-white/60">Weight</span>
+                                    <span class="font-bold" x-text="userChoices?.weight || 'N/A'"></span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 rounded-xl bg-white/5">
+                                    <span class="text-sm text-white/60">Height</span>
+                                    <span class="font-bold" x-text="userChoices?.height || 'N/A'"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Health Score & Summary -->
+                        <div class="md:col-span-2 glass-card rounded-[32px] p-8 flex flex-col md:flex-row gap-8 items-center">
+                            <div class="relative w-48 h-48 flex-shrink-0">
+                                <svg class="w-full h-full transform -rotate-90">
+                                    <circle cx="96" cy="96" r="80" stroke="rgba(255,255,255,0.05)" stroke-width="16" fill="none"></circle>
+                                    <circle cx="96" cy="96" r="80" stroke="#10b981" stroke-width="16" fill="none"
+                                            :stroke-dasharray="502" :stroke-dashoffset="502 - (502 * healthScore / 100)"
+                                            class="transition-all duration-1000 ease-out shadow-[0_0_30px_#10b981]"></circle>
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span class="text-5xl font-bold tracking-tighter" x-text="healthScore"></span>
+                                    <span class="text-[10px] uppercase tracking-widest text-white/40 mt-1">Health Score</span>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-xl font-bold mb-4">Biological Summary</h3>
+                                <p class="text-white/60 leading-relaxed" x-text="context?.summary || 'No data available. Please upload bloodwork.'"></p>
+                                <div class="mt-6 flex gap-3">
+                                    <div class="px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold uppercase tracking-wider">
+                                        Issues: <span x-text="context?.issues?.length || 0"></span>
+                                    </div>
+                                    <div class="px-4 py-2 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold uppercase tracking-wider">
+                                        Biomarkers: <span x-text="context?.biomarkers?.length || 0"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Biomarkers Table -->
+                    <div class="glass-card rounded-[32px] p-8">
+                        <h3 class="text-xl font-bold mb-6">Bloodwork Data</h3>
+
+                        <template x-if="!context?.biomarkers || context.biomarkers.length === 0">
+                            <div class="text-center py-10 text-white/30">
+                                <p>No specific biomarkers extracted. Upload a detailed PDF.</p>
+                            </div>
+                        </template>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-xs uppercase tracking-widest text-white/40 border-b border-white/10">
+                                        <th class="py-4 px-4 font-bold">Biomarker</th>
+                                        <th class="py-4 px-4 font-bold">Value</th>
+                                        <th class="py-4 px-4 font-bold">Unit</th>
+                                        <th class="py-4 px-4 font-bold">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm">
+                                    <template x-for="marker in context?.biomarkers">
+                                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                                            <td class="py-4 px-4 font-bold text-white" x-text="marker.name"></td>
+                                            <td class="py-4 px-4 font-medium text-white/80" x-text="marker.value"></td>
+                                            <td class="py-4 px-4 text-white/40" x-text="marker.unit"></td>
+                                            <td class="py-4 px-4">
+                                                <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                                                      :class="{
+                                                          'bg-green-500/10 text-green-400': marker.status === 'Normal' || marker.status === 'Optimal',
+                                                          'bg-red-500/10 text-red-400': marker.status === 'High' || marker.status === 'Low' || marker.status === 'Critical',
+                                                          'bg-yellow-500/10 text-yellow-400': marker.status === 'Borderline'
+                                                      }"
+                                                      x-text="marker.status">
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
 
                 <div x-show="currentTab === 'dashboard'" class="max-w-6xl mx-auto space-y-8 animate-scale-in">
 
