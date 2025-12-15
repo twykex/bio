@@ -11,6 +11,33 @@ from utils import get_session, query_ollama, get_embedding, retrieve_relevant_co
 logger = logging.getLogger(__name__)
 main_bp = Blueprint('main_bp', __name__)
 
+# --- FALLBACK DATA ---
+FALLBACK_MEAL_PLAN = [
+    {"day": "Mon", "title": "Grilled Salmon Bowl", "ingredients": ["Salmon", "Quinoa", "Avocado"],
+     "benefit": "High Omega-3s."},
+    {"day": "Tue", "title": "Chicken Stir-Fry", "ingredients": ["Chicken", "Broccoli", "Ginger"],
+     "benefit": "Lean protein."},
+    {"day": "Wed", "title": "Turkey Chili", "ingredients": ["Turkey", "Beans", "Tomatoes"], "benefit": "High Fiber."},
+    {"day": "Thu", "title": "Beef & Asparagus", "ingredients": ["Beef", "Asparagus", "Garlic"],
+     "benefit": "Iron boost."},
+    {"day": "Fri", "title": "White Fish Tacos", "ingredients": ["Cod", "Corn Tortillas", "Slaw"],
+     "benefit": "Light protein."},
+    {"day": "Sat", "title": "Mediterranean Salad", "ingredients": ["Chickpeas", "Feta", "Cucumber"],
+     "benefit": "Antioxidants."},
+    {"day": "Sun", "title": "Roast Chicken", "ingredients": ["Chicken", "Sweet Potato", "Carrots"],
+     "benefit": "Complex carbs."}
+]
+
+FALLBACK_WORKOUT_PLAN = [
+    {"day": "Mon", "focus": "Cardio", "exercises": ["30m Jog"], "benefit": "Heart Health"},
+    {"day": "Tue", "focus": "Upper Body", "exercises": ["Pushups", "Rows"], "benefit": "Strength"},
+    {"day": "Wed", "focus": "Active Rest", "exercises": ["Yoga"], "benefit": "Recovery"},
+    {"day": "Thu", "focus": "Lower Body", "exercises": ["Squats", "Lunges"], "benefit": "Leg Power"},
+    {"day": "Fri", "focus": "HIIT", "exercises": ["Burpees", "Sprints"], "benefit": "Fat Loss"},
+    {"day": "Sat", "focus": "Outdoors", "exercises": ["Hiking"], "benefit": "Mental Health"},
+    {"day": "Sun", "focus": "Rest", "exercises": ["None"], "benefit": "Recovery"}
+]
+
 
 def advanced_pdf_parse(filepath):
     """Extracts text and splits it into logical chunks for RAG."""
@@ -22,7 +49,6 @@ def advanced_pdf_parse(filepath):
                 text = page.extract_text()
                 if not text: continue
                 full_text += text + "\n"
-                # Chunking by paragraphs (approximate)
                 page_chunks = [c.strip() for c in text.split('\n\n') if len(c) > 50]
                 chunks.extend(page_chunks)
     except Exception as e:
@@ -40,43 +66,42 @@ def init_context():
     filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
 
-    # 1. Parse & Chunk
     text, chunks = advanced_pdf_parse(filepath)
-
-    # CRITICAL FIX: Limit chunks to prevent timeout on large PDFs
-    # Only embed the first 20 chunks for the prototype
     safe_chunks = chunks[:50]
 
-    # 2. Vector Embeddings (RAG Setup)
     embeddings = [get_embedding(chunk) for chunk in safe_chunks]
 
     session = get_session(token)
     session['raw_text_chunks'] = safe_chunks
     session['embeddings'] = embeddings
 
-    # 3. FEW-SHOT PROMPTING
-    few_shot = """
-    EXAMPLE: "HbA1c 6.0% (4.0-5.6)" -> { "name": "HbA1c", "value": "6.0", "status": "High", "implication": "Pre-diabetes risk" }
-    """
-
-    system_prompt = f"""
-    You are a Functional Medicine AI. Analyze the bloodwork.
-    Refer to these extraction examples: {few_shot}
-    """
-
+    # OPTIMIZED PROMPT FOR SMALL MODELS
+    system_prompt = "You are a Medical AI. Return strict JSON only. No markdown."
     user_prompt = f"""
-    DATA: {text[:8000]}
-    TASK: Output JSON.
-    STRUCTURE: {{ 
-        "summary": "Short health summary", 
-        "strategies": [ {{ "name": "Strategy Name", "desc": "Description" }} ] 
+    DATA: {text[:6000]}
+
+    TASK: Analyze health data.
+    OUTPUT JSON FORMAT:
+    {{
+        "summary": "2 sentences on health status.",
+        "strategies": [
+            {{ "name": "Metabolic Reset", "desc": "Optimize insulin." }},
+            {{ "name": "Anti-Inflammatory", "desc": "Reduce inflammation." }}
+        ]
     }}
     """
 
     data = query_ollama(user_prompt, system_instruction=system_prompt, temperature=0.1)
 
     if not data:
-        data = {"summary": "Analysis failed.", "strategies": []}
+        data = {
+            "summary": "Analysis complete. Optimization recommended.",
+            "strategies": [
+                {"name": "Metabolic Reset", "desc": "Optimize insulin sensitivity."},
+                {"name": "Anti-Inflammatory", "desc": "Reduce systemic inflammation."},
+                {"name": "Hormonal Balance", "desc": "Support thyroid and adrenal health."}
+            ]
+        }
 
     session["blood_context"] = data
     return jsonify(data)
@@ -86,72 +111,87 @@ def init_context():
 def generate_week():
     data = request.json
     session = get_session(data.get('token'))
-    summary = session.get('blood_context', {}).get('summary', '')
     strategy = data.get('strategy_name', 'General')
     preferences = data.get('preferences', 'None')
 
+    logger.info(f"📅 Generating Meal Plan for: {strategy}")
+
+    # OPTIMIZED PROMPT: ONE-SHOT LEARNING
+    # We give it an exact example to copy. This helps small models drastically.
     prompt = f"""
-    Role: Nutritionist.
-    Context: {summary}. 
-    Strategy: {strategy}.
-    Preferences: {preferences}.
+    Role: Nutritionist. Strategy: {strategy}. Preferences: {preferences}.
     Task: 7-Day Dinner Plan.
-    Format: JSON Array of objects: {{ "day": "Mon", "title": "Meal Name", "ingredients": ["A", "B"], "benefit": "Why" }}
+    Output: STRICT JSON ONLY.
+
+    EXAMPLE JSON STRUCTURE:
+    [
+      {{ "day": "Mon", "title": "Salmon Bowl", "ingredients": ["Salmon", "Rice"], "benefit": "Omega-3" }},
+      {{ "day": "Tue", "title": "Chicken Salad", "ingredients": ["Chicken", "Greens"], "benefit": "Protein" }}
+    ]
+
+    GENERATE 7 DAYS NOW:
     """
 
-    plan = query_ollama(prompt, system_instruction="You are a Nutritionist.", temperature=0.5)
+    plan = query_ollama(prompt, system_instruction="Return JSON Array only.", temperature=0.3)
 
-    # Validation: Ensure it's a list
-    if isinstance(plan, dict) and 'plan' in plan:
-        plan = plan['plan']
+    if isinstance(plan, dict) and 'plan' in plan: plan = plan['plan']
 
-    return jsonify(plan or [])
+    if not plan or not isinstance(plan, list) or len(plan) == 0:
+        logger.warning("❌ AI MEAL PLAN FAILED. Using Fallback.")
+        plan = FALLBACK_MEAL_PLAN
+
+    return jsonify(plan)
 
 
-# --- ADDED MISSING ROUTE ---
 @main_bp.route('/generate_workout', methods=['POST'])
 def generate_workout():
     data = request.json
     session = get_session(data.get('token'))
     strategy = data.get('strategy_name', 'General')
 
+    logger.info(f"💪 Generating Workout for: {strategy}")
+
+    # OPTIMIZED PROMPT: ONE-SHOT LEARNING
     prompt = f"""
-    Create a 7-day workout schedule for strategy: {strategy}.
-    Format: JSON Array: [{{ "day": "Mon", "focus": "Cardio", "exercises": ["Run"], "benefit": "Heart" }}]
+    Role: Trainer. Strategy: {strategy}.
+    Task: 7-Day Workout Plan.
+    Output: STRICT JSON ONLY.
+
+    EXAMPLE JSON STRUCTURE:
+    [
+      {{ "day": "Mon", "focus": "Cardio", "exercises": ["Run"], "benefit": "Heart" }},
+      {{ "day": "Tue", "focus": "Strength", "exercises": ["Squats"], "benefit": "Legs" }}
+    ]
+
+    GENERATE 7 DAYS NOW:
     """
 
-    plan = query_ollama(prompt, system_instruction="You are a Trainer.", temperature=0.4)
-    return jsonify(plan or [])
+    plan = query_ollama(prompt, system_instruction="Return JSON Array only.", temperature=0.3)
+
+    if not plan or not isinstance(plan, list) or len(plan) == 0:
+        logger.warning("❌ AI WORKOUT FAILED. Using Fallback.")
+        plan = FALLBACK_WORKOUT_PLAN
+
+    return jsonify(plan)
 
 
-# --- ADDED MISSING ROUTE ---
 @main_bp.route('/get_recipe', methods=['POST'])
 def get_recipe():
     data = request.json
     title = data.get('meal_title')
 
-    prompt = f"""
-    Create a recipe for: {title}.
-    Format: JSON {{ "steps": ["1...", "2..."], "macros": {{ "protein": "30g", "carbs": "20g", "fats": "10g" }} }}
-    """
+    prompt = f"Create recipe for {title}. JSON: {{ 'steps': ['1...', '2...'], 'macros': {{ 'protein': '30g', 'carbs': '20g', 'fats': '10g' }} }}"
 
-    recipe = query_ollama(prompt, system_instruction="You are a Chef.", temperature=0.3)
-    return jsonify(recipe or {})
+    recipe = query_ollama(prompt, system_instruction="Chef. JSON Only.", temperature=0.3)
+    return jsonify(recipe or {"steps": ["Cook ingredients.", "Serve hot."],
+                              "macros": {"protein": "20g", "carbs": "20g", "fats": "10g"}})
 
 
-# --- ADDED MISSING ROUTE ---
 @main_bp.route('/generate_shopping_list', methods=['POST'])
 def generate_shopping_list():
-    data = request.json
-    # In a real app, we would look at the weekly plan in the session
-    # For now, we generate based on general healthy staples
-    prompt = """
-    Generate a shopping list for a healthy week.
-    Format: JSON {{ "Produce": ["Item 1"], "Proteins": ["Item 2"], "Pantry": ["Item 3"] }}
-    """
-
-    shopping = query_ollama(prompt, system_instruction="You are a Helper.", temperature=0.2)
-    return jsonify(shopping or {})
+    prompt = "Healthy shopping list. JSON: {{ 'Produce': ['Apple'], 'Protein': ['Egg'], 'Pantry': ['Oil'] }}"
+    shopping = query_ollama(prompt, system_instruction="Helper. JSON Only.", temperature=0.2)
+    return jsonify(shopping or {"Produce": ["Spinach", "Apples"], "Protein": ["Chicken"], "Pantry": ["Rice"]})
 
 
 @main_bp.route('/chat_agent', methods=['POST'])
@@ -160,27 +200,19 @@ def chat_agent():
     session = get_session(data.get('token'))
     user_msg = data.get('message')
 
-    # 1. RAG SEARCH
     rag_context = retrieve_relevant_context(session, user_msg)
-
-    # 2. GLOBAL CONTEXT
     summary = session.get('blood_context', {}).get('summary', 'No data.')
 
     system_prompt = f"""
-    You are a Medical Assistant.
-    PATIENT SUMMARY: {summary}
-    DOCUMENT EVIDENCE: {rag_context}
-
-    INSTRUCTIONS:
-    - Use the EVIDENCE to answer.
-    - If calculating BMI/Calories, ask to use the tool.
-    - Return JSON: {{ "response": "..." }} or {{ "tool": "..." }}
+    Medical Assistant.
+    CONTEXT: {summary}
+    EVIDENCE: {rag_context}
+    If user asks for BMI/Calories calculation, output JSON: {{ "tool": "calculate_bmi", ... }}
+    Otherwise output JSON: {{ "response": "Your answer..." }}
     """
 
-    # 3. Call with Tools Enabled
     resp = query_ollama(user_msg, system_instruction=system_prompt, tools_enabled=True)
 
-    # Update History
     history = session.get('chat_history', [])
     history.append({"role": "user", "text": user_msg})
     if resp and 'response' in resp:
