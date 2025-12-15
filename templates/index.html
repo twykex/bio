@@ -418,6 +418,16 @@
                         </div>
                     </div>
 
+                    <div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-8">
+                        <template x-for="tool in getNutritionTools()">
+                            <button @click="selectTool(tool); bioHacksOpen = true"
+                                    class="glass-card p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition group text-center h-full">
+                                <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-blue-400 group-hover:scale-110 transition text-lg">✨</div>
+                                <span class="text-xs font-bold leading-tight" x-text="tool.name"></span>
+                            </button>
+                        </template>
+                    </div>
+
                     <div class="glass-panel p-4 rounded-[24px] flex gap-3 overflow-x-auto custom-scroll snap-x">
                         <template x-for="day in calendarDays">
                             <button @click="selectDate(day)"
@@ -440,28 +450,49 @@
                         <div x-show="weekPlan.length > 0">
                             <template x-for="daily in getMealsForSelectedDate()">
                                 <div>
-                                    <div class="glass-card p-6 rounded-[24px] mb-8 bg-blue-600/5 border-blue-500/20">
-                                        <div class="flex items-center justify-between mb-4">
-                                            <h3 class="text-xs font-bold text-blue-400 uppercase tracking-widest">Daily Targets</h3>
-                                            <span class="text-xl font-bold" x-text="daily.total_macros.calories + ' kcal'"></span>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                        <!-- Macros -->
+                                        <div class="md:col-span-2 glass-card p-6 rounded-[24px] bg-blue-600/5 border-blue-500/20">
+                                            <div class="flex items-center justify-between mb-6">
+                                                <h3 class="text-xs font-bold text-blue-400 uppercase tracking-widest">Daily Fuel</h3>
+                                                <span class="text-2xl font-bold" x-text="daily.total_macros.calories + ' kcal'"></span>
+                                            </div>
+                                            <div class="space-y-4">
+                                                <div>
+                                                    <div class="flex justify-between text-xs text-white/60 mb-1"><span>Protein</span> <span class="text-white font-bold" x-text="daily.total_macros.protein"></span></div>
+                                                    <div class="w-full h-2 bg-white/10 rounded-full"><div class="w-[40%] h-full bg-blue-500 rounded-full"></div></div>
+                                                </div>
+                                                <div>
+                                                    <div class="flex justify-between text-xs text-white/60 mb-1"><span>Carbs</span> <span class="text-white font-bold" x-text="daily.total_macros.carbs"></span></div>
+                                                    <div class="w-full h-2 bg-white/10 rounded-full"><div class="w-[50%] h-full bg-green-500 rounded-full"></div></div>
+                                                </div>
+                                                <div>
+                                                    <div class="flex justify-between text-xs text-white/60 mb-1"><span>Fats</span> <span class="text-white font-bold" x-text="daily.total_macros.fats"></span></div>
+                                                    <div class="w-full h-2 bg-white/10 rounded-full"><div class="w-[30%] h-full bg-orange-500 rounded-full"></div></div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="grid grid-cols-3 gap-4 text-center">
-                                            <div class="p-3 rounded-xl bg-white/5">
-                                                <div class="text-[10px] text-white/40 uppercase mb-1">Protein</div>
-                                                <div class="font-bold text-lg" x-text="daily.total_macros.protein"></div>
+
+                                        <!-- Hydration Mini -->
+                                        <div class="glass-card p-6 rounded-[24px] flex flex-col justify-between">
+                                            <div>
+                                                <div class="text-xs uppercase tracking-widest text-blue-400 mb-2">Hydration</div>
+                                                <div class="text-3xl font-bold"><span x-text="waterIntake"></span><span class="text-base text-white/40">/</span><span x-text="waterGoal"></span></div>
+                                                <div class="w-full h-1 bg-white/10 rounded-full mt-3 overflow-hidden">
+                                                    <div class="h-full bg-blue-500 rounded-full transition-all duration-500" :style="`width: ${(waterIntake/waterGoal)*100}%`"></div>
+                                                </div>
                                             </div>
-                                            <div class="p-3 rounded-xl bg-white/5">
-                                                <div class="text-[10px] text-white/40 uppercase mb-1">Carbs</div>
-                                                <div class="font-bold text-lg" x-text="daily.total_macros.carbs"></div>
-                                            </div>
-                                            <div class="p-3 rounded-xl bg-white/5">
-                                                <div class="text-[10px] text-white/40 uppercase mb-1">Fats</div>
-                                                <div class="font-bold text-lg" x-text="daily.total_macros.fats"></div>
+                                            <div class="flex justify-between items-center mt-4">
+                                                <button @click="resetWater" class="text-[10px] text-white/20 hover:text-white transition">RESET</button>
+                                                <button @click="addWater" class="w-10 h-10 rounded-full bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white flex items-center justify-center transition text-xl font-bold">+</button>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <h3 class="text-xs font-bold text-white/40 uppercase tracking-widest mb-4 pl-2">Scheduled Meals</h3>
+                                    <div class="flex items-center justify-between mb-4 pl-2">
+                                        <h3 class="text-xs font-bold text-white/40 uppercase tracking-widest">Scheduled Meals</h3>
+                                        <button @click="openAddMealModal(daily)" class="text-xs font-bold text-blue-400 hover:text-white transition">+ Add Meal</button>
+                                    </div>
                                     <div class="space-y-4">
                                         <template x-for="meal in daily.meals">
                                             <div class="glass-card p-0 rounded-[24px] overflow-hidden group transition-all duration-300" :class="meal.completed ? 'opacity-50 grayscale' : ''">
@@ -800,6 +831,36 @@
                         </div>
                     </button>
                 </template>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="customMealModalOpen" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" x-cloak>
+        <div @click.outside="customMealModalOpen = false" class="glass-card w-full max-w-md rounded-[32px] p-8 animate-scale-in border border-white/10">
+            <h2 class="text-2xl font-bold mb-6">Log Custom Meal</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-white/40 uppercase mb-2">Meal Title</label>
+                    <input type="text" x-model="customMealForm.title" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                     <div>
+                        <label class="block text-xs font-bold text-white/40 uppercase mb-2">Calories</label>
+                        <input type="number" x-model="customMealForm.calories" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-white/40 uppercase mb-2">Type</label>
+                        <select x-model="customMealForm.type" class="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition appearance-none">
+                            <option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div><label class="text-[10px] uppercase text-white/40 block mb-1">Prot (g)</label><input type="number" x-model="customMealForm.protein" class="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-2 text-xs"></div>
+                    <div><label class="text-[10px] uppercase text-white/40 block mb-1">Carbs (g)</label><input type="number" x-model="customMealForm.carbs" class="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-2 text-xs"></div>
+                    <div><label class="text-[10px] uppercase text-white/40 block mb-1">Fats (g)</label><input type="number" x-model="customMealForm.fats" class="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-2 text-xs"></div>
+                </div>
+                <button @click="addCustomMeal" class="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition shadow-lg shadow-blue-900/20 mt-4">Add to Log</button>
             </div>
         </div>
     </div>
