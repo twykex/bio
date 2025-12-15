@@ -48,6 +48,7 @@ document.addEventListener('alpine:init', () => {
 
         // --- 9. CONSULTATION STATE ---
         consultationActive: false,
+        consultationType: 'onboarding',
         consultationStep: 0,
         interviewQueue: [],
         currentQuestion: null,
@@ -240,6 +241,7 @@ document.addEventListener('alpine:init', () => {
 
         startConsultation() {
             this.consultationActive = true;
+            this.consultationType = 'onboarding';
             this.consultationStep = 0;
             this.userChoices = {};
             this.bloodStrategies = [];
@@ -260,6 +262,24 @@ document.addEventListener('alpine:init', () => {
             this.currentQuestion = this.interviewQueue[0];
         },
 
+        startMealPlanner() {
+            this.consultationType = 'mealplanner';
+            this.consultationActive = true;
+            this.consultationStep = 0;
+            this.userChoices = {};
+
+            const relevantIds = ['goal', 'diet', 'allergies', 'cuisine', 'time', 'meals', 'budget', 'cooking_skill'];
+            this.interviewQueue = this.lifestyleQuestions.filter(q => relevantIds.includes(q.id)).map(q => ({
+                type: 'lifestyle', id: q.id, title: q.title, desc: q.desc, options: q.options
+            }));
+
+            if (this.interviewQueue.length > 0) {
+                this.currentQuestion = this.interviewQueue[0];
+            } else {
+                this.finalizeConsultation();
+            }
+        },
+
         selectOption(option) {
             if (this.currentQuestion.type === 'bio') {
                 this.bloodStrategies.push(option.text);
@@ -277,6 +297,12 @@ document.addEventListener('alpine:init', () => {
 
         async finalizeConsultation() {
             this.consultationActive = false;
+
+            if (this.consultationType === 'mealplanner') {
+                this.openMealWizard();
+                return;
+            }
+
             // First time generation uses "Personalized" default
             this.startLoading('plan');
             await this.executePlanGeneration("Personalized Protocol");
@@ -291,7 +317,7 @@ document.addEventListener('alpine:init', () => {
             try {
                 const res = await fetch('/propose_meal_strategies', {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ token: this.token })
+                    body: JSON.stringify({ token: this.token, lifestyle: this.userChoices })
                 });
                 this.mealStrategies = await res.json();
             } catch(e) {

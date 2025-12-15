@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Resolved imports: Import app instance and in-memory stores from app.py
 from app import app, sessions, users, password_reset_tokens
+from utils import sessions as utils_sessions
 
 class TestRoutes(unittest.TestCase):
     def setUp(self):
@@ -17,6 +18,7 @@ class TestRoutes(unittest.TestCase):
         self.app.testing = True
         # Clear sessions and user data to ensure test isolation
         sessions.clear()
+        utils_sessions.clear()
         users.clear()
         password_reset_tokens.clear()
 
@@ -60,14 +62,14 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(response.get_json()['summary'], "Healthy")
 
         # Verify session updated
-        self.assertIn('testtoken', sessions)
-        self.assertEqual(sessions['testtoken']['blood_context']['summary'], "Healthy")
+        self.assertIn('testtoken', utils_sessions)
+        self.assertEqual(utils_sessions['testtoken']['blood_context']['summary'], "Healthy")
 
     @patch('routes.main_routes.query_ollama')
     def test_generate_week(self, mock_query):
         mock_query.return_value = [{"day": "Mon", "meals": [{"title": "Meal"}]}]
 
-        sessions['testtoken'] = {'blood_context': {}}
+        utils_sessions['testtoken'] = {'blood_context': {}}
 
         response = self.app.post('/generate_week', json={
             'token': 'testtoken',
@@ -82,7 +84,7 @@ class TestRoutes(unittest.TestCase):
     def test_generate_week_fallback(self, mock_query):
         mock_query.return_value = None # Fail
 
-        sessions['testtoken'] = {'blood_context': {}}
+        utils_sessions['testtoken'] = {'blood_context': {}}
 
         response = self.app.post('/generate_week', json={
             'token': 'testtoken',
@@ -98,7 +100,7 @@ class TestRoutes(unittest.TestCase):
     @patch('routes.main_routes.query_ollama')
     def test_chat_agent(self, mock_query):
         mock_query.return_value = {"response": "Hello"}
-        sessions['testtoken'] = {'weekly_plan': [], 'chat_history': []}
+        utils_sessions['testtoken'] = {'weekly_plan': [], 'chat_history': []}
 
         response = self.app.post('/chat_agent', json={
             'token': 'testtoken',
@@ -109,7 +111,7 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(response.get_json()['response'], "Hello")
 
         # Verify history updated
-        history = sessions['testtoken']['chat_history']
+        history = utils_sessions['testtoken']['chat_history']
         self.assertEqual(len(history), 2)
         self.assertEqual(history[0]['text'], 'Hi')
         self.assertEqual(history[1]['text'], 'Hello')
@@ -142,6 +144,26 @@ class TestRoutes(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 302)
         self.assertNotIn(token, password_reset_tokens)
+
+    @patch('routes.main_routes.query_ollama')
+    def test_propose_meal_strategies_with_lifestyle(self, mock_query):
+        # Mock AI response
+        mock_query.return_value = [{"title": "Strategy 1"}]
+
+        utils_sessions['testtoken'] = {'blood_context': {'summary': 'Healthy'}}
+
+        response = self.app.post('/propose_meal_strategies', json={
+            'token': 'testtoken',
+            'lifestyle': {'goal': 'Weight Loss'}
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()[0]['title'], "Strategy 1")
+
+        # Verify prompt contained lifestyle
+        args, _ = mock_query.call_args
+        self.assertIn("LIFESTYLE PROFILE", args[0])
+        self.assertIn("Weight Loss", args[0])
 
 if __name__ == '__main__':
     unittest.main()

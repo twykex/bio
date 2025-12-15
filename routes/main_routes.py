@@ -349,13 +349,20 @@ def propose_meal_strategies():
     data = request.json
     session = get_session(data.get('token'))
     summary = session.get('blood_context', {}).get('summary', 'General Health')
+    lifestyle = data.get('lifestyle', {})
 
-    # Ask AI to brainstorm 3 distinct approaches based on bloodwork
+    # Ask AI to brainstorm 3 distinct approaches based on bloodwork and lifestyle
     prompt = f"""
     ROLE: Elite Medical Nutritionist.
     PATIENT CONTEXT: {summary}
+    LIFESTYLE PROFILE:
+    - GOAL: {lifestyle.get('goal', 'General Health')}
+    - DIET: {lifestyle.get('diet', 'Balanced')}
+    - CUISINE: {lifestyle.get('cuisine', 'Varied')}
+    - TIME: {lifestyle.get('time', '30 mins')}
+    - BUDGET: {lifestyle.get('budget', 'Moderate')}
 
-    TASK: Propose 3 distinct weekly meal plan strategies to fix the patient's issues.
+    TASK: Propose 3 distinct weekly meal plan strategies to fix the patient's issues while respecting their lifestyle.
     1. "Aggressive Repair": Hardcore focus on biomarkers.
     2. "Balanced Lifestyle": 80/20 rule, easier to stick to.
     3. "Time Saver": Dense nutrients, fast prep.
