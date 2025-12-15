@@ -1,6 +1,6 @@
-<div x-show="currentTab === 'status'" class="max-w-7xl mx-auto space-y-6 animate-scale-in" x-cloak>
+<div x-show="currentTab === 'status'" class="max-w-7xl mx-auto space-y-6 animate-fade-in" x-cloak>
     <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 animate-slide-up delay-100">
         <div>
             <h2 class="text-3xl font-bold tracking-tight">Biological Status</h2>
             <p class="text-white/40">Real-time analysis of your metabolic and physiological state.</p>
@@ -18,7 +18,7 @@
     </div>
 
     <!-- Top Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-slide-up delay-200">
 
         <!-- 1. Profile & Vitals (Col Span 4) -->
         <div class="lg:col-span-4 glass-card rounded-[32px] p-8 flex flex-col justify-between relative overflow-hidden">
@@ -124,7 +124,7 @@
     </div>
 
     <!-- Main Content Split -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full animate-slide-up delay-300">
 
         <!-- Left: Strategies & Protocols (2/3) -->
         <div class="lg:col-span-2 space-y-6">

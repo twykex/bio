@@ -1,7 +1,7 @@
-<div x-show="currentTab === 'fitness'" class="max-w-6xl mx-auto space-y-6 animate-scale-in pb-24">
+<div x-show="currentTab === 'fitness'" class="max-w-6xl mx-auto space-y-6 animate-fade-in pb-24" x-cloak>
 
     <!-- Header -->
-    <div class="flex justify-between items-center">
+    <div class="flex justify-between items-center animate-slide-up delay-100">
         <div>
             <h2 class="text-2xl font-bold tracking-tight">Training Lab</h2>
             <p class="text-white/40 text-xs mt-1">Bio-Individualized Protocol</p>
@@ -14,7 +14,7 @@
     </div>
 
     <!-- Calendar Strip -->
-    <div class="flex gap-2 overflow-x-auto custom-scroll snap-x py-2">
+    <div class="flex gap-2 overflow-x-auto custom-scroll snap-x py-2 animate-slide-up delay-200">
         <template x-for="day in calendarDays">
             <button @click="selectDate(day)"
                     class="flex-shrink-0 w-14 h-16 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all duration-300 snap-center border"
@@ -27,7 +27,7 @@
     </div>
 
     <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-slide-up delay-300">
 
         <!-- Left: Workout Session -->
         <div class="lg:col-span-2 space-y-6">
