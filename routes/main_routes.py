@@ -482,6 +482,45 @@ def propose_meal_strategies():
     return jsonify(strategies)
 
 
+@main_bp.route('/load_demo_data', methods=['POST'])
+def load_demo_data():
+    token = request.json.get('token')
+
+    sample_context = {
+        "patient_name": "Demo User",
+        "health_score": 72,
+        "summary": "Analysis indicates suboptimal iron levels and elevated cortisol. Metabolic function is otherwise normal. Recommended protocol focuses on stress reduction and nutrient density.",
+        "biomarkers": [
+            {"name": "Vitamin D", "value": "28", "unit": "ng/mL", "status": "Low"},
+            {"name": "Ferritin", "value": "30", "unit": "ng/mL", "status": "Borderline"},
+            {"name": "Cortisol", "value": "22", "unit": "ug/dL", "status": "High"},
+            {"name": "HbA1c", "value": "5.1", "unit": "%", "status": "Optimal"},
+            {"name": "Testosterone", "value": "650", "unit": "ng/dL", "status": "Normal"}
+        ],
+        "issues": [
+            {"title": "Low Iron Stores",
+             "explanation": "Ferritin is on the lower end, suggesting reduced iron reserves which may impact energy.",
+             "value": "Borderline", "options": [{"text": "Dietary Approach", "type": "Diet"},
+                                                 {"text": "Supplementation", "type": "Sup"}]},
+            {"title": "Elevated Cortisol",
+             "explanation": "High stress hormone levels detected. This can interfere with sleep and recovery.",
+             "value": "High", "options": [{"text": "Lifestyle Changes", "type": "Life"},
+                                          {"text": "Adaptogens", "type": "Sup"}]}
+        ],
+        "strategies": [
+            {"name": "Adrenal Support", "desc": "Focus on lowering cortisol through adaptogens and nutrient timing."},
+            {"name": "Energy Restoration",
+             "desc": "High iron bioavailability diet to boost ferritin and oxygen transport."},
+            {"name": "Balanced Optimization", "desc": "A moderate approach addressing all biomarkers equally."}
+        ]
+    }
+
+    session_data = get_session(token)
+    session_data['blood_context'] = sample_context
+
+    return jsonify(sample_context)
+
+
 @main_bp.route('/analyze_food_plate', methods=['POST'])
 def analyze_food_plate():
     if 'file' not in request.files: return jsonify({"error": "No file"}), 400
