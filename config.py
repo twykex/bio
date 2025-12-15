@@ -10,7 +10,7 @@ logging.basicConfig(
 
 # --- CONFIGURATION ---
 # CHANGED: Set to the specific model you want
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma3:12b")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma3:4b")
 
 # CRITICAL: Point to the base URL (127.0.0.1 is safer than localhost on Windows)
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
