@@ -216,6 +216,10 @@ def init_context():
         "patient_name": "User",
         "health_score": 78,
         "summary": "Short overall health summary.",
+        "biomarkers": [
+            {{ "name": "Vitamin D", "value": "18", "unit": "ng/mL", "status": "Low" }},
+            {{ "name": "Hemoglobin", "value": "14.5", "unit": "g/dL", "status": "Normal" }}
+        ],
         "issues": [
             {{
                 "title": "Low Vitamin D",
@@ -238,6 +242,12 @@ def init_context():
             "patient_name": "Guest",
             "health_score": 75,
             "summary": "We detected some potential optimizations for your metabolism.",
+            "biomarkers": [
+                {"name": "Glucose", "value": "95", "unit": "mg/dL", "status": "Normal"},
+                {"name": "HbA1c", "value": "5.7", "unit": "%", "status": "Borderline"},
+                {"name": "Cholesterol", "value": "190", "unit": "mg/dL", "status": "Normal"},
+                {"name": "Vitamin D", "value": "30", "unit": "ng/mL", "status": "Normal"}
+            ],
             "strategies": [
                 {"name": "Metabolic Reset", "desc": "Focus on insulin sensitivity and inflammation reduction."},
                 {"name": "Energy Optimization", "desc": "Targeting mitochondrial health and fatigue."},
