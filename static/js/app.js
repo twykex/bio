@@ -142,7 +142,8 @@ const app = (userId) => ({
         const keys = [
             'context', 'weekPlan', 'workoutPlan', 'waterIntake',
             'userName', 'userChoices', 'journalEntries', 'journalAnalysis',
-            'moodHistory', 'activityLog', 'waterHistory', 'achievements', 'workoutHistory'
+            'moodHistory', 'activityLog', 'waterHistory', 'achievements', 'workoutHistory',
+            'favoriteBiohacks', 'recentBiohacks'
         ];
 
         keys.forEach(key => {

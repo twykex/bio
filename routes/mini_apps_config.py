@@ -131,6 +131,32 @@ APP_CONFIGS = {
         "prompt": "Alternative to '{exercise}' due to '{reason}'. Output format: {{ 'alternative': '...', 'benefit': '...' }}",
         "temp": 0.2
     },
+    # --- New Biohacks ---
+    "caffeine_optimizer": {
+        "system": "You are a Sleep Scientist.",
+        "prompt": "Calculate the latest caffeine cutoff time for a {sleep_time} bedtime. Typical intake: {caffeine_amount}mg. Output format: {{ 'cutoff_time': '...', 'reason': '...' }}",
+        "temp": 0.1
+    },
+    "fasting_timer": {
+        "system": "You are a Metabolic Health Expert.",
+        "prompt": "I finished eating at {last_meal_time}. Calculate the next eating window for a {fasting_type} fast. Output format: {{ 'start_eating_at': '...', 'fasting_hours': '...' }}",
+        "temp": 0.1
+    },
+    "circadian_sync": {
+        "system": "You are a Chronobiologist.",
+        "prompt": "Create a light exposure schedule for a {wake_time} wake up time. Output format: {{ 'sunlight_viewing': '...', 'caffeine_cutoff': '...', 'blue_light_block': '...' }}",
+        "temp": 0.2
+    },
+    "macro_cheat_sheet": {
+        "system": "You are a Nutritionist.",
+        "prompt": "List top 5 sources of {macro_type} suitable for {diet_preference} diet. Output format: {{ 'sources': ['...', '...', '...'] }}",
+        "temp": 0.2
+    },
+    "breathwork_guide": {
+        "system": "You are a Breathwork Instructor.",
+        "prompt": "Guide for {technique} breathing. Output format: {{ 'instructions': ['Step 1...', 'Step 2...'], 'benefits': '...' }}",
+        "temp": 0.3
+    },
     # --- New Fitness Tools ---
     "calculate_1rm": {
         "system": "You are a Strength Coach. Use the Epley Formula: w * (1 + r/30).",
@@ -189,5 +215,10 @@ FALLBACKS = {
     "heart_rate_zones": {"max_hr": "180", "zone_2": "110-130"},
     "exercise_form_check": {"cues": ["Keep back straight"], "common_mistake": "Rounding back"},
     "symptom_checker": {"causes": ["Dehydration", "Fatigue", "Stress"], "recommendation": "Rest and drink water."},
-    "analyze_journal": {"mood": "Neutral", "triggers": ["None identified"], "tip": "Keep journaling to track your progress."}
+    "analyze_journal": {"mood": "Neutral", "triggers": ["None identified"], "tip": "Keep journaling to track your progress."},
+    "caffeine_optimizer": {"cutoff_time": "2:00 PM", "reason": "Half-life of caffeine is ~5-6 hours."},
+    "fasting_timer": {"start_eating_at": "12:00 PM", "fasting_hours": "16"},
+    "circadian_sync": {"sunlight_viewing": "8:00 AM", "caffeine_cutoff": "2:00 PM", "blue_light_block": "8:00 PM"},
+    "macro_cheat_sheet": {"sources": ["Chicken", "Tofu", "Lentils"]},
+    "breathwork_guide": {"instructions": ["Inhale 4s", "Hold 4s", "Exhale 4s", "Hold 4s"], "benefits": "Stress reduction"}
 }

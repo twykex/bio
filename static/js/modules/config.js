@@ -36,6 +36,11 @@ export const toolsList = [
     { id: 'stress_relief', category: 'Wellness', name: 'Stress Relief', desc: 'Techniques to calm down.', inputs: [{k:'context', l:'Context', p:'Work Stress', options: ['Work Stress', 'Anxiety', 'Overwhelmed', 'Panic', 'Insomnia']}] },
     { id: 'focus_technique', category: 'Performance', name: 'Focus Mode', desc: 'Boost your concentration.', inputs: [{k:'task', l:'Task Type', p:'Deep Work', options: ['Deep Work', 'Studying', 'Creative Work', 'Admin Tasks', 'Reading']}] },
     { id: 'exercise_alternative', category: 'Performance', name: 'Exercise Swap', desc: 'Find an alternative exercise.', inputs: [{k:'exercise', l:'Exercise', p:'Running'}, {k:'reason', l:'Reason', p:'Knee Pain', options: ['Knee Pain', 'Back Pain', 'No Equipment', 'Boredom', 'Time Constraint']}] },
+    { id: 'caffeine_optimizer', category: 'Wellness', name: 'Caffeine Optimizer', desc: 'Find your caffeine cutoff.', inputs: [{k:'sleep_time', l:'Bedtime', p:'10:00 PM'}, {k:'caffeine_amount', l:'Daily Intake (mg)', p:'200'}] },
+    { id: 'fasting_timer', category: 'Nutrition', name: 'Fasting Timer', desc: 'Plan your next meal.', inputs: [{k:'last_meal_time', l:'Last Meal', p:'8:00 PM'}, {k:'fasting_type', l:'Fasting Type', p:'16:8', options: ['16:8', '18:6', '20:4', 'OMAD']}] },
+    { id: 'circadian_sync', category: 'Wellness', name: 'Circadian Sync', desc: 'Optimize light exposure.', inputs: [{k:'wake_time', l:'Wake Up Time', p:'7:00 AM'}] },
+    { id: 'macro_cheat_sheet', category: 'Nutrition', name: 'Macro Cheat Sheet', desc: 'Top sources for macros.', inputs: [{k:'macro_type', l:'Macro', p:'Protein', options: ['Protein', 'Carbs', 'Fats', 'Fiber']}, {k:'diet_preference', l:'Diet', p:'Omnivore', options: ['Omnivore', 'Vegan', 'Vegetarian', 'Keto', 'Paleo']}] },
+    { id: 'breathwork_guide', category: 'Wellness', name: 'Breathwork Guide', desc: 'Guided breathing exercises.', inputs: [{k:'technique', l:'Technique', p:'Box Breathing', options: ['Box Breathing', '4-7-8 Relax', 'Wim Hof Style', 'Alternate Nostril']}] },
 ];
 
 export const fitnessToolsList = [
