@@ -184,6 +184,100 @@ def analyze_image(image_file, prompt):
         return None
 
 
+def repair_lazy_json(text):
+    text = re.sub(r'("day":\s*"[^"]+",\s*)("[^"]+")(\s*,)', r'\1"title": \2\3', text)
+    text = re.sub(r'(,\s*)("[^"]+")(\s*\})', r'\1"desc": \2\3', text)
+    return text
+
+
+def fix_truncated_json(json_str):
+    json_str = json_str.strip()
+    json_str = re.sub(r',\s*$', '', json_str)
+    stack = []
+    is_inside_string = False
+    escaped = False
+
+    for char in json_str:
+        if is_inside_string:
+            if char == '"' and not escaped:
+                is_inside_string = False
+            elif char == '\\':
+                escaped = not escaped
+            else:
+                escaped = False
+        else:
+            if char == '"':
+                is_inside_string = True
+            elif char == '{':
+                stack.append('}')
+            elif char == '[':
+                stack.append(']')
+            elif char == '}' or char == ']':
+                if stack and stack[-1] == char:
+                    stack.pop()
+
+    if is_inside_string:
+        json_str += '"'
+    while stack:
+        json_str += stack.pop()
+    return json_str
+
+
+def remove_json_comments(text):
+    output = []
+    in_string = False
+    escape = False
+    i = 0
+    while i < len(text):
+        char = text[i]
+        if in_string:
+            if char == '"' and not escape:
+                in_string = False
+            if char == '\\' and not escape:
+                escape = True
+            else:
+                escape = False
+            output.append(char)
+            i += 1
+        else:
+            if char == '"':
+                in_string = True
+                output.append(char)
+                i += 1
+            elif char == '/' and i + 1 < len(text) and text[i+1] == '/':
+                i += 2
+                while i < len(text) and text[i] != '\n':
+                    i += 1
+            else:
+                output.append(char)
+                i += 1
+    return "".join(output)
+
+
+def clean_and_parse_json(text):
+    # 1. Use stack-based extractor to isolate JSON block
+    cleaned = clean_json_output(text)
+
+    # 2. Fix specific lazy patterns
+    cleaned = repair_lazy_json(cleaned)
+    cleaned = remove_json_comments(cleaned)
+
+    # 3. Fix common syntax errors
+    cleaned = re.sub(r'\]\s*"\s*\}', '] }', cleaned)
+    cleaned = re.sub(r',\s*\}', '}', cleaned)
+    cleaned = re.sub(r',\s*\]', ']', cleaned)
+
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        logger.warning("JSON Invalid. Attempting auto-balance...")
+        balanced = fix_truncated_json(cleaned)
+        try:
+            return json.loads(balanced)
+        except json.JSONDecodeError:
+            return None
+
+
 def query_ollama(prompt, system_instruction=None, tools_enabled=False, temperature=0.1, retries=1, images=None):
     messages = []
     if system_instruction: messages.append({"role": "system", "content": system_instruction})
@@ -205,10 +299,13 @@ def query_ollama(prompt, system_instruction=None, tools_enabled=False, temperatu
         r = requests.post(CHAT_ENDPOINT, json=payload)
         response_text = r.json().get('message', {}).get('content', '')
 
-        # Use the new robust cleaner
-        cleaned = clean_json_output(response_text)
+        # Use the robust cleaner
+        data = clean_and_parse_json(response_text)
 
-        data = json.loads(cleaned)
+        if data is None and retries > 0:
+            logger.warning("🔄 JSON Failed. Retrying with stricter prompt...")
+            prompt += "\nIMPORTANT: You previously outputted invalid JSON. Fix syntax. Ensure all keys are present."
+            return query_ollama(prompt, system_instruction, tools_enabled, temperature, retries - 1, images)
 
         # Tool Logic
         if tools_enabled and isinstance(data, dict) and "tool" in data:
@@ -217,9 +314,6 @@ def query_ollama(prompt, system_instruction=None, tools_enabled=False, temperatu
                                 tools_enabled=False)
 
         return data
-    except json.JSONDecodeError:
-        if retries > 0: return query_ollama(f"Fix JSON: {response_text}", retries=retries - 1)
-        return None
     except Exception as e:
         logger.error(f"AI Error: {e}")
         return None

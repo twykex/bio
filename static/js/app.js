@@ -1,7 +1,7 @@
 document.addEventListener('alpine:init', () => {
-    Alpine.data('app', () => ({
+    Alpine.data('app', (userId) => ({
         // --- 1. AUTH & CONFIG ---
-        token: localStorage.getItem('bio_token') || Math.random().toString(36).substring(7),
+        token: userId || localStorage.getItem('bio_token') || Math.random().toString(36).substring(7),
 
         // --- 2. GLOBAL STATE ---
         context: null,
