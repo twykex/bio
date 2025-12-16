@@ -41,8 +41,22 @@ export function utilsSlice() {
             this.notify("Settings Saved");
         },
 
-        resetSystem() {
-            if(confirm('Reset all data?')) { this.context = null; this.weekPlan = []; this.chatHistory = []; this.toasts = []; this.currentTab = 'dashboard'; localStorage.clear(); window.location.reload(); }
+        async resetSystem() {
+            if (confirm('Are you sure you want to reset your data? Your account will not be deleted.')) {
+                const res = await fetch('/reset-data', { method: 'POST' });
+                if (res.ok) {
+                    const keysToRemove = [
+                        'context', 'weekPlan', 'workoutPlan', 'waterIntake',
+                        'userName', 'userChoices', 'journalEntries', 'journalAnalysis',
+                        'moodHistory', 'activityLog', 'waterHistory', 'achievements', 'workoutHistory',
+                        'favoriteBiohacks', 'recentBiohacks', 'fastingStart'
+                    ];
+                    keysToRemove.forEach(k => localStorage.removeItem(k));
+                    window.location.reload();
+                } else {
+                    this.notify('Failed to reset data on the server.', 'error');
+                }
+            }
         },
 
         exportData() {

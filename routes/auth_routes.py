@@ -1,9 +1,10 @@
 import uuid
 import logging
 import time
-from flask import Blueprint, request, session, redirect, url_for, flash, render_template
+from flask import Blueprint, request, session, redirect, url_for, flash, render_template, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from services.user_store import users, password_reset_tokens
+from utils import sessions
 
 logger = logging.getLogger(__name__)
 auth_bp = Blueprint('auth_bp', __name__)
@@ -123,3 +124,17 @@ def reset_password(token):
         return redirect(url_for('auth_bp.login'))
 
     return render_template('reset_password.html')
+
+@auth_bp.route('/reset-data', methods=['POST'])
+def reset_data():
+    user_id = session.get('user_id')
+    if user_id:
+        # Clear data from the sessions dictionary
+        if user_id in sessions:
+            del sessions[user_id]
+
+        # Also clear any user-specific data from the Flask session if needed
+        # For example, session.pop('some_user_specific_key', None)
+
+        return jsonify({"success": "User data has been reset."}), 200
+    return jsonify({"error": "User not found or not logged in."}), 404
