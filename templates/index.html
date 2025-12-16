@@ -19,16 +19,27 @@
             extend: {
               fontFamily: {
                   sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                  mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
               },
               colors: {
                 glass: {
                   border: 'rgba(255, 255, 255, 0.08)',
                   surface: 'rgba(255, 255, 255, 0.03)',
-                  highlight: 'rgba(255, 255, 255, 0.1)'
+                  highlight: 'rgba(255, 255, 255, 0.1)',
+                  input: 'rgba(0, 0, 0, 0.3)',
                 },
                 brand: {
                     blue: '#3b82f6',
                     purple: '#8b5cf6',
+                    cyan: '#06b6d4',
+                    emerald: '#10b981',
+                    rose: '#f43f5e',
+                    orange: '#f97316',
+                },
+                dark: {
+                    bg: '#050507',
+                    card: '#0e0e11',
+                    sidebar: '#08080a',
                 },
                 ios: {
                     bg: '#000000',
@@ -46,9 +57,12 @@
                 'scan': 'scan 3s ease-in-out infinite',
                 'float': 'float 6s ease-in-out infinite',
                 'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                'slide-down': 'slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                 'fade-in': 'fadeIn 1s ease-out forwards',
                 'gradient-x': 'gradient-x 15s ease infinite',
                 'blob': 'blob 7s infinite',
+                'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                'spin-slow': 'spin 3s linear infinite',
               },
               keyframes: {
                 blob: {
@@ -78,6 +92,10 @@
                   '0%': { transform: 'translateY(20px)', opacity: '0' },
                   '100%': { transform: 'translateY(0)', opacity: '1' },
                 },
+                slideDown: {
+                  '0%': { transform: 'translateY(-20px)', opacity: '0' },
+                  '100%': { transform: 'translateY(0)', opacity: '1' },
+                },
                 fadeIn: {
                   '0%': { opacity: '0' },
                   '100%': { opacity: '1' },
@@ -99,8 +117,6 @@
     </script>
 
     <!-- 3. Custom Manual CSS -->
-<!-- 3. Custom Manual CSS -->
-<!-- 3. Custom Manual CSS -->
     <style>
         /* Custom Scrollbar */
         .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -122,7 +138,7 @@
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
-        /* MISSING CSS FOR AI TOOLTIP - This hides the top-left box */
+        /* AI Tooltip */
         .ai-tooltip {
             position: fixed;
             background: rgba(10, 10, 10, 0.95);
@@ -135,7 +151,7 @@
             pointer-events: none;
             z-index: 100;
             max-width: 250px;
-            opacity: 0; /* Hidden by default */
+            opacity: 0;
             transition: opacity 0.2s;
             box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
         }
@@ -151,20 +167,25 @@
     </style>
 
     <!-- Scripts -->
-        <script type="module" src="/static/js/app.js"></script>
+    <script type="module" src="/static/js/app.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
-<body class="h-[100dvh] w-screen overflow-hidden relative flex bg-[#050505] text-white selection:bg-blue-500/30" x-data="app('{{ user_id|default('') }}')">
+<body class="h-[100dvh] w-screen overflow-hidden relative flex bg-[#050505] text-white selection:bg-brand-blue/30" x-data="app('{{ user_id|default('') }}')">
 
     <!-- Background Effects -->
-    <div class="fixed inset-0 pointer-events-none z-0">
-        <div class="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] animate-breathe"></div>
-        <div class="absolute bottom-[-10%] right-[10%] w-[600px] h-[600px] bg-indigo-600/5 rounded-full blur-[100px]"></div>
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+         <!-- Dynamic Blobs -->
+        <div class="absolute top-[-20%] left-[10%] w-[800px] h-[800px] bg-brand-blue/10 rounded-full blur-[120px] animate-blob"></div>
+        <div class="absolute top-[20%] right-[-10%] w-[600px] h-[600px] bg-brand-purple/10 rounded-full blur-[100px] animate-blob" style="animation-delay: 2s;"></div>
+        <div class="absolute bottom-[-20%] left-[30%] w-[700px] h-[700px] bg-brand-cyan/5 rounded-full blur-[120px] animate-blob" style="animation-delay: 4s;"></div>
+
+        <!-- Grid Pattern Overlay -->
+        <div class="absolute inset-0 bg-[url('/static/img/grid.svg')] opacity-[0.02]" style="mask-image: linear-gradient(to bottom, transparent, black, transparent);"></div>
     </div>
 
     <!-- 1. Landing / Upload Screen -->
@@ -178,12 +199,12 @@
         <!-- Sidebar -->
         {% include 'components/layout/sidebar.html' %}
 
-        <main class="flex-1 h-full overflow-hidden relative flex flex-col bg-[#050505]">
+        <main class="flex-1 h-full overflow-hidden relative flex flex-col bg-[#050505]/50 backdrop-blur-sm">
             <!-- Header -->
             {% include 'components/layout/header.html' %}
 
             <!-- Scrollable Content Area -->
-            <div class="flex-1 overflow-y-auto custom-scroll p-6 lg:p-10">
+            <div class="flex-1 overflow-y-auto custom-scroll p-4 lg:p-8">
                 {% include 'components/tabs/status.html' %}
                 {% include 'components/tabs/health.html' %}
                 {% include 'components/tabs/dashboard.html' %}

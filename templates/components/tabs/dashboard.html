@@ -3,16 +3,16 @@
     <!-- 1. Header -->
     <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-slide-up delay-100">
         <div>
-            <h2 class="text-4xl font-bold tracking-tight">Hello, <span x-text="userName" class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400"></span></h2>
-            <p class="text-white/40 mt-1">Ready to optimize your day?</p>
+            <h2 class="text-4xl font-bold tracking-tight">Hello, <span x-text="userName" class="text-transparent bg-clip-text bg-gradient-to-r from-brand-blue to-brand-purple"></span></h2>
+            <p class="text-white/40 mt-1">Ready to optimize your biology?</p>
         </div>
         <div class="flex items-center gap-3">
-             <div class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-white/60 flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+             <div class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-white/60 flex items-center gap-2 backdrop-blur-md">
+                <span class="w-2 h-2 rounded-full bg-brand-blue"></span>
                 <span x-text="userChoices?.goal || 'General Health'"></span>
             </div>
-             <div class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-white/60 flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+             <div class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-white/60 flex items-center gap-2 backdrop-blur-md">
+                <span class="w-2 h-2 rounded-full bg-brand-orange"></span>
                 <span>Day <span x-text="streak"></span> Streak</span>
             </div>
         </div>
@@ -21,17 +21,17 @@
     <!-- 2. Hero Section: Bio-Score & Sub-Scores -->
     <div class="grid grid-cols-1 md:grid-cols-12 gap-6 animate-slide-up delay-200">
         <!-- Main Score -->
-        <div class="md:col-span-4 glass-card rounded-[32px] p-8 flex flex-col items-center justify-center relative overflow-hidden">
-             <div class="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10 opacity-50"></div>
+        <div class="md:col-span-4 glass-card rounded-[32px] p-8 flex flex-col items-center justify-center relative overflow-hidden group">
+             <div class="absolute inset-0 bg-gradient-to-br from-brand-blue/10 to-brand-purple/10 opacity-50 group-hover:opacity-70 transition-opacity duration-500"></div>
 
              <!-- Circular Progress -->
-             <div class="relative w-64 h-64">
-                <svg class="w-full h-full transform -rotate-90">
-                    <circle cx="128" cy="128" r="110" stroke="rgba(255,255,255,0.05)" stroke-width="24" fill="none"></circle>
-                    <circle cx="128" cy="128" r="110" stroke="url(#gradientScore)" stroke-width="24" fill="none"
+             <div class="relative w-64 h-64 scale-100 group-hover:scale-105 transition-transform duration-500">
+                <svg class="w-full h-full transform -rotate-90 drop-shadow-2xl">
+                    <circle cx="128" cy="128" r="110" stroke="rgba(255,255,255,0.05)" stroke-width="20" fill="none"></circle>
+                    <circle cx="128" cy="128" r="110" stroke="url(#gradientScore)" stroke-width="20" fill="none"
                             :stroke-dasharray="690" :stroke-dashoffset="690 - (690 * healthScore / 100)"
                             stroke-linecap="round"
-                            class="transition-all duration-1000 ease-out drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]"></circle>
+                            class="transition-all duration-1000 ease-out"></circle>
                     <defs>
                         <linearGradient id="gradientScore" x1="0%" y1="0%" x2="100%" y2="0%">
                             <stop offset="0%" stop-color="#3b82f6" />
@@ -50,78 +50,78 @@
         <div class="md:col-span-8 grid grid-cols-1 md:grid-cols-3 gap-4">
 
             <!-- Body -->
-            <div class="glass-card rounded-[24px] p-6 flex flex-col justify-between relative overflow-hidden group hover:bg-white/5 transition">
+            <div class="glass-card rounded-[24px] p-6 flex flex-col justify-between relative overflow-hidden group hover:bg-white/5 transition border-l-4 border-l-transparent hover:border-l-brand-blue">
                 <div class="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-40 transition transform group-hover:scale-110">
-                    <div class="text-4xl">💪</div>
+                    <div class="text-4xl text-brand-blue">💪</div>
                 </div>
                 <div>
-                    <div class="text-xs uppercase tracking-widest text-blue-400 mb-2">Body</div>
+                    <div class="text-xs uppercase tracking-widest text-brand-blue mb-2 font-bold">Body</div>
                     <div class="text-3xl font-bold">88</div>
                 </div>
                 <div class="mt-4">
                      <div class="flex justify-between text-[10px] text-white/40 mb-1"><span>Recovery</span> <span>High</span></div>
-                     <div class="w-full h-1 bg-white/10 rounded-full"><div class="w-[88%] h-full bg-blue-500 rounded-full"></div></div>
+                     <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden"><div class="w-[88%] h-full bg-brand-blue rounded-full shadow-[0_0_10px_#3b82f6]"></div></div>
                 </div>
             </div>
 
             <!-- Mind -->
-            <div class="glass-card rounded-[24px] p-6 flex flex-col justify-between relative overflow-hidden group hover:bg-white/5 transition">
+            <div class="glass-card rounded-[24px] p-6 flex flex-col justify-between relative overflow-hidden group hover:bg-white/5 transition border-l-4 border-l-transparent hover:border-l-brand-purple">
                 <div class="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-40 transition transform group-hover:scale-110">
-                    <div class="text-4xl">🧠</div>
+                    <div class="text-4xl text-brand-purple">🧠</div>
                 </div>
                 <div>
-                    <div class="text-xs uppercase tracking-widest text-purple-400 mb-2">Mind</div>
+                    <div class="text-xs uppercase tracking-widest text-brand-purple mb-2 font-bold">Mind</div>
                     <div class="text-3xl font-bold">92</div>
                 </div>
                  <div class="mt-4">
                      <div class="flex justify-between text-[10px] text-white/40 mb-1"><span>Focus</span> <span>Peak</span></div>
-                     <div class="w-full h-1 bg-white/10 rounded-full"><div class="w-[92%] h-full bg-purple-500 rounded-full"></div></div>
+                     <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden"><div class="w-[92%] h-full bg-brand-purple rounded-full shadow-[0_0_10px_#8b5cf6]"></div></div>
                 </div>
             </div>
 
             <!-- Sleep -->
-            <div class="glass-card rounded-[24px] p-6 flex flex-col justify-between relative overflow-hidden group hover:bg-white/5 transition">
+            <div class="glass-card rounded-[24px] p-6 flex flex-col justify-between relative overflow-hidden group hover:bg-white/5 transition border-l-4 border-l-transparent hover:border-l-brand-cyan">
                 <div class="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-40 transition transform group-hover:scale-110">
-                    <div class="text-4xl">🌙</div>
+                    <div class="text-4xl text-brand-cyan">🌙</div>
                 </div>
                 <div>
-                    <div class="text-xs uppercase tracking-widest text-indigo-400 mb-2">Sleep</div>
+                    <div class="text-xs uppercase tracking-widest text-brand-cyan mb-2 font-bold">Sleep</div>
                     <div class="text-3xl font-bold" x-text="userChoices?.sleep?.includes('Good') ? '85' : (userChoices?.sleep?.includes('Poor') ? '45' : '70')"></div>
                 </div>
                  <div class="mt-4">
                      <div class="flex justify-between text-[10px] text-white/40 mb-1"><span>Quality</span> <span x-text="userChoices?.sleep || 'Avg'"></span></div>
-                     <div class="w-full h-1 bg-white/10 rounded-full"><div class="w-[70%] h-full bg-indigo-500 rounded-full"></div></div>
+                     <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden"><div class="w-[70%] h-full bg-brand-cyan rounded-full shadow-[0_0_10px_#06b6d4]"></div></div>
                 </div>
             </div>
 
             <!-- Quick Actions Bar (Spans full width of this sub-grid) -->
-            <div class="md:col-span-3 glass-card rounded-[24px] p-4 flex items-center justify-around gap-2">
-                <button @click="addWater" class="flex flex-col items-center gap-2 group">
-                    <div class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition shadow-[0_0_15px_rgba(59,130,246,0.1)] group-hover:shadow-[0_0_20px_rgba(59,130,246,0.4)]">
+            <div class="md:col-span-3 glass-card rounded-[24px] p-4 flex items-center justify-around gap-2 bg-white/[0.02]">
+                <button @click="addWater" class="flex flex-col items-center gap-2 group w-full">
+                    <div class="w-12 h-12 rounded-2xl bg-brand-blue/10 flex items-center justify-center text-brand-blue group-hover:bg-brand-blue group-hover:text-white transition shadow-[0_0_15px_rgba(59,130,246,0.1)] group-hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] group-hover:-translate-y-1 duration-300">
                         <span class="material-icons text-xl">+</span>
                     </div>
-                    <span class="text-[10px] uppercase font-bold text-white/40 group-hover:text-white/80">Water</span>
+                    <span class="text-[10px] uppercase font-bold text-white/40 group-hover:text-white/80 transition-colors">Water</span>
                 </button>
 
-                <button @click="toggleFasting" class="flex flex-col items-center gap-2 group">
-                    <div class="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition shadow-[0_0_15px_rgba(249,115,22,0.1)] group-hover:shadow-[0_0_20px_rgba(249,115,22,0.4)]">
+                <button @click="toggleFasting" class="flex flex-col items-center gap-2 group w-full">
+                    <div class="w-12 h-12 rounded-2xl bg-brand-orange/10 flex items-center justify-center text-brand-orange group-hover:bg-brand-orange group-hover:text-white transition shadow-[0_0_15px_rgba(249,115,22,0.1)] group-hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] group-hover:-translate-y-1 duration-300">
                         <span class="text-xl">⚡</span>
                     </div>
-                    <span class="text-[10px] uppercase font-bold text-white/40 group-hover:text-white/80">Fast</span>
+                    <span class="text-[10px] uppercase font-bold text-white/40 group-hover:text-white/80 transition-colors">Fast</span>
                 </button>
 
-                 <button @click="toggleMeditation" class="flex flex-col items-center gap-2 group">
-                    <div class="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition shadow-[0_0_15px_rgba(168,85,247,0.1)] group-hover:shadow-[0_0_20px_rgba(168,85,247,0.4)]">
+                 <button @click="toggleMeditation" class="flex flex-col items-center gap-2 group w-full">
+                    <div class="w-12 h-12 rounded-2xl bg-brand-purple/10 flex items-center justify-center text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition shadow-[0_0_15px_rgba(168,85,247,0.1)] group-hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] group-hover:-translate-y-1 duration-300">
                         <span class="text-xl">🧘</span>
                     </div>
-                    <span class="text-[10px] uppercase font-bold text-white/40 group-hover:text-white/80">Mind</span>
+                    <span class="text-[10px] uppercase font-bold text-white/40 group-hover:text-white/80 transition-colors">Mind</span>
                 </button>
 
-                 <button @click="currentTab = 'journal'" class="flex flex-col items-center gap-2 group">
-                    <div class="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-400 group-hover:bg-green-500 group-hover:text-white transition shadow-[0_0_15px_rgba(34,197,94,0.1)] group-hover:shadow-[0_0_20px_rgba(34,197,94,0.4)]">
+                 <button @click="currentTab = 'journal'" class="flex flex-col items-center gap-2 group w-full">
+                    <div class="w-12 h-12 rounded-2xl bg-brand-emerald/10 flex items-center justify-center text-brand-emerald group-hover:bg-brand-emerald group-hover:text-white transition shadow-[0_0_15px_rgba(34,197,94,0.1)] group-hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] group-hover:-translate-y-1 duration-300">
                         <span class="text-xl">✏️</span>
                     </div>
-                    <span class="text-[10px] uppercase font-bold text-white/40 group-hover:text-white/80">Journal</span>
+                    <span class="text-[10px] uppercase font-bold text-white/40 group-hover:text-white/80 transition-colors">Journal</span>
                 </button>
             </div>
         </div>
@@ -133,13 +133,13 @@
         <!-- Left: Today's Focus -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Insight -->
-            <div class="glass-card rounded-[24px] p-6 flex items-start gap-5 relative overflow-hidden">
+            <div class="glass-card rounded-[24px] p-6 flex items-start gap-5 relative overflow-hidden bg-gradient-to-r from-yellow-500/5 to-transparent border-l-4 border-l-yellow-500">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 rounded-full blur-[50px] -mr-10 -mt-10"></div>
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-400/20 to-orange-400/20 flex-shrink-0 flex items-center justify-center text-2xl border border-yellow-400/20 shadow-[0_0_15px_rgba(250,204,21,0.1)]">
+                <div class="w-12 h-12 rounded-2xl bg-yellow-500/10 flex-shrink-0 flex items-center justify-center text-2xl border border-yellow-500/20 shadow-[0_0_15px_rgba(250,204,21,0.1)] text-yellow-500">
                     💡
                 </div>
                 <div class="relative z-10">
-                    <h4 class="text-sm font-bold text-yellow-400 uppercase tracking-widest mb-2">Daily Insight</h4>
+                    <h4 class="text-sm font-bold text-yellow-500 uppercase tracking-widest mb-2">Daily Insight</h4>
                     <p class="text-lg text-white/90 font-medium leading-relaxed" x-text="currentTip"></p>
                 </div>
             </div>
@@ -147,9 +147,11 @@
             <!-- Charts Row -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                  <!-- Hydration -->
-                <div class="glass-card rounded-[24px] p-6 relative h-64 flex flex-col">
+                <div class="glass-card rounded-[24px] p-6 relative h-72 flex flex-col">
                      <div class="flex justify-between items-center mb-4">
-                        <h4 class="text-xs font-bold text-blue-400 uppercase tracking-widest">Hydration</h4>
+                        <h4 class="text-xs font-bold text-brand-blue uppercase tracking-widest flex items-center gap-2">
+                             <span class="w-2 h-2 rounded-full bg-brand-blue"></span> Hydration
+                        </h4>
                         <div class="text-lg font-bold"><span x-text="waterIntake"></span><span class="text-white/40 text-sm"> / <span x-text="waterGoal"></span></span></div>
                      </div>
                      <div class="flex-1 relative w-full">
@@ -157,13 +159,15 @@
                      </div>
                 </div>
                 <!-- Mood -->
-                 <div class="glass-card rounded-[24px] p-6 relative h-64 flex flex-col">
+                 <div class="glass-card rounded-[24px] p-6 relative h-72 flex flex-col">
                      <div class="flex justify-between items-center mb-4">
-                        <h4 class="text-xs font-bold text-purple-400 uppercase tracking-widest">Mood Trend</h4>
+                        <h4 class="text-xs font-bold text-brand-purple uppercase tracking-widest flex items-center gap-2">
+                             <span class="w-2 h-2 rounded-full bg-brand-purple"></span> Mood
+                        </h4>
                         <div class="flex gap-2">
-                            <button @click="setMood('😁')" class="opacity-50 hover:opacity-100 hover:scale-110 transition text-lg" :class="currentMood==='😁' ? 'opacity-100 scale-125' : ''">😁</button>
-                            <button @click="setMood('😐')" class="opacity-50 hover:opacity-100 hover:scale-110 transition text-lg" :class="currentMood==='😐' ? 'opacity-100 scale-125' : ''">😐</button>
-                            <button @click="setMood('😔')" class="opacity-50 hover:opacity-100 hover:scale-110 transition text-lg" :class="currentMood==='😔' ? 'opacity-100 scale-125' : ''">😔</button>
+                            <button @click="setMood('😁')" class="opacity-50 hover:opacity-100 hover:scale-110 transition text-lg grayscale hover:grayscale-0" :class="currentMood==='😁' ? 'opacity-100 scale-125 grayscale-0' : ''">😁</button>
+                            <button @click="setMood('😐')" class="opacity-50 hover:opacity-100 hover:scale-110 transition text-lg grayscale hover:grayscale-0" :class="currentMood==='😐' ? 'opacity-100 scale-125 grayscale-0' : ''">😐</button>
+                            <button @click="setMood('😔')" class="opacity-50 hover:opacity-100 hover:scale-110 transition text-lg grayscale hover:grayscale-0" :class="currentMood==='😔' ? 'opacity-100 scale-125 grayscale-0' : ''">😔</button>
                         </div>
                      </div>
                      <div class="flex-1 relative w-full">
@@ -176,20 +180,20 @@
              <div class="glass-card rounded-[24px] p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h4 class="text-xs font-bold text-white/40 uppercase tracking-widest">Today's Protocol</h4>
-                    <button @click="currentTab = 'fitness'" class="text-[10px] text-blue-400 font-bold hover:text-blue-300 transition">VIEW FULL PLAN</button>
+                    <button @click="currentTab = 'fitness'" class="text-[10px] text-brand-blue font-bold hover:text-white transition">VIEW FULL PLAN</button>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center gap-4 hover:bg-white/10 transition cursor-pointer" @click="currentTab = 'nutrition'">
-                        <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-400">🍎</div>
+                    <div class="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center gap-4 hover:bg-white/10 transition cursor-pointer group" @click="currentTab = 'nutrition'">
+                        <div class="w-12 h-12 rounded-xl bg-brand-emerald/10 flex items-center justify-center text-brand-emerald group-hover:scale-110 transition-transform">🍎</div>
                         <div>
-                            <div class="text-xs text-white/40 font-bold">NUTRITION</div>
+                            <div class="text-[10px] text-brand-emerald font-bold tracking-wider mb-1">NUTRITION</div>
                             <div class="font-bold text-sm">Adhere to Macro Plan</div>
                         </div>
                     </div>
-                    <div class="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center gap-4 hover:bg-white/10 transition cursor-pointer" @click="currentTab = 'fitness'">
-                        <div class="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-400">💪</div>
+                    <div class="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center gap-4 hover:bg-white/10 transition cursor-pointer group" @click="currentTab = 'fitness'">
+                        <div class="w-12 h-12 rounded-xl bg-brand-orange/10 flex items-center justify-center text-brand-orange group-hover:scale-110 transition-transform">💪</div>
                         <div>
-                            <div class="text-xs text-white/40 font-bold">FITNESS</div>
+                            <div class="text-[10px] text-brand-orange font-bold tracking-wider mb-1">FITNESS</div>
                             <div class="font-bold text-sm" x-text="getNextWorkout()?.focus || 'Active Recovery'"></div>
                         </div>
                     </div>
@@ -200,22 +204,22 @@
         <!-- Right: Activity & Status -->
         <div class="space-y-6">
             <!-- Activity Feed -->
-            <div class="glass-card rounded-[24px] p-6 flex flex-col h-[400px]">
-                <h3 class="text-xs font-bold text-white/40 uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Live Activity
+            <div class="glass-card rounded-[24px] p-6 flex flex-col h-[420px]">
+                <h3 class="text-xs font-bold text-white/40 uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-brand-emerald animate-pulse"></span> Live Activity
                 </h3>
-                <div class="flex-1 overflow-y-auto custom-scroll space-y-0 relative">
+                <div class="flex-1 overflow-y-auto custom-scroll space-y-0 relative pl-2">
                     <!-- Timeline Line -->
-                    <div class="absolute left-4 top-0 bottom-0 w-px bg-white/5"></div>
+                    <div class="absolute left-6 top-0 bottom-0 w-px bg-white/10"></div>
 
                      <template x-if="!activityLog || activityLog.length === 0">
                         <div class="text-white/30 text-xs italic py-10 text-center">No recent activity.</div>
                      </template>
                      <template x-for="log in activityLog">
                          <div class="flex gap-4 items-start py-3 relative group">
-                             <div class="w-8 h-8 rounded-full bg-[#050505] border border-white/10 flex-shrink-0 flex items-center justify-center text-xs relative z-10 group-hover:border-blue-500/50 transition" x-text="log.icon"></div>
+                             <div class="w-8 h-8 rounded-full bg-[#111] border border-white/10 flex-shrink-0 flex items-center justify-center text-sm relative z-10 group-hover:border-brand-blue/50 transition group-hover:text-brand-blue shadow-lg" x-text="log.icon"></div>
                              <div>
-                                 <div class="text-sm font-medium text-white/90" x-text="log.text"></div>
+                                 <div class="text-sm font-medium text-white/90 group-hover:text-white transition-colors" x-text="log.text"></div>
                                  <div class="text-[10px] text-white/30" x-text="log.time"></div>
                              </div>
                          </div>
@@ -228,14 +232,14 @@
                  <h3 class="text-xs font-bold text-white/40 uppercase tracking-widest mb-4">Biomarker Alerts</h3>
                  <div class="space-y-3">
                     <template x-if="!context?.issues || context.issues.length === 0">
-                        <div class="flex items-center gap-3 text-white/50 text-sm">
-                            <span class="text-green-500">✓</span> All systems optimal.
+                        <div class="flex items-center gap-3 text-white/50 text-sm p-3 rounded-xl bg-brand-emerald/5 border border-brand-emerald/10">
+                            <span class="text-brand-emerald">✓</span> All systems optimal.
                         </div>
                     </template>
                     <template x-for="issue in (context?.issues || []).slice(0,3)">
-                        <div class="flex items-center justify-between p-3 rounded-xl bg-red-500/10 border border-red-500/20">
-                            <div class="text-xs font-bold text-red-200" x-text="issue.title"></div>
-                            <div class="text-xs font-bold text-red-400" x-text="issue.value"></div>
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-brand-rose/10 border border-brand-rose/20 hover:bg-brand-rose/20 transition-colors cursor-help">
+                            <div class="text-xs font-bold text-rose-200" x-text="issue.title"></div>
+                            <div class="text-xs font-bold text-rose-400" x-text="issue.value"></div>
                         </div>
                     </template>
                  </div>
@@ -248,17 +252,17 @@
         <h3 class="text-lg font-bold mb-6 flex items-center gap-2">🏆 Achievements</h3>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <template x-for="(ach, key) in achievements">
-                <div class="p-4 rounded-2xl border transition-all duration-300"
-                     :class="ach.unlocked ? 'bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-yellow-500/50' : 'bg-white/5 border-white/5 opacity-50'">
+                <div class="p-4 rounded-2xl border transition-all duration-300 group hover:scale-105"
+                     :class="ach.unlocked ? 'bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.2)]' : 'bg-white/5 border-white/5 opacity-50 grayscale hover:grayscale-0 hover:opacity-100'">
                     <div class="flex items-center gap-4 mb-2">
-                        <div class="text-2xl" x-text="ach.icon"></div>
+                        <div class="text-3xl group-hover:animate-bounce" x-text="ach.icon"></div>
                         <div>
                             <div class="font-bold text-sm" x-text="ach.name"></div>
-                            <div class="text-[10px] text-white/40" x-text="ach.desc"></div>
+                            <div class="text-[10px] text-white/40 group-hover:text-white/70" x-text="ach.desc"></div>
                         </div>
                     </div>
                     <div class="w-full h-1 bg-white/10 rounded-full mt-2 overflow-hidden">
-                        <div class="h-full bg-yellow-500 rounded-full transition-all" :style="`width: ${(ach.progress / ach.target) * 100}%`"></div>
+                        <div class="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full transition-all" :style="`width: ${(ach.progress / ach.target) * 100}%`"></div>
                     </div>
                     <div class="text-right text-[10px] text-white/30 mt-1" x-text="ach.progress + '/' + ach.target"></div>
                 </div>

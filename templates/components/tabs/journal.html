@@ -1,51 +1,67 @@
-<div x-show="currentTab === 'journal'" class="max-w-4xl mx-auto space-y-8 animate-scale-in">
-    <div class="flex justify-between items-end">
+<div x-show="currentTab === 'journal'" class="max-w-4xl mx-auto space-y-8 animate-scale-in pb-24" x-cloak>
+    <div class="flex justify-between items-end animate-slide-up delay-100">
         <div>
-            <h2 class="text-3xl font-bold">Daily Journal</h2>
-            <p class="text-white/40 text-sm mt-1">Reflect on your journey.</p>
+            <h2 class="text-3xl font-bold tracking-tight">Daily Journal</h2>
+            <p class="text-white/40 text-sm mt-1">Reflect on your journey and track your mental state.</p>
         </div>
     </div>
 
-     <div class="glass-panel p-4 rounded-[24px] flex gap-3 overflow-x-auto custom-scroll snap-x">
+     <div class="glass-panel p-4 rounded-[24px] flex gap-3 overflow-x-auto custom-scroll snap-x animate-slide-up delay-200">
         <template x-for="day in calendarDays">
             <button @click="selectDate(day)"
-                    class="flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-300 snap-center border"
-                    :class="day.active ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/40 transform scale-105' : 'bg-white/5 border-transparent text-white/40 hover:bg-white/10 hover:text-white'">
+                    class="flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-300 snap-center border group"
+                    :class="day.active ? 'bg-brand-purple border-brand-purple text-white shadow-lg shadow-brand-purple/40 scale-105' : 'bg-white/5 border-transparent text-white/40 hover:bg-white/10 hover:text-white'">
                 <span class="text-xs font-bold uppercase tracking-wider" x-text="day.day"></span>
                 <span class="text-xl font-bold" x-text="day.date"></span>
-                <div class="w-1 h-1 rounded-full bg-white/50 mt-1" x-show="journalEntries[day.fullDate]"></div>
+                <div class="w-1.5 h-1.5 rounded-full bg-white/50 mt-1" x-show="journalEntries[day.fullDate]"></div>
             </button>
         </template>
     </div>
 
-    <div class="glass-card p-8 rounded-[32px]">
+    <div class="glass-card p-8 rounded-[32px] animate-slide-up delay-300">
         <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-bold" x-text="new Date(selectedDate).toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'})"></h3>
+            <h3 class="text-xl font-bold flex items-center gap-3">
+                 <span class="p-2 rounded-lg bg-white/5 text-white/60 text-lg">📅</span>
+                 <span x-text="new Date(selectedDate).toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'})"></span>
+            </h3>
             <div class="flex gap-3">
-                <button @click="analyzeJournal" class="px-6 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-sm transition border border-white/10 flex items-center gap-2"><span>✨</span> Analyze</button>
-                <button @click="saveJournal" class="px-6 py-2 rounded-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition shadow-lg shadow-purple-900/20">Save Entry</button>
+                <button @click="analyzeJournal" class="px-6 py-2.5 rounded-full bg-white/5 hover:bg-white/10 text-white font-bold text-xs transition border border-white/10 flex items-center gap-2 hover:border-white/20">
+                    <span class="text-brand-purple">✨</span> AI Analysis
+                </button>
+                <button @click="saveJournal" class="px-6 py-2.5 rounded-full bg-brand-purple hover:bg-purple-600 text-white font-bold text-xs transition shadow-lg shadow-brand-purple/20 transform hover:-translate-y-0.5">
+                    Save Entry
+                </button>
             </div>
         </div>
-        <textarea x-model="journalInput" class="w-full h-64 bg-black/20 border border-white/10 rounded-2xl p-6 text-white text-lg leading-relaxed focus:outline-none focus:border-purple-500 transition-all resize-none" placeholder="How are you feeling today? What did you eat? Any symptoms?"></textarea>
 
-        <div x-show="journalAnalysis && journalAnalysis[selectedDate]" class="mt-8 p-6 rounded-2xl bg-white/5 border border-white/5 animate-scale-in">
-            <h4 class="text-xs font-bold text-purple-400 uppercase tracking-widest mb-4 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span> AI Analysis</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="relative">
+            <textarea x-model="journalInput" class="w-full h-80 bg-black/20 border border-white/10 rounded-3xl p-6 text-white text-lg leading-relaxed focus:outline-none focus:border-brand-purple focus:ring-1 focus:ring-brand-purple/50 transition-all resize-none placeholder-white/20 custom-scroll" placeholder="How are you feeling today? What did you eat? Any symptoms?"></textarea>
+            <div class="absolute bottom-4 right-4 text-xs text-white/20 pointer-events-none">
+                <span x-text="journalInput.length"></span> chars
+            </div>
+        </div>
+
+        <div x-show="journalAnalysis && journalAnalysis[selectedDate]" class="mt-8 p-6 rounded-3xl bg-brand-purple/5 border border-brand-purple/10 animate-scale-in">
+            <h4 class="text-xs font-bold text-brand-purple uppercase tracking-widest mb-6 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-purple animate-pulse"></span> AI Analysis</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    <div class="text-white/40 text-xs uppercase tracking-widest mb-1">Detected Mood</div>
-                    <div class="text-lg font-bold" x-text="journalAnalysis[selectedDate]?.mood"></div>
+                    <div class="text-white/40 text-xs uppercase tracking-widest mb-2 font-bold">Detected Mood</div>
+                    <div class="text-2xl font-bold text-white capitalize" x-text="journalAnalysis[selectedDate]?.mood"></div>
                 </div>
                 <div>
-                    <div class="text-white/40 text-xs uppercase tracking-widest mb-1">Triggers</div>
+                    <div class="text-white/40 text-xs uppercase tracking-widest mb-2 font-bold">Triggers Identified</div>
                     <div class="flex flex-wrap gap-2">
                         <template x-for="trig in journalAnalysis[selectedDate]?.triggers">
-                            <span class="px-2 py-1 rounded bg-white/10 text-xs" x-text="trig"></span>
+                            <span class="px-2.5 py-1 rounded-lg bg-white/10 text-xs font-bold text-white/80 border border-white/5" x-text="trig"></span>
+                        </template>
+                         <template x-if="!journalAnalysis[selectedDate]?.triggers?.length">
+                            <span class="text-white/30 text-sm italic">None detected</span>
                         </template>
                     </div>
                 </div>
                 <div class="md:col-span-2">
-                    <div class="text-white/40 text-xs uppercase tracking-widest mb-1">Recommendation</div>
-                    <p class="text-white/80 leading-relaxed" x-text="journalAnalysis[selectedDate]?.tip"></p>
+                    <div class="text-white/40 text-xs uppercase tracking-widest mb-2 font-bold">Doctor's Recommendation</div>
+                    <p class="text-white/90 leading-relaxed p-4 rounded-2xl bg-black/20 border border-white/5" x-text="journalAnalysis[selectedDate]?.tip"></p>
                 </div>
             </div>
         </div>
