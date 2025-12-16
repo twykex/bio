@@ -1,5 +1,7 @@
-__pycharge__/
+__pycache__/
+*.pyc
 app.log
 app_output.log
+server.log
 uploads/
 node_modules

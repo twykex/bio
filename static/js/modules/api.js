@@ -20,6 +20,10 @@ export function apiSlice() {
                     body: formData
                 });
 
+                if (res.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
                 if (!res.ok) throw new Error('Upload failed');
 
                 const data = await res.json();

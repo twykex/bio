@@ -4,6 +4,7 @@ import sys
 import os
 import json
 from io import BytesIO
+from werkzeug.security import generate_password_hash
 
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -21,6 +22,11 @@ class TestRoutes(unittest.TestCase):
         sessions.clear()
         users.clear()
         password_reset_tokens.clear()
+        # Create a user and log in
+        users['test@example.com'] = {'password': generate_password_hash('password')}
+        with self.app as c:
+            with c.session_transaction() as sess:
+                sess['user_id'] = 'test@example.com'
 
     @patch('routes.health_routes.query_ollama')
     def test_init_context_no_file(self, mock_query):
@@ -56,23 +62,28 @@ class TestRoutes(unittest.TestCase):
         file_content = b"%PDF-1.4..."
         file = (BytesIO(file_content), 'test.pdf')
 
-        response = self.app.post('/init_context', data={'file': file, 'token': 'testtoken'}, content_type='multipart/form-data')
+        response = self.app.post('/init_context', data={'file': file}, content_type='multipart/form-data')
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()['summary'], "Healthy")
 
         # Verify session updated
-        self.assertIn('testtoken', sessions)
-        self.assertEqual(sessions['testtoken']['blood_context']['summary'], "Healthy")
+        self.assertIn('test@example.com', sessions)
+        self.assertEqual(sessions['test@example.com']['blood_context']['summary'], "Healthy")
+
+    def test_reset_data(self):
+        sessions['test@example.com'] = {'blood_context': {'summary': 'Healthy'}}
+        response = self.app.post('/reset-data')
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('test@example.com', sessions)
 
     @patch('routes.meal_routes.query_ollama')
     def test_generate_week(self, mock_query):
         mock_query.return_value = [{"day": "Mon", "meals": [{"title": "Meal"}]}]
 
-        sessions['testtoken'] = {'blood_context': {}}
+        sessions['test@example.com'] = {'blood_context': {}}
 
         response = self.app.post('/generate_week', json={
-            'token': 'testtoken',
             'strategy_name': 'Keto',
             'preferences': 'None'
         })
@@ -84,10 +95,9 @@ class TestRoutes(unittest.TestCase):
     def test_generate_week_fallback(self, mock_query):
         mock_query.return_value = None # Fail
 
-        sessions['testtoken'] = {'blood_context': {}}
+        sessions['test@example.com'] = {'blood_context': {}}
 
         response = self.app.post('/generate_week', json={
-            'token': 'testtoken',
             'strategy_name': 'Keto'
         })
 
@@ -100,10 +110,9 @@ class TestRoutes(unittest.TestCase):
     @patch('routes.health_routes.stream_ollama')
     def test_chat_agent(self, mock_stream):
         mock_stream.return_value = iter(["Hello"])
-        sessions['testtoken'] = {'weekly_plan': [], 'chat_history': []}
+        sessions['test@example.com'] = {'weekly_plan': [], 'chat_history': []}
 
         response = self.app.post('/chat_agent', json={
-            'token': 'testtoken',
             'message': 'Hi'
         })
 
@@ -111,7 +120,7 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(response.data.decode('utf-8'), "Hello")
 
         # Verify history updated
-        history = sessions['testtoken']['chat_history']
+        history = sessions['test@example.com']['chat_history']
         self.assertEqual(len(history), 2)
         self.assertEqual(history[0]['text'], 'Hi')
         self.assertEqual(history[1]['text'], 'Hello')

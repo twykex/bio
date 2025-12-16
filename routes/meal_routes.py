@@ -1,5 +1,5 @@
 import logging
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from utils import get_session, query_ollama
 from data.fallbacks import FALLBACK_MEAL_PLAN
 
@@ -8,12 +8,12 @@ meal_bp = Blueprint('meal_bp', __name__)
 
 @meal_bp.route('/generate_week', methods=['POST'])
 def generate_week():
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
     data = request.json
-    token = data.get('token')
-    if not token:
-        return jsonify({"error": "Token is required"}), 400
+    user_id = session['user_id']
 
-    user_session = get_session(token)
+    user_session = get_session(user_id)
 
     summary = user_session.get('blood_context', {}).get('summary', 'General Health')
     blood_strategies = data.get('blood_strategies', [])
@@ -91,12 +91,11 @@ def get_recipe():
 
 @meal_bp.route('/generate_shopping_list', methods=['POST'])
 def generate_shopping_list():
-    data = request.json
-    token = data.get('token')
-    if not token:
-        return jsonify({"error": "Token is required"}), 400
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    user_id = session['user_id']
 
-    user_session = get_session(token)
+    user_session = get_session(user_id)
     weekly_plan = user_session.get('weekly_plan', [])
 
     if not weekly_plan:
@@ -120,12 +119,11 @@ def generate_shopping_list():
 
 @meal_bp.route('/propose_meal_strategies', methods=['POST'])
 def propose_meal_strategies():
-    data = request.json
-    token = data.get('token')
-    if not token:
-        return jsonify({"error": "Token is required"}), 400
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    user_id = session['user_id']
 
-    user_session = get_session(token)
+    user_session = get_session(user_id)
     summary = user_session.get('blood_context', {}).get('summary', 'General Health')
 
     # Ask AI to brainstorm 3 distinct approaches based on bloodwork

@@ -1,7 +1,7 @@
 import logging
 import os
 import uuid
-from flask import Blueprint, request, jsonify, Response, stream_with_context
+from flask import Blueprint, request, jsonify, Response, stream_with_context, session
 from config import UPLOAD_FOLDER
 from utils import get_session, query_ollama, stream_ollama, retrieve_relevant_context, get_embedding, analyze_image
 from services.pdf_service import advanced_pdf_parse
@@ -11,12 +11,11 @@ health_bp = Blueprint('health_bp', __name__)
 
 @health_bp.route('/init_context', methods=['POST'])
 def init_context():
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
     if 'file' not in request.files: return jsonify({"error": "No file"}), 400
     file = request.files['file']
-    token = request.form.get('token')
-
-    if not token:
-        return jsonify({"error": "Token is required"}), 400
+    user_id = session['user_id']
 
     ext = os.path.splitext(file.filename)[1]
     filename = f"{uuid.uuid4()}{ext}"
@@ -34,7 +33,7 @@ def init_context():
     safe_chunks = chunks[:60]
     embeddings = [get_embedding(chunk) for chunk in safe_chunks]
 
-    user_session = get_session(token)
+    user_session = get_session(user_id)
     user_session['raw_text_chunks'] = safe_chunks
     user_session['embeddings'] = embeddings
 
@@ -113,12 +112,12 @@ def init_context():
 
 @health_bp.route('/chat_agent', methods=['POST'])
 def chat_agent():
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
     data = request.json
-    token = data.get('token')
-    if not token:
-        return jsonify({"error": "Token is required"}), 400
+    user_id = session['user_id']
 
-    user_session = get_session(token)
+    user_session = get_session(user_id)
     user_msg = data.get('message')
 
     rag_context = retrieve_relevant_context(user_session, user_msg)
@@ -171,9 +170,9 @@ def chat_agent():
 
 @health_bp.route('/load_demo_data', methods=['POST'])
 def load_demo_data():
-    token = request.json.get('token')
-    if not token:
-        return jsonify({"error": "Token is required"}), 400
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    user_id = session['user_id']
 
     sample_context = {
         "patient_name": "Demo User",
